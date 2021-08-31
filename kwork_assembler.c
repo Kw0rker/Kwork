@@ -102,6 +102,7 @@ translate_code(FILE *inp,FILE *out){
 			fprintf(out, "-%s\n",command);
 		}
 	}
+	free(command);
 }
 int getLine(char *buf,FILE *pt){
 	char c;
