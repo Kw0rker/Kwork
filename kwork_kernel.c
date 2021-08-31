@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <syscalls.h>
 #define MEM_SIZE 1000
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
@@ -16,6 +17,7 @@
 #define BRANCHZERO 42 // go to mem adress if acc==0
 #define HALT 43 //stop, executes after programs finished 
 #define DEBUG 60//dumps memory when reached
+#define SYSCALL 70 //calls kwork system call, by operand as syscall id
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
@@ -63,7 +65,7 @@ int main(){
 		operand%=x;
 		switch(operation_code){
 			case READ:
-				printf("Enter value\n");
+				//printf("Enter value\n");
 				scanf("%Lf",&memory[operand]);
                            break;
 			case WRITE:
@@ -105,6 +107,17 @@ int main(){
 				dump_memory(memory);	
 			case HALT:
 				HULT=0;
+				break;
+			case SYSCALL:
+				switch (operand){
+					case GETIC:
+					acc=instruction_counter;
+					break;
+
+					case SETIC:
+					instruction_counter=acc;
+					break;
+				}
 				break;
 		}
 	}

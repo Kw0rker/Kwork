@@ -26,9 +26,10 @@ int getLine(char*,FILE *);
 #define BRANCHNEG 11
 #define BRANCHZERO 12
 #define HALT 13
-#define DEBUG 13
+#define DEBUG 14
+#define SYSCALL 15
 
-int opcodes[] = {10,11,12,20,21,30,32,33,34,40,41,42,43,60};
+int opcodes[] = {10,11,12,20,21,30,32,33,34,40,41,42,43,60,70};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -86,6 +87,7 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"BRANCHZERO"))fprintf(out,"%d%d\n",opcodes[BRANCHZERO],operand);
 		else if(!strcmp(command,"HALT"))fprintf(out, "%d%d\n",opcodes[HALT],operand);
 		else if(!strcmp(command,"DEBUG"))fprintf(out, "%d%d\n",opcodes[DEBUG],operand);
+		else if(!strcmp(command,"SYSCALL"))fprintf(out, "%d%d\n",opcodes[SYSCALL],operand);
 		//sets up addres datta at address
 		else if(command[0]=='#'){
 			command++;
