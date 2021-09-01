@@ -4,7 +4,9 @@
 #ifndef MAX_STR_SIZE
 #define MAX_STR_SIZE 100
 #endif
-
+char *convertToPostfix(char*);
+int isOperator(char);
+int Prec(char);
 char *convertToPostfix(char *string){
 	if (sizeof string > MAX_STR_SIZE)
 	{
