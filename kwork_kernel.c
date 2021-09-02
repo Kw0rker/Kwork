@@ -157,6 +157,16 @@ int main(){
 					case SETIC:
 					instruction_counter=acc;
 					break;
+
+					case NEWTHREAD:
+					active_threads[0]++; //increment total number of threads
+					THREADPTR new_thread = malloc(sizeof(THREAD));
+					new_thread->savedstate = acc; //instruction pointer is stored in acc
+					new_thread->id = acc % MAX_THREAD_POOL; // here we convert insturction pointer to thread id
+					active_threads[active_threads[0]] = acc % MAX_THREAD_POOL;
+					thread_pool[acc % MAX_THREAD_POOL] = new_thread;
+					//new thread scheduling done	
+					break;
 				}
 				break;
 		}
@@ -218,8 +228,8 @@ void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,int *acc
 void remove_thread(int thread_id,THREADPTR thread_pool[],int *active_threads,int *time_since_last_call){
 	free(thread_pool[active_threads[thread_id]]);
 	for(int i=1;i<MAX_THREAD_POOL;i++){
-		if(active_threads[i]==thread_id)active_threads[i]=0;
+		if(active_threads[i]==thread_id)active_threads[i]=0; // find thread id in activethread map and remove it
 	}
-	active_threads[0]--;
+	active_threads[0]--; // decrement totaal number of threads
 	(*time_since_last_call)=LONG_MAX; //set max value so the next thread is executed for sure
 }
