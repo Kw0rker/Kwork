@@ -227,7 +227,7 @@ void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,int *acc
 }
 void remove_thread(int thread_id,THREADPTR thread_pool[],int *active_threads,int *time_since_last_call){
 	free(thread_pool[active_threads[thread_id]]);
-	for(int i=1;i<MAX_THREAD_POOL;i++){
+	for(int i=1;i<active_threads[0];i++){
 		if(active_threads[i]==thread_id)active_threads[i]=0; // find thread id in activethread map and remove it
 	}
 	active_threads[0]--; // decrement totaal number of threads
