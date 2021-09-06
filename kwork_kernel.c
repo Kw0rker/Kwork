@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <syscalls.h>
+#ifndef DEFNAME
+#define DEFNAME "out.kw"
+#endif
 #define MEM_SIZE 10000
 #ifndef MAX_THREAD_POOL
 #define MAX_THREAD_POOL 1000
@@ -33,7 +37,6 @@
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
 
-
 struct thread
 {
 	int savedstate;
@@ -43,6 +46,9 @@ struct thread
 typedef struct thread THREAD;
 typedef THREAD *THREADPTR;
 
+void switch_threads(THREADPTR [],int *,int *,long *,long*,int *,struct timespec *);
+void remove_thread(int *,THREADPTR [],int *,long *);
+void dump_memory(long*);
 
 int main(){
 	long acc ;
@@ -54,13 +60,21 @@ int main(){
 	// thread pool declaration
 	THREADPTR thread_pool[MAX_THREAD_POOL];
 	int active_threads[MAX_THREAD_POOL+1];
-	active_threads[0]=0; //first element shows how many active threads
+	active_threads[0]=1; //first element shows how many active threads
 						 //there are
 						 //other elements contain thread id for accesing thread in thread pool
 						 // thread_pool[active_thread[1]] exmp	
 						 // it's guaranteed by assembler that id does not exceed max thread pool size
 	struct timespec *tp = malloc(sizeof (struct timespec)); //struct for clock_gettime() method
 	long time_since_last_call=LONG_MAX; //time in nanosecs from last thread switch
+	//decalre main thread
+	THREADPTR main_thread = malloc(sizeof(THREAD));
+	main_thread->savedstate=0;
+	main_thread->id = instruction_register = 0; 
+	main_thread->acc_s=0;
+	thread_pool[0]=main_thread;
+	active_threads[1]=0; //reference to main thread in thread pool
+	//
 	int thread_id=1; //curent thread
 	/*
 	 * Beggining of initiaalization 
@@ -73,23 +87,28 @@ int main(){
 	for(int i=0;i<MEM_SIZE;i++)memory[i]=0;
 	
 	int counter=0;
-	printf("***Kworker lang welcomes you\n 	please enter your program\n			to end please enter -1\n");
+	//printf("***Kworker lang welcomes you\n 	please enter your program\n			to end please enter -1\n");
+	FILE *source;
+	source = fopen(DEFNAME,"r");
+	if(source==NULL){
+		perror("No kwork code found\n");
+		return -1;
+	}
 	int adress=0;
-	while(instruction_register!=-1){
-		scanf("%L",&instruction_register);
+	while(!feof(source)){
+		fscanf(source,"%d",&instruction_register);
 		if((int)instruction_register==-1)break;
 		if(instruction_register<-1){
 			adress=instruction_register*-1;
-			scanf("%L",&instruction_register);
+			fscanf(source,"%d",&instruction_register);
 		}
 		else adress=counter++;
 		memory[adress] = instruction_register;
 	
 	}
-	int HULT=1;
 	printf("program loaded sucsesffuly\n");
 	while(active_threads[0]){ //works till there's any running thread left
-		switch_threads(active_threads,thread_pool,&instruction_counter,&time_since_last_call,&thread_id,tp);
+		switch_threads(thread_pool,active_threads,&instruction_counter,&acc,&time_since_last_call,&thread_id,tp);
 
 
 
@@ -104,10 +123,10 @@ int main(){
 		switch(operation_code){
 			case READ:
 				//printf("Enter value\n");
-				scanf("%L",&memory[operand]);
+				scanf("%d",&memory[operand]);
                            break;
 			case WRITE:
-			  	printf("%L\n",memory[operand]);
+			  	printf("%d\n",(int)memory[operand]);
 			       break;
 			case PRINT:
 				printf("%c",(char) memory[(int)memory[operand]]);  // from pointer to adress and resolving pointer
@@ -145,8 +164,7 @@ int main(){
 				dump_memory(memory);
 				break;	
 			case HALT:
-				HULT=0;
-				remove_thread(thread_id,thread_pool,active_threads,&time_since_last_call);
+				remove_thread(&thread_id,thread_pool,active_threads,&time_since_last_call);
 				break;
 			case SYSCALL:
 				switch (operand){
@@ -172,7 +190,7 @@ int main(){
 		}
 	}
 	//memory dump here
-	printf("value in acc is %L\n",acc);
+	printf("value in acc is %d\n",(int)acc);
 	printf("last instruction called is %d\n",instruction_counter);
 	printf("last operation code is %d\n",operation_code);
 	printf("last operand is %d\n",operand);
@@ -183,11 +201,11 @@ int main(){
 	{
 		if(i%10==0)printf("\n%d\t",10*row++);
 		if(memory[i]==0)printf("0000\t");
-		else printf("%L\t",memory[i]);
+		else printf("%d\t",memory[i]);
 	}
 	printf("\n");			
 }
-void dump_memory(long double *arr){
+void dump_memory(long *arr){
 	printf("\r");
 	int row =0;
 	for(int i=0;i<10;i++)printf("\t%d",i);		
@@ -196,7 +214,7 @@ void dump_memory(long double *arr){
 	{
 		if(i%10==0)printf("\n%d\t",10*row++);
 		if(arr[i]==0)printf("0000\t");
-		else printf("%L\t",arr[i]);
+		else printf("%d\t",arr[i]);
 	}
 	printf("\n");			
 
@@ -208,7 +226,7 @@ void dump_memory(long double *arr){
 //@time_since_last_call time since last thread switch was performed in nanosecs
 //@thread_id is id of current thread
 //@tp is timespec struct that's used by clock_gettime()
-void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,int *acc,int*time_since_last_call,int *thread_id,struct timespec *tp){
+void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,long *acc,long*time_since_last_call,int *thread_id,struct timespec *tp){
 	clock_gettime(CLOCK_MONOTONIC,tp);
 	if( ((tp->tv_nsec) - (*time_since_last_call)) > (MIN_THREAD_TIME + rand()%MAX_THREAD_TIME) ){
 		(*time_since_last_call) = tp->tv_nsec; 								//reset timer
@@ -226,7 +244,7 @@ void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,int *acc
 
 	}
 }
-void remove_thread(int *thread_id,THREADPTR thread_pool[],int *active_threads,int *time_since_last_call){
+void remove_thread(int *thread_id,THREADPTR thread_pool[],int *active_threads,long *time_since_last_call){
 	free(thread_pool[active_threads[(*thread_id)]]);
 	for(int i=1;i<active_threads[0];i++){
 		if(active_threads[i]==(*thread_id))active_threads[i]=0; 	// find thread id in activethread map and remove it
