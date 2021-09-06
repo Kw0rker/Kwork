@@ -211,25 +211,28 @@ void dump_memory(long double *arr){
 void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,int *acc,int*time_since_last_call,int *thread_id,struct timespec *tp){
 	clock_gettime(CLOCK_MONOTONIC,tp);
 	if( ((tp->tv_nsec) - (*time_since_last_call)) > (MIN_THREAD_TIME + rand()%MAX_THREAD_TIME) ){
-		(*time_since_last_call) = tp->tv_nsec; //reset timer
-		thread_pool[(*thread_id)]->acc_s = (*acc); //save current value of acc to the coresponding thread
-		thread_pool[(*thread_id)]->savedstate = (*ic); // save last thread insturction pointer so the proccess can be resumed
-
-		int next_thread_id = 1 + rand() % active_threads[0]; // active_threads[0] contains number of all active threads, here we select
-															 //next thread to be executed
-		(*acc) = thread_pool[active_threads[next_thread_id]]->acc_s; //restore value of acc register of the thread
-		(*thread_id) = next_thread_id; // set current thread to what we just selected
-		(*ic) = thread_pool[active_threads[next_thread_id]]->savedstate; // restores the instuction pointer from thread saved value 
-														 //(restore thread insruction execution from the moment thread was swiched)
-		// now new thread is executing 
+		(*time_since_last_call) = tp->tv_nsec; 								//reset timer
+		if(*thread_id > 0){													//check if thread id is positive to prevent SIGSEGV
+		thread_pool[(*thread_id)]->acc_s = (*acc); 							//save current value of acc to the coresponding thread
+		thread_pool[(*thread_id)]->savedstate = (*ic); 						// save last thread insturction pointer so the proccess can be resumed
+	    }
+		int next_thread_id = 1 + rand() % active_threads[0]; 				// active_threads[0] contains number of all active threads, here we select
+															 				//next thread to be executed
+		(*acc) = thread_pool[active_threads[next_thread_id]]->acc_s; 		//restore value of acc register of the thread
+		(*thread_id) = next_thread_id; 										// set current thread to what we just selected
+		(*ic) = thread_pool[active_threads[next_thread_id]]->savedstate; 	// restores the instuction pointer from thread saved value 
+														 					//(restore thread insruction execution from the moment thread was swiched)
+																			// now new thread is executing 
 
 	}
 }
-void remove_thread(int thread_id,THREADPTR thread_pool[],int *active_threads,int *time_since_last_call){
-	free(thread_pool[active_threads[thread_id]]);
+void remove_thread(int *thread_id,THREADPTR thread_pool[],int *active_threads,int *time_since_last_call){
+	free(thread_pool[active_threads[(*thread_id)]]);
 	for(int i=1;i<active_threads[0];i++){
-		if(active_threads[i]==thread_id)active_threads[i]=0; // find thread id in activethread map and remove it
+		if(active_threads[i]==(*thread_id))active_threads[i]=0; 	// find thread id in activethread map and remove it
 	}
-	active_threads[0]--; // decrement totaal number of threads
-	(*time_since_last_call)=LONG_MAX; //set max value so the next thread is executed for sure
+	active_threads[0]--; 											// decrement totaal number of threads
+	(*time_since_last_call)=LONG_MAX; 								//set max value so the next thread is executed for sure
+	(*thread_id) = -1 ; 											//set id to negative number to prevent SIGSEGV
+
 }
