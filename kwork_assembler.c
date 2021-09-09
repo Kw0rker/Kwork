@@ -28,8 +28,10 @@ int getLine(char*,FILE *);
 #define HALT 13
 #define DEBUG 14
 #define SYSCALL 15
+#define MAIN "0000"
+#define FUNC "1111"
 
-int opcodes[] = {10,11,12,20,21,30,32,33,34,40,41,42,43,60,70};
+int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -69,9 +71,10 @@ translate_code(FILE *inp,FILE *out){
 	int operand;
 	while(!feof(inp)){
 		fscanf(inp,"%s",command);
+		//printf("%s\n",command);
 		fscanf(inp,"%d",&operand);
 		//fscanf(inp,"%s\n",command);//vuln to bufferoverflow fix later
-		//printf("%s %d\n",command,operand );
+
 		if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
 		else if(!strcmp(command,"WRITE"))fprintf(out, "%d%d\n",opcodes[WRITE],operand);
 		else if(!strcmp(command,"PRINT"))fprintf(out,"%d%d\n",opcodes[PRINT],operand);
@@ -88,6 +91,8 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"HALT"))fprintf(out, "%d%d\n",opcodes[HALT],operand);
 		else if(!strcmp(command,"DEBUG"))fprintf(out, "%d%d\n",opcodes[DEBUG],operand);
 		else if(!strcmp(command,"SYSCALL"))fprintf(out, "%d%d\n",opcodes[SYSCALL],operand);
+		else if(!strcmp(command,"MAIN"))fprintf(out, "%s\n",MAIN);
+		else if(!strcmp(command,"FUNC"))fprintf(out, "%s\n",FUNC);
 		//sets up addres datta at address
 		else if(command[0]=='#'){
 			command++;
@@ -101,6 +106,11 @@ translate_code(FILE *inp,FILE *out){
 			command++;
 			fprintf(out, "-%s\n",command);
 		}
+		else{
+			perror("Undefined command -> %s\n",command);
+		}
+	
+
 	}
 	free(command);
 }

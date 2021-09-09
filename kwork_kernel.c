@@ -20,7 +20,7 @@
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
 #define PRINT 12 // prints a char from memory adress
-#define LOAD 20 //inserts data to acc register
+#define LOAD 20 //inserts data to acc register from memory
 #define STORE 21 // stores data from acc to memory address
 #define ADD 30 //sums acc with data in mem address and stores result in acc
 #define SUB 31 //subtracts accc with data in mem adress result stored in acc
@@ -48,6 +48,7 @@ typedef THREAD *THREADPTR;
 
 void switch_threads(THREADPTR [],int *,int *,long *,long*,int *,struct timespec *);
 void remove_thread(int *,THREADPTR [],int *,long *);
+void select_new_thread(int *,long *,THREADPTR[],int *,int *);
 void dump_memory(long*);
 
 int main(){
@@ -70,12 +71,13 @@ int main(){
 	//decalre main thread
 	THREADPTR main_thread = malloc(sizeof(THREAD));
 	main_thread->savedstate=0;
-	main_thread->id = instruction_register = 0; 
+	main_thread->id = 1;
+	instruction_register = 0; 
 	main_thread->acc_s=0;
 	thread_pool[0]=main_thread;
 	active_threads[1]=0; //reference to main thread in thread pool
 	//
-	int thread_id=1; //curent thread
+	int thread_id=0; //curent thread
 	/*
 	 * Beggining of initiaalization 
 	 */
@@ -96,18 +98,23 @@ int main(){
 	}
 	int adress=0;
 	while(!feof(source)){
-		fscanf(source,"%d",&instruction_register);
-		if((int)instruction_register==-1)break;
-		if(instruction_register<-1){
+		fscanf(source,"%ld\n",&instruction_register);
+		if((int)instruction_register <= 0){
 			adress=instruction_register*-1;
-			fscanf(source,"%d",&instruction_register);
+			counter = adress;
+			fscanf(source,"%ld\n",&instruction_register);
+			memory[adress]=instruction_register;
+
 		}
-		else adress=counter++;
-		memory[adress] = instruction_register;
+		else{
+			adress=counter++;
+			memory[adress] = instruction_register;
+		}
 	
 	}
-	printf("program loaded sucsesffuly\n");
-	while(active_threads[0]){ //works till there's any running thread left
+	//dump_memory(memory);
+
+	while(active_threads[0]>0){ //works till there's any running thread left
 		switch_threads(thread_pool,active_threads,&instruction_counter,&acc,&time_since_last_call,&thread_id,tp);
 
 
@@ -123,10 +130,10 @@ int main(){
 		switch(operation_code){
 			case READ:
 				//printf("Enter value\n");
-				scanf("%d",&memory[operand]);
+				scanf("%ld",&memory[operand]);
                            break;
 			case WRITE:
-			  	printf("%d\n",(int)memory[operand]);
+			  	printf("%d",(int)memory[operand]);
 			       break;
 			case PRINT:
 				printf("%c",(char) memory[(int)memory[operand]]);  // from pointer to adress and resolving pointer
@@ -153,7 +160,7 @@ int main(){
 				break;
 			case BRANCH:
 				instruction_counter=operand;
-                                break;
+                 break;
 			case BRANCHNEG:
 				if(acc<0)instruction_counter=operand;
 				break;
@@ -177,6 +184,7 @@ int main(){
 					break;
 
 					case NEWTHREAD:
+					//printf("new thread created\n");
 					active_threads[0]++; //increment total number of threads
 					THREADPTR new_thread = malloc(sizeof(THREAD));
 					new_thread->savedstate = acc; //instruction pointer is stored in acc
@@ -194,16 +202,7 @@ int main(){
 	printf("last instruction called is %d\n",instruction_counter);
 	printf("last operation code is %d\n",operation_code);
 	printf("last operand is %d\n",operand);
-	int row =0;
-	for(int i=0;i<10;i++)printf("\t%d",i);		
-	printf("\n");					
-	for(int i=0;i<MEM_SIZE;i++)
-	{
-		if(i%10==0)printf("\n%d\t",10*row++);
-		if(memory[i]==0)printf("0000\t");
-		else printf("%d\t",memory[i]);
-	}
-	printf("\n");			
+	dump_memory(memory);
 }
 void dump_memory(long *arr){
 	printf("\r");
@@ -214,7 +213,7 @@ void dump_memory(long *arr){
 	{
 		if(i%10==0)printf("\n%d\t",10*row++);
 		if(arr[i]==0)printf("0000\t");
-		else printf("%d\t",arr[i]);
+		else printf("%ld\t",arr[i]);
 	}
 	printf("\n");			
 
@@ -228,12 +227,16 @@ void dump_memory(long *arr){
 //@tp is timespec struct that's used by clock_gettime()
 void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,long *acc,long*time_since_last_call,int *thread_id,struct timespec *tp){
 	clock_gettime(CLOCK_MONOTONIC,tp);
-	if( ((tp->tv_nsec) - (*time_since_last_call)) > (MIN_THREAD_TIME + rand()%MAX_THREAD_TIME) ){
+	if( abs((tp->tv_nsec) - (*time_since_last_call)) > (MIN_THREAD_TIME + rand()%MAX_THREAD_TIME) ){
 		(*time_since_last_call) = tp->tv_nsec; 								//reset timer
 		if(*thread_id > 0){													//check if thread id is positive to prevent SIGSEGV
-		thread_pool[(*thread_id)]->acc_s = (*acc); 							//save current value of acc to the coresponding thread
-		thread_pool[(*thread_id)]->savedstate = (*ic); 						// save last thread insturction pointer so the proccess can be resumed
+		thread_pool[active_threads[(*thread_id)]]->acc_s = (*acc); 			//save current value of acc to the coresponding thread
+		thread_pool[active_threads[(*thread_id)]]->savedstate = (*ic);		// save last thread insturction pointer so the proccess can be resumed
 	    }
+		select_new_thread(active_threads,acc,thread_pool,thread_id,ic);
+	}
+}
+void select_new_thread(int *active_threads,long *acc,THREADPTR thread_pool[],int *thread_id,int *ic){
 		int next_thread_id = 1 + rand() % active_threads[0]; 				// active_threads[0] contains number of all active threads, here we select
 															 				//next thread to be executed
 		(*acc) = thread_pool[active_threads[next_thread_id]]->acc_s; 		//restore value of acc register of the thread
@@ -241,16 +244,15 @@ void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,long *ac
 		(*ic) = thread_pool[active_threads[next_thread_id]]->savedstate; 	// restores the instuction pointer from thread saved value 
 														 					//(restore thread insruction execution from the moment thread was swiched)
 																			// now new thread is executing 
-
-	}
 }
 void remove_thread(int *thread_id,THREADPTR thread_pool[],int *active_threads,long *time_since_last_call){
 	free(thread_pool[active_threads[(*thread_id)]]);
-	for(int i=1;i<active_threads[0];i++){
-		if(active_threads[i]==(*thread_id))active_threads[i]=0; 	// find thread id in activethread map and remove it
+	for(int i = (*thread_id);i <= active_threads[0];i++){
+		//printf("moved %d<-%d\n",i,i+1);
+		active_threads[i] = active_threads[i+1];
 	}
 	active_threads[0]--; 											// decrement totaal number of threads
-	(*time_since_last_call)=LONG_MAX; 								//set max value so the next thread is executed for sure
 	(*thread_id) = -1 ; 											//set id to negative number to prevent SIGSEGV
+	(*time_since_last_call) = LONG_MAX;
 
 }
