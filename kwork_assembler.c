@@ -12,26 +12,10 @@
 #include <string.h>
 int translate_code(FILE *,FILE *);
 int getLine(char*,FILE *);
-#define READ 0
-#define WRITE 1
-#define PRINT 2
-#define LOAD 3
-#define STORE 4
-#define ADD 5
-#define SUB 6
-#define DIV 7
-#define MUL 8
-#define MOD 9
-#define BRANCH 10
-#define BRANCHNEG 11
-#define BRANCHZERO 12
-#define HALT 13
-#define DEBUG 14
-#define SYSCALL 15
 #define MAIN "0000"
 #define FUNC "1111"
-
-int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70};
+enum operators{READ,WRITE,PRINT,LOAD,STORE,ADD,SUB,DIV,MUL,MOD,BRANCH,BRANCHNEG,BRANCHZERO,HALT,DEBUG,SYSCALL,BIT_S_R,BIT_S_L,BIT_OR,BIT_AND,BIT_XOR,BIT_INV};
+int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -91,6 +75,12 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"HALT"))fprintf(out, "%d%d\n",opcodes[HALT],operand);
 		else if(!strcmp(command,"DEBUG"))fprintf(out, "%d%d\n",opcodes[DEBUG],operand);
 		else if(!strcmp(command,"SYSCALL"))fprintf(out, "%d%d\n",opcodes[SYSCALL],operand);
+		else if(!strcmp(command,"BIT_OR"))fprintf(out, "%d%d\n",opcodes[BIT_OR],operand);
+		else if(!strcmp(command,"BIT_AND"))fprintf(out, "%d%d\n",opcodes[BIT_AND],operand);
+		else if(!strcmp(command,"BIT_INV"))fprintf(out, "%d%d\n",opcodes[BIT_INV],operand);
+		else if(!strcmp(command,"BIT_XOR"))fprintf(out, "%d%d\n",opcodes[BIT_XOR],operand);
+		else if(!strcmp(command,"BIT_S_L"))fprintf(out, "%d%d\n",opcodes[BIT_S_L],operand);
+		else if(!strcmp(command,"BIT_S_R"))fprintf(out, "%d%d\n",opcodes[BIT_S_R],operand);
 		else if(!strcmp(command,"MAIN"))fprintf(out, "%s\n",MAIN);
 		else if(!strcmp(command,"FUNC"))fprintf(out, "%s\n",FUNC);
 		//sets up addres datta at address
@@ -107,7 +97,7 @@ translate_code(FILE *inp,FILE *out){
 			fprintf(out, "-%s\n",command);
 		}
 		else{
-			perror("Undefined command -> %s\n",command);
+			fprintf(stderr,"Undefined command -> %s\n",command);
 		}
 	
 

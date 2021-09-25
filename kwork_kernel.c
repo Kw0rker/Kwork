@@ -33,8 +33,13 @@
 #define BRANCH 40 // go to mem adress 
 #define BRANCHNEG 41 // go to mem adress if acc < 0 
 #define BRANCHZERO 42 // go to mem adress if acc==0
-#define HALT 43 //stop, executes after programs finished 
-#define DEBUG 60//dumps memory when reached
+#define HALT 43 //stop, executes after programs finished
+#define BIT_S_R 50 //bit shifts acc to the right with the value from pointer to memory memory[operand], result stored in acc
+#define BIT_S_L 51 //bit shifts acc to the left with the value from pointer to memory memory[operand], result stored in acc
+#define BIT_OR 52 // Binary OR acc with the value from pointer to memory memory[operand], result stored in acc
+#define BIT_AND 53 // Binary AND acc with the value from pointer to memory memory[operand], result stored in acc
+#define BIT_XOR 54 // Binary XOR acc with the value from pointer to memory memory[operand], result stored in acc
+#define BIT_INV 55 //inverts bytes of acc result stored in acc
 #define SYSCALL 70 //calls kwork system call, by operand as syscall id
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
@@ -229,6 +234,26 @@ int main(){
 					break;
 
 				}
+				break;
+
+				//bitwise operations
+				case BIT_OR:
+				acc|=memory[operand];
+				break;
+				case BIT_AND:
+				acc&=memory[operand];
+				break;
+				case BIT_XOR:
+				acc^=memory[operand];
+				break;
+				case BIT_INV:
+				acc= ~acc;
+				break;
+				case BIT_S_L:
+				acc<<=memory[operand];
+				break;
+				case BIT_S_R:
+				acc>>=memory[operand];
 				break;
 		}
 	}
