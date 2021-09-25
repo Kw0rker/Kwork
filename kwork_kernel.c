@@ -41,6 +41,7 @@
 #define BIT_XOR 54 // Binary XOR acc with the value from pointer to memory memory[operand], result stored in acc
 #define BIT_INV 55 //inverts bytes of acc result stored in acc
 #define SYSCALL 70 //calls kwork system call, by operand as syscall id
+#define DEBUG 60 //dumps memory when reached
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
@@ -236,7 +237,7 @@ int main(){
 				}
 				break;
 
-				//bitwise operations
+				//bitwise operation
 				case BIT_OR:
 				acc|=memory[operand];
 				break;
