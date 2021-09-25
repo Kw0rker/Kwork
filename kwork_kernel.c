@@ -5,6 +5,7 @@
 #include <string.h>
 #include <limits.h>
 #include <syscalls.h>
+#include <fast_math.h>
 #ifndef DEFNAME
 #define DEFNAME "out.kw"
 #endif
@@ -18,6 +19,7 @@
 #ifndef MAX_THREAD_TIME
 #define MAX_THREAD_TIME 450 //in nanosecs
 #endif
+#define CONVERT_THREAD_POINTER_TO_ID(x) x % MAX_THREAD_POOL
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
 #define PRINT 12 // prints a char from memory adress
@@ -40,8 +42,10 @@
 
 struct thread
 {
-	int savedstate;
-	int id;
+
+	unsigned savedstate; // 0 <= savestate < 10000
+						 // 0 <= savestate < 2^13
+	unsigned id;
 	int acc_s;
 };
 typedef struct thread THREAD;
@@ -79,6 +83,11 @@ int main(){
 	active_threads[1]=0; //reference to main thread in thread pool
 	//
 	int thread_id=0; //curent thread
+
+
+
+	int waiting_threads[MAX_THREAD_POOL+1]; //map containg ids of threads that are on wait
+	waiting_threads[0]=0; //first element shows amount of threads on wait
 	/*
 	 * Beggining of initiaalization 
 	 */
@@ -190,11 +199,35 @@ int main(){
 					active_threads[0]++; //increment total number of threads
 					THREADPTR new_thread = malloc(sizeof(THREAD));
 					new_thread->savedstate = acc; //instruction pointer is stored in acc
-					new_thread->id = acc % MAX_THREAD_POOL; // here we convert insturction pointer to thread id
-					active_threads[active_threads[0]] = acc % MAX_THREAD_POOL;
-					thread_pool[acc % MAX_THREAD_POOL] = new_thread;
+					new_thread->id = CONVERT_THREAD_POINTER_TO_ID(acc); // here we convert insturction pointer to thread id
+					active_threads[active_threads[0]] = CONVERT_THREAD_POINTER_TO_ID(acc);
+					thread_pool[CONVERT_THREAD_POINTER_TO_ID(acc)] = new_thread;
 					//new thread scheduling done	
 					break;
+					//sets curent thread to wait by temproary removing its id from selection pool @active_threads
+					//and releases lock to execute next thread
+					case WAIT:
+					waiting_threads[++waiting_threads[0]] = thread_id; //store current thread id in map
+					for(int i = thread_id;i <= active_threads[0];i++){
+					active_threads[i] = active_threads[i+1];
+					}
+					time_since_last_call = LONG_MAX;
+					active_threads[0]--;
+					break;
+
+					//invokes thread with id from acc 
+					//see @page libs/syscalls.h
+					case INVOKE:
+					active_threads[++active_threads[0]] = CONVERT_THREAD_POINTER_TO_ID(acc); 
+					break;
+
+					case INVOKE_ALL:
+					for(int i = 1; i <= waiting_threads[0];i++){
+						active_threads[++active_threads[0]] = waiting_threads[i]; //place all removed thread's id back to selection pool @active_threads
+					}
+
+					break;
+
 				}
 				break;
 		}
@@ -233,7 +266,7 @@ void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,long *ac
 		(*time_since_last_call) = tp->tv_nsec; 								//reset timer
 		if(*thread_id > 0){													//check if thread id is positive to prevent SIGSEGV
 		thread_pool[active_threads[(*thread_id)]]->acc_s = (*acc); 			//save current value of acc to the coresponding thread
-		thread_pool[active_threads[(*thread_id)]]->savedstate 4= (*ic);		// save last thread insturction pointer so the proccess can be resumed
+		thread_pool[active_threads[(*thread_id)]]->savedstate = (*ic);		// save last thread insturction pointer so the proccess can be resumed
 	    }
 		select_new_thread(active_threads,acc,thread_pool,thread_id,ic);
 	}
@@ -250,7 +283,6 @@ void select_new_thread(int *active_threads,long *acc,THREADPTR thread_pool[],int
 void remove_thread(int *thread_id,THREADPTR thread_pool[],int *active_threads,long *time_since_last_call){
 	free(thread_pool[active_threads[(*thread_id)]]);
 	for(int i = (*thread_id);i <= active_threads[0];i++){
-		//printf("moved %d<-%d\n",i,i+1);
 		active_threads[i] = active_threads[i+1];
 	}
 	active_threads[0]--; 											// decrement totaal number of threads
