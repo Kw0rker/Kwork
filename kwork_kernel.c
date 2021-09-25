@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include <syscalls.h>
 #ifndef DEFNAME
@@ -86,7 +87,8 @@ int main(){
 	instruction_register=0;
 	operation_code=0;
 	operand = 0;
-	for(int i=0;i<MEM_SIZE;i++)memory[i]=0;
+	memset(memory,0,sizeof(long) * MEM_SIZE);
+	//for(int i=0;i<MEM_SIZE;i++)memory[i]=0;
 	
 	int counter=0;
 	//printf("***Kworker lang welcomes you\n 	please enter your program\n			to end please enter -1\n");
@@ -223,7 +225,7 @@ void dump_memory(long *arr){
 //@ic instruction counter which saved and changed during threads switch
 //@acc acc register which data needs to be preserved accross threads
 //@time_since_last_call time since last thread switch was performed in nanosecs
-//@thread_id is id of current thread
+//@thread_id is id of current thread that is been swiched from
 //@tp is timespec struct that's used by clock_gettime()
 void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,long *acc,long*time_since_last_call,int *thread_id,struct timespec *tp){
 	clock_gettime(CLOCK_MONOTONIC,tp);
@@ -231,7 +233,7 @@ void switch_threads(THREADPTR thread_pool[],int *active_threads,int *ic,long *ac
 		(*time_since_last_call) = tp->tv_nsec; 								//reset timer
 		if(*thread_id > 0){													//check if thread id is positive to prevent SIGSEGV
 		thread_pool[active_threads[(*thread_id)]]->acc_s = (*acc); 			//save current value of acc to the coresponding thread
-		thread_pool[active_threads[(*thread_id)]]->savedstate = (*ic);		// save last thread insturction pointer so the proccess can be resumed
+		thread_pool[active_threads[(*thread_id)]]->savedstate 4= (*ic);		// save last thread insturction pointer so the proccess can be resumed
 	    }
 		select_new_thread(active_threads,acc,thread_pool,thread_id,ic);
 	}
