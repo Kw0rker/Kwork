@@ -41,6 +41,8 @@
 #define BIT_XOR 54 // Binary XOR acc with the value from pointer to memory memory[operand], result stored in acc
 #define BIT_INV 55 //inverts bytes of acc result stored in acc
 #define SYSCALL 70 //calls kwork system call, by operand as syscall id
+#define PUSH 71 //pushes data from memory on the stack
+#define POP 72 //pops data from the stack to memory adress
 #define DEBUG 60 //dumps memory when reached
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
@@ -64,6 +66,8 @@ void dump_memory(long*);
 
 int main(){
 	long acc ;
+	int ESP; //esp register
+	int EBP = MEM_SIZE-1; //ebp register points to highest adressable memory
 	int instruction_counter;
 	long  instruction_register;
 	int operation_code;
@@ -256,6 +260,15 @@ int main(){
 				case BIT_S_R:
 				acc>>=memory[operand];
 				break;
+				//
+
+				case PUSH:
+				memory[ESP--] = memory[operand]; //as stack grows upward to the memory
+				break;
+				case POP:
+				memory[operand] = memory[ESP++]; // pops value from stack
+				break;
+
 		}
 	}
 	//memory dump here
