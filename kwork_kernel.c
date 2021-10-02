@@ -238,6 +238,18 @@ int main(){
 					}
 
 					break;
+					case GETESP:
+					acc = ESP;
+					break;
+					case SETESP:
+					ESP = acc;
+					break;
+					case GETEBP:
+					acc = EBP;
+					break;
+					case SETEBP:
+					EBP = acc;
+					break;
 
 				}
 				break;
