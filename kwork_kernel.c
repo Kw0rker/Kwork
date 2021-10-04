@@ -1,25 +1,4 @@
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <syscalls.h>
-#include <fast_math.h>
-#ifndef DEFNAME
-#define DEFNAME "out.kw"
-#endif
-#define MEM_SIZE 10000
-#ifndef MAX_THREAD_POOL
-#define MAX_THREAD_POOL 1000
-#endif
-#ifndef MIN_THREAD_TIME
-#define MIN_THREAD_TIME 150 //in nanosecs
-#endif
-#ifndef MAX_THREAD_TIME
-#define MAX_THREAD_TIME 450 //in nanosecs
-#endif
-#define CONVERT_THREAD_POINTER_TO_ID(x) x % MAX_THREAD_POOL
+#include <kwork_params.h>
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
 #define PRINT 12 // prints a char from memory adress
