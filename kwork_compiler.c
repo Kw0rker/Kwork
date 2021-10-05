@@ -12,9 +12,23 @@ char *KWAC[MAX_CODE_SIZE];
 
 //pass pointer to struct
 #define Table_EntryToString(entry)												\
-			printf("Struct table_entry{\nint symbol %d;\nchar type %c;\nlong location %ld;\nchar fucn_name %s;\n}\n",entry->symbol,entry->type,entry->location,entry->fucn_name)		\
+			printf("Struct table_entry{\nint const_value %d\nint symbol %d;\nchar type %c;\nlong location %ld;\nchar fucn_name %s;\n}\n",entry->const_value, entry->symbol,entry->type,entry->location,entry->fucn_name)		\
 
 /*
+use in main function only ! as it depends on local variables
+@comp is comparator == or <= etc
+*/
+#define getVars(comp) char f = [20];\
+				char s = [20];\
+				f = strtok(operand,#comp);\
+				s = strtok(NULL,#comp);\
+				if(isdigig(f[0])) v1 = find_entry('C',atoi(f),fucn_name,line_n,function_pointer);\
+				else v1 = find_entry('V',f[0],fucn_name,line_n,function_pointer);\
+				if(isdigig(s[0]))  v2 = find_entry('C',atoi(s),fucn_name,line_n,function_pointer);\
+				else v2 = find_entry('V',s[0],fucn_name,line_n,function_pointer)\
+
+/*
+@const value used for constants only
 @symbol is ansi representation of var name (var name is one char long as defined in standart)
 @type {
 		C -> constant
@@ -27,6 +41,7 @@ char *KWAC[MAX_CODE_SIZE];
 
 struct table_entry
 {
+	int const_value;
 	int symbol;
 	char type;
 	long location;
@@ -49,6 +64,7 @@ compiles code to KWAC (kworker assembly code)
 void compile(FILE *);
 void first_compile(FILE *);
 void second_compile();
+TABLE_ENTRY_PTR find_entry(char ,int ,char *,int ,int );
 
 int main(int argc, char const *argv[])
 {	
@@ -169,10 +185,41 @@ void first_compile(FILE *file){
 		symbolTable[total_comands++] = new; //and save it
 		memset(KWAC_COMMAND,0,sizeof(KWAC_COMMAND));
 		}
+		else if(!strcmp(operator,"if")){
+			TABLE_ENTRY_PTR v1;
+			TABLE_ENTRY_PTR v2;
+			if(strlen(operand)>=4){
+			
+
+			if(operand[1]=='=' && operand[2]=='='){
+				getVars(==);
+
+
+			}
+			else if(operand[1]=='<' && operand[2]=='='){
+				getVars(<=);
+			}
+			else if(operand[1]=='>' && operand[2]=='='){
+				getVars(>=);
+			}
+
+			}
+			else if(strlen(operand)==3){
+				char first = operand[0];
+				char second = operand[2];
+				if(operand[1]=='>'){
+					getVars(>);
+				}
+				else if(operand[1]=='<'){
+					getVars(<);
+				}
+			}
+		}
 
 
 
 	}
+	fclose(file);
 	// free(operator);
 	// free(operand);
 	// free(fucn_name);
@@ -227,4 +274,45 @@ void second_compile(){
 	}
 	fclose(file);
 
+}
+
+TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int line_n,int function_pointer){
+	switch(type){
+		case'C':
+		for(int x=1;x<=line_n;x++){ //todo search from the top of array as there vars are stored
+			int a = function_pointer+MAX_STATIC_SIZE - x;
+			if(symbolTable[a]!=NULL && symbolTable[a]->const_value==data &&(!strcmp(symbolTable[a]->fucn_name,fucn_name))){
+				return symbolTable[a]; // found
+				break;
+			}
+		}
+		break;
+
+		case'V':
+		for(int x=1;x<=line_n;x++){ //todo search from the top of array as there vars are stored
+			int a = function_pointer+MAX_STATIC_SIZE - x;
+			if(symbolTable[a]!=NULL && symbolTable[a]->symbol==data &&(!strcmp(symbolTable[a]->fucn_name,fucn_name))){
+				return symbolTable[a]; // found
+			}
+		}
+		break;
+	}
+	//if not found create new
+	TABLE_ENTRY_PTR new = malloc(sizeof TABLE_ENTRY);
+	new->location=function_pointer+MAX_STATIC_SIZE-line_n;
+	new->type=type;
+	new->const_value=data;
+	new->symbol=data;
+	strcpy(new->fucn_name,fucn_name);
+	return new;
+
+}
+TABLE_ENTRY_PTR create_new(char type,int data,char *fucn_name,long location){
+	TABLE_ENTRY_PTR new = malloc(sizeof TABLE_ENTRY);
+	new->location=location;
+	new->type=type;
+	new->const_value=data;
+	new->symbol=data;
+	strcpy(new->fucn_name,fucn_name);
+	return new;
 }
