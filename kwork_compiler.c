@@ -191,7 +191,17 @@ void first_compile(FILE *file){
 			TABLE_ENTRY_PTR v2;
 			char command[30];
 			//todo change if blocs as they dont support const bigger than 9 
-			if(operand[1]=='=' && operand[2]=='='){
+			char comparator[3];
+			int x=0;
+			char y =0;
+			//while end of the string is not encountered
+			//get comparator from the operand
+			while(!operand[x]){
+				if(operand[x]=='=' || operand[x]=='<' || operand[x]=='>')comparator[y++] = operand[x];
+			}
+			comparator[y] = '\0';
+
+			if(!strcmp(comparator,"==")){
 				getVars(==);
 				sprintf(command,"LOAD %ld",v1->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
@@ -213,7 +223,7 @@ void first_compile(FILE *file){
 
 
 			}
-			else if(operand[1]=='<' && operand[2]=='='){
+			else if(!strcmp(comparator,"<=")){
 				getVars(<=);
 				//v1 -v2
 				sprintf(command,"LOAD %ld",v1->location);
@@ -239,7 +249,7 @@ void first_compile(FILE *file){
 				push(total_comands,&stack);    
 
 			}
-			else if(operand[1]=='>' && operand[2]=='='){
+			else if(!strcmp(comparator,">=")){
 				getVars(>=);
 				//v2 -v1
 
@@ -266,7 +276,7 @@ void first_compile(FILE *file){
 				push(total_comands,&stack);    
 			}
 
-			else if(operand[1]=='>'){
+			else if(!strcmp(comparator,">")){
 				getVars(>);
 				sprintf(command,"LOAD %ld",v2->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
@@ -288,7 +298,7 @@ void first_compile(FILE *file){
 				push(total_comands,&stack);    
 
 			}
-			else if(operand[1]=='<'){
+			else if(!strcmp(comparator,"<")){
 				getVars(<);
 				sprintf(command,"LOAD %ld",v1->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
