@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <syscalls.h>
 #include <fast_math.h>
+#include <utils.h>
 #ifndef DEFNAME
 #define DEFNAME "out.kw"
 #endif

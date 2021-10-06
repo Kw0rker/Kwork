@@ -87,6 +87,7 @@ void compile(FILE *file){
 	second_compile();
 }
 void first_compile(FILE *file){
+	STACKPTR stack = new_stack();
 	char *line = malloc(100);
 	int function_pointer;
 	int line_n=-1;
@@ -188,32 +189,150 @@ void first_compile(FILE *file){
 		else if(!strcmp(operator,"if")){
 			TABLE_ENTRY_PTR v1;
 			TABLE_ENTRY_PTR v2;
-			if(strlen(operand)>=4){
-			
-
+			char command[30];
+			//todo change if blocs as they dont support const bigger than 9 
 			if(operand[1]=='=' && operand[2]=='='){
 				getVars(==);
+				sprintf(command,"LOAD %ld",v1->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
+				memset(command,0,sizeof(command));
+				sprintf(command,"SUB %ld",v2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+1);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCHZERO %d",function_pointer+line_n+4); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+2);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+3);
+				memset(command,0,sizeof(command));
+				flags[function_pointer+line_n+3] = total_comands;
+				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+				push(total_comands,&stack);  
 
 
 			}
 			else if(operand[1]=='<' && operand[2]=='='){
 				getVars(<=);
+				//v1 -v2
+				sprintf(command,"LOAD %ld",v1->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
+				memset(command,0,sizeof(command));
+				sprintf(command,"SUB %ld",v2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+1);
+				memset(command,0,sizeof(command));
+				//branzero and branch neg jump over branch statement 
+				sprintf(command,"BRANCHZERO %d",function_pointer+line_n+5); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+2);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCHZNEG %d",function_pointer+line_n+5); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+3);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+4);
+				memset(command,0,sizeof(command));
+				flags[function_pointer+line_n+4] = total_comands;
+				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+				push(total_comands,&stack);    
+
 			}
 			else if(operand[1]=='>' && operand[2]=='='){
 				getVars(>=);
+				//v2 -v1
+
+				sprintf(command,"LOAD %ld",v2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
+				memset(command,0,sizeof(command));
+				sprintf(command,"SUB %ld",v1->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+1);
+				memset(command,0,sizeof(command));
+				//branzero and branch neg jump over branch statement 
+				sprintf(command,"BRANCHZERO %d",function_pointer+line_n+5); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+2);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCHZNEG %d",function_pointer+line_n+5); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+3);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+4);
+				memset(command,0,sizeof(command));
+				flags[function_pointer+line_n+4] = total_comands;
+				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+				push(total_comands,&stack);    
 			}
 
+			else if(operand[1]=='>'){
+				getVars(>);
+				sprintf(command,"LOAD %ld",v2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
+				memset(command,0,sizeof(command));
+				sprintf(command,"SUB %ld",v1->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+1);
+				memset(command,0,sizeof(command));
+				//branzero and branch neg jump over branch statement 
+				
+				sprintf(command,"BRANCHZNEG %d",function_pointer+line_n+4); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+2);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+3);
+				memset(command,0,sizeof(command));
+				flags[function_pointer+line_n+3] = total_comands;
+				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+				push(total_comands,&stack);    
+
 			}
-			else if(strlen(operand)==3){
-				char first = operand[0];
-				char second = operand[2];
-				if(operand[1]=='>'){
-					getVars(>);
-				}
-				else if(operand[1]=='<'){
-					getVars(<);
-				}
+			else if(operand[1]=='<'){
+				getVars(<);
+				sprintf(command,"LOAD %ld",v1->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n);
+				memset(command,0,sizeof(command));
+				sprintf(command,"SUB %ld",v2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+1);
+				memset(command,0,sizeof(command));
+				//branzero and branch neg jump over branch statement 
+				
+				sprintf(command,"BRANCHZNEG %d",function_pointer+line_n+4); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+2);
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+line_n+3);
+				memset(command,0,sizeof(command));
+				flags[function_pointer+line_n+3] = total_comands;
+				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+				push(total_comands,&stack);    
+
 			}
+		}
+		else if(!strcmp(operator,"}"){
+			//we found clossing bracket now pop 
+			if(!isEmpty(stack)){
+				char jump_address[30];
+				// we pop adress of last if or for or while command (any command that has conditional jump)
+				//and set jump adress to adreess of next command following bracket (on next line)
+				sprintf(jump_address,"%d",line_n+1);
+				line_n--; // decrement line_n as bracket isnot a command itself
+				strcat(symbolTable[pop(&stack)]->fucn_name,jump_address);
+			}
+			else {
+				perror("extra bracket found");
+				line_n--;
+			}
+		}
+
+
+
+
+		else{
+			//dont count number of commands if operation is not defined in compiler
+			line_n--;
 		}
 
 
