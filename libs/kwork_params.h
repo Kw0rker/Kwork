@@ -3,10 +3,12 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <limits.h>
 #include <syscalls.h>
 #include <fast_math.h>
-#include <utils.h>
+//#include <utils.h>
+#include <data_str.h>
 #ifndef DEFNAME
 #define DEFNAME "out.kw"
 #endif

@@ -126,12 +126,13 @@ void first_compile(FILE *file){
 		line_n--;
 	}
 	else if(!strcmp(operator,"function")){
-		fucn_name=operand;
+		//strcpy(fucn_name,operand);
+		//fucn_name=operand;
 		TABLE_ENTRY_PTR func = malloc(sizeof(TABLE_ENTRY));
 		func->type='L';
-		if(!strcmp(operand,"main")){
+		if(!strcmp(operand,"main\r\n")){
 			function_pointer=0;
-			strcpy(func->fucn_name,"MAIN");
+			strcpy(func->fucn_name,"&0\nMAIN");
 		}
 		else {
 			function_pointer = function_pointer + MAX_STATIC_SIZE + 1;
@@ -151,7 +152,7 @@ void first_compile(FILE *file){
 				fucn_name=operand;
 				TABLE_ENTRY_PTR func = malloc(sizeof(TABLE_ENTRY));
 				func->type='L';
-				if(!strcmp(operand,"main")){
+				if(!strcmp(operand,"main\r\n")){
 					function_pointer=0;
 					strcpy(func->fucn_name,"MAIN");
 				}
