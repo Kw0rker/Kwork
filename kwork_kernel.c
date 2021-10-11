@@ -4,6 +4,8 @@
 #define PRINT 12 // prints a char from memory adress
 #define LOAD 20 //inserts data to acc register from memory
 #define STORE 21 // stores data from acc to memory address
+#define PLOAD 22 //inserts data from pointer to memory to acc
+#define PSTORE 23 //stores data from acc in memory pointer
 #define ADD 30 //sums acc with data in mem address and stores result in acc
 #define SUB 31 //subtracts accc with data in mem adress result stored in acc
 #define DIV 32 //divedes acc with data in mem adress result stored in acc
@@ -144,6 +146,12 @@ int main(){
 			case STORE:
 				memory[operand] = acc;
 				break;
+			case PLOAD:
+				acc=memory[memory[operand]];
+				break;
+			case PSTORE:
+				memory[memory[operand]] = acc;
+				break;		
 			case ADD:
 				acc+=memory[operand];
 				break;
