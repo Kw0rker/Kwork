@@ -16,8 +16,8 @@ int getLine(char*,FILE *);
 #define FUNC "1111"
 enum operators{READ,WRITE,PRINT,LOAD,STORE,ADD,SUB,DIV,MUL,MOD,BRANCH,
 			  BRANCHNEG,BRANCHZERO,HALT,DEBUG,SYSCALL,BIT_S_R,BIT_S_L,
-			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL};
-int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44};
+			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE};
+int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -61,7 +61,7 @@ translate_code(FILE *inp,FILE *out){
 		fscanf(inp,"%d",&operand);
 		//fscanf(inp,"%s\n",command);//vuln to bufferoverflow fix later
 
-		if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
+			 if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
 		else if(!strcmp(command,"WRITE"))fprintf(out, "%d%d\n",opcodes[WRITE],operand);
 		else if(!strcmp(command,"PRINT"))fprintf(out,"%d%d\n",opcodes[PRINT],operand);
 		else if(!strcmp(command,"LOAD"))fprintf(out, "%d%d\n",opcodes[LOAD],operand);
@@ -86,6 +86,8 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"PUSH"))fprintf(out, "%d%d\n",opcodes[PUSH],operand);
 		else if(!strcmp(command,"POP"))fprintf(out, "%d%d\n",opcodes[POP],operand);
 		else if(!strcmp(command,"CALL"))fprintf(out, "%d%d\n",opcodes[CALL],operand);
+		else if(!strcmp(command,"PLOAD"))fprintf(out, "%d%d\n",opcodes[PLOAD],operand);
+		else if(!strcmp(command,"PSTORE"))fprintf(out, "%d%d\n",opcodes[PSTORE],operand);
 		else if(!strcmp(command,"MAIN"))fprintf(out, "%s\n",MAIN);
 		else if(!strcmp(command,"FUNC"))fprintf(out, "%s\n",FUNC);
 		//sets up addres datta at address
