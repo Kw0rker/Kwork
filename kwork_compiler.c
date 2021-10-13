@@ -8,9 +8,9 @@
 #endif
 #define input "READ \0"
 
-int flags[MAX_CODE_SIZE];
+int flags[MAX_CODE_SIZE]={0};
 char *KWAC[MAX_CODE_SIZE];
-
+enum TYPES{IF,FOR,WHILE};
 //pass pointer to struct
 #define Table_EntryToString(entry)												\
 			printf("Struct table_entry{\nint const_value %d\nint symbol %d;\nchar type %c;\nlong location %ld;\nchar fucn_name %s;\n}\n",entry->const_value, entry->symbol,entry->type,entry->location,entry->fucn_name)		\
@@ -19,16 +19,38 @@ char *KWAC[MAX_CODE_SIZE];
 use in main function only ! as it depends on local variables
 @comp is comparator == or <= etc
 */
-#define getVars(comp) char *f;\
+#define GET_VARS(comp) char *f;\
 				char *s;\
 				f = strtok(operand,#comp);\
 				s = strtok(NULL,#comp);\
-				if(isdigit((int)f[0])) v1 = find_entry('C',atoi(f),fucn_name,line_n,function_pointer);\
-				else v1 = find_entry('V',f[0],fucn_name,line_n,function_pointer);\
-				if(isdigit((int)s[0]))  v2 = find_entry('C',atoi(s),fucn_name,line_n,function_pointer);\
-				else v2 = find_entry('V',s[0],fucn_name,line_n,function_pointer)\
+				if(isdigit((int)f[0])){\
+					v1 = find_entry('C',atoi(f),fucn_name,total_vars);\
+					if(v1==NULL){\
+					v1= create_new('C',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v1;}\
+				}\
+				else{\
+					v1 = find_entry('V',f[0],fucn_name,total_vars);\
+					if(v1==NULL){\
+					v1 = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v1;}\
+				}\
+				if(isdigit((int)s[0])){\
+					v2 = find_entry('C',atoi(s),fucn_name,total_vars);\
+					if(v2==NULL){\
+					v2 = create_new('C',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v2;}\
+				}\
+				else {\
+					v2 = find_entry('V',s[0],fucn_name,total_vars);\
+					if(v2==NULL){\
+					v2 = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v2;}\
+				}\
 			
-
+//used after each set of kwork assembly coomands to update any potential jumps 
+//coused by if or loop sturctures
+//@offset is number of instruction entered for each individual command
 #define UPDATE_IF_BLOCKS(offset)if(returns[total_comands-offset]!=NULL){\
 								TABLE_ENTRY_PTR assm = symbolTable[total_comands-offset];\
 				 				char new_addres[30];\
@@ -77,7 +99,7 @@ compiles code to KWAC (kworker assembly code)
 void compile(FILE *);
 void first_compile(FILE *);
 void second_compile();
-TABLE_ENTRY_PTR find_entry(char ,int ,char *,int ,int );
+TABLE_ENTRY_PTR find_entry(char ,int ,char *,int );
 TABLE_ENTRY_PTR create_new(char ,int ,char *,long);
 
 int main(int argc, char const *argv[])
@@ -102,11 +124,13 @@ void compile(FILE *file){
 }
 void first_compile(FILE *file){
 	STACKPTR stack = new_stack();
+	STACKPTR for_stack = new_stack();
 	char *line = malloc(100);
 	STACKPTR returns[MAX_CODE_SIZE];
+	int local_created=0;
 	int function_pointer;
 	int line_n=-1;
-	int local_comands =-8 ;//number of commands in function and i have no fucking clue why it has to be  -8 lmao im fucking retard but it works this way
+	int local_comands =0 ;//number of commands in function and i have no fucking clue why it has to be  -8 lmao im fucking retard but it works this way
 	int total_vars=0; //total ammount of vars declareted
 	int total_comands = 0;
 	char *operator = malloc(20);
@@ -116,8 +140,10 @@ void first_compile(FILE *file){
 	while(!feof(file))
 	{
 	fgets(line,100,file);
+	char *saved = line;
 	//fscanf(file,"%100s\n",line);
 	//printf("%s\n",line );
+	while(line[0]==' ' || line[0]=='\t')line++;
 	operator = strtok(line," ");
 	operand = strtok(NULL," ");
 	//if(operand == NULL)continue;
@@ -142,34 +168,40 @@ void first_compile(FILE *file){
 		symbolTable[total_comands++] = func;
 	}
 	else if(!strcmp(operator,"end")){
-		line_n=-1;
-		while(!feof(file)){
-			fscanf(file,"%100s\n",line);
+		// line_n=-1;
+		// while(!feof(file)){
+		// 	fscanf(file,"%100s\n",line);
 
-			operator = strtok(line," ");
-			operand = strtok(NULL," ");
-			if(!strcmp(operator,"function")){
-				fucn_name=operand;
-				TABLE_ENTRY_PTR func = malloc(sizeof(TABLE_ENTRY));
-				func->type='L';
-				if(!strcmp(operand,"main\r\n")){
-					function_pointer=0;
-					strcpy(func->fucn_name,"MAIN");
-				}
-				else {
-				function_pointer = function_pointer + MAX_STATIC_SIZE + 1;
-				strcpy(func->fucn_name,"FUNC");
-				}
-			func->location=function_pointer;
-			symbolTable[total_comands++] = func;
-			break; //we found next function now repead
-			}
-		}
+		// 	operator = strtok(line," ");
+		// 	operand = strtok(NULL," ");
+		// 	if(!strcmp(operator,"function")){
+		// 		fucn_name=operand;
+		// 		TABLE_ENTRY_PTR func = malloc(sizeof(TABLE_ENTRY));
+		// 		func->type='L';
+		// 		if(!strcmp(operand,"main\r\n")){
+		// 			function_pointer=0;
+		// 			strcpy(func->fucn_name,"MAIN");
+		// 		}
+		// 		else {
+		// 		function_pointer = function_pointer + MAX_STATIC_SIZE + 1;
+		// 		strcpy(func->fucn_name,"FUNC");
+		// 		}
+		// 	func->location=function_pointer;
+		// 	symbolTable[total_comands++] = func;
+		// 	break; //we found next function now repead
+		// 	}
+		// }
+		symbolTable[total_comands++] = create_new('L',0,"HALT 00",function_pointer+(local_comands++));
+		UPDATE_IF_BLOCKS(1)
 		//todo do while search for next function in file
 	}
 	else if(!strcmp(operator,"input")){
-		TABLE_ENTRY_PTR table_entry =find_entry('V',operand[0],fucn_name,line_n,function_pointer);
-		symbolTable[MAX_CODE_SIZE-(++total_vars)] = table_entry;
+		TABLE_ENTRY_PTR table_entry =find_entry('V',operand[0],fucn_name,total_vars);
+		// if not found create new
+		if(table_entry==NULL){
+			table_entry = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
+			symbolTable[MAX_CODE_SIZE-(++total_vars)] = table_entry;
+		}
 		char KWAC_COMMAND [50];
 		sprintf(KWAC_COMMAND,"%s %ld",input,table_entry->location);
 		// strncat(KWAC_COMMAND,input,sizeof(KWAC_COMMAND)-1);
@@ -207,7 +239,7 @@ void first_compile(FILE *file){
 			printf("comparator -> %s\n",comparator);
 			#endif
 			if(!strcmp(comparator,"==")){
-				getVars(==);
+				GET_VARS(==)
 				sprintf(command,"LOAD %ld",v1->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
@@ -230,7 +262,7 @@ void first_compile(FILE *file){
 
 			}
 			else if(!strcmp(comparator,"<=")){
-				getVars(<=);
+				GET_VARS(<=)
 				//v1 -v2
 				sprintf(command,"LOAD %ld",v1->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
@@ -257,7 +289,7 @@ void first_compile(FILE *file){
 
 			}
 			else if(!strcmp(comparator,">=")){
-				getVars(>=);
+				GET_VARS(>=)
 				//v2 -v1
 
 				sprintf(command,"LOAD %ld",v2->location);
@@ -285,7 +317,7 @@ void first_compile(FILE *file){
 			}
 
 			else if(!strcmp(comparator,">")){
-				getVars(>);
+				GET_VARS(>)
 				sprintf(command,"LOAD %ld",v2->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
@@ -308,7 +340,7 @@ void first_compile(FILE *file){
 
 			}
 			else if(!strcmp(comparator,"<")){
-				getVars(<);
+				GET_VARS(<)
 				sprintf(command,"LOAD %ld",v1->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
@@ -338,16 +370,253 @@ void first_compile(FILE *file){
 			//we found clossing bracket now pop 
 			if(!isEmpty(stack)){
 				int adress = pop(&stack)-1;
-				//if no stack create one
-				//used to store addresses of all jump statments that exit if or while statements
-				//stores in adress of next command
-				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
-				push(adress,&(returns[total_comands]));
+
+				switch(flags[adress+1]){
+					case IF:
+					//if no stack create one
+					//used to store addresses of all jump statments that exit if statements
+					//stores in adress of next command
+					if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
+					push(adress,&(returns[total_comands]));
+					break;
+
+					case FOR:
+					// add jump to post incremnt
+					int adress2 = pop(&for_stack);
+					char command[30];
+					sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					memset(command,0,sizeof(command));
+					UPDATE_IF_BLOCKS(1)
+
+					//apped brancha adress
+					if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
+					push(adress,&(returns[total_comands]));
+					break;
+				}
+				
 			}
 			else {
 				perror("extra bracket found");
 				//line_n--;
 			}
+		}
+		//check if line starts as for loop
+		else if (!strcmp(operator,"for")){
+			//for exmaple
+			// for x=0;x<10;1
+			//	init value;comparasing;step
+			char *var_nd_defV = malloc(12); //variable and its asign value
+			char *comparator = malloc(3);
+			char *comparator_saved = comparator; //so we can free it's later after pointer ariphmetics been done
+			char *var_nd_defV_saved = var_nd_defV;
+			char *step = malloc(8);
+			var_nd_defV = strtok(operand,";");
+			comparator = strtok(NULL,";");
+			step = strtok(NULL,";");
+			int step_value = atoi(step);
+			char var = var_nd_defV[0];
+			char var2 = comparator[0];
+			var_nd_defV+=2;//increment pointer so it points to var deflaut value
+			comparator++;
+			//increment pointer by one so it points to 
+			//so next element afer variable must be equaltiy sign 1 or 2 bits 
+			char comp[] = {comparator[0],
+							   (comparator[1]=='>'||
+							   	comparator[1]=='<'||
+							   	comparator[1]=='=')?comparator[1]++:'\0', //increment by one if there 2 signs
+							   '\0'};
+			comparator++;//increment pointer so it points to compare value
+			//if one ony equality sign found incrment only by one, if 2 increment by 2				   
+			TABLE_ENTRY_PTR VAR1 = find_entry('V',var,fucn_name,total_vars);
+			if(VAR1==NULL){
+				VAR1 = create_new('V',var,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR1;
+			}
+			TABLE_ENTRY_PTR VAR2 = find_entry('V',var2,fucn_name,total_vars);
+			if(VAR2==NULL){
+				VAR2 = create_new('V',var2,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR2;
+			}
+			int compareValue = atoi(comparator);
+			TABLE_ENTRY_PTR CMP_VALUE = find_entry(isdigit((int)comparator[0])?'C':'V',compareValue,fucn_name,total_vars);
+			if(CMP_VALUE==NULL){
+				CMP_VALUE = create_new(isdigit((int)comparator[0])?'C':'V',compareValue,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = CMP_VALUE;
+			}
+			int defValue = atoi(var_nd_defV);
+			TABLE_ENTRY_PTR DEF_VALUE = find_entry(isdigit((int)var_nd_defV[0])?'C':'V',defValue,fucn_name,total_vars);
+			if(DEF_VALUE==NULL){
+				DEF_VALUE = create_new(isdigit((int)var_nd_defV[0])?'C':'V',defValue,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = DEF_VALUE;
+			}
+			TABLE_ENTRY_PTR step_ = find_entry('C',step_value,fucn_name,total_vars);
+			if(step_==NULL){
+				step_ = create_new('C',step_value,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = step_;
+			}
+			TABLE_ENTRY_PTR one = find_entry('C',1,fucn_name,total_vars);
+			//check if vars and consts was intialized 
+			if(one==NULL){
+				one = create_new('C',1,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++)));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = one;
+			}
+
+
+			char command[40];
+			//generate kwork asm code //
+			//			asign variable its default value -1 ////
+			//			as we pre increment 				////
+			sprintf(command,"LOAD %ld",DEF_VALUE->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+			sprintf(command,"SUB %ld",one->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+			sprintf(command,"STORE %ld",VAR1->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+
+			// 				pre increment the value 			////
+			//				we have to jump here 				////
+			push(total_comands,&for_stack);
+			sprintf(command,"LOAD %ld",VAR1->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+			sprintf(command,"ADD %ld",step_->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+			sprintf(command,"STORE %ld",VAR1->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+
+			//                                           ////
+
+			if(!strcmp(comp,"<=")){
+				//			subtract value of compare value form Variable in equality			////
+				sprintf(command,"LOAD %ld",CMP_VALUE->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"SUB %ld",VAR2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//																				////
+
+				//blind jump forward if result is negative meaning that var > compare_vale which reuslts in the end of the cycle
+				sprintf(command,"BRANCHZNEG ");
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				push(total_comands,&stack); //push adress of bracnh command in sybol table so whe can reslove jump adress later
+				UPDATE_IF_BLOCKS(9)
+
+
+
+			}
+			else if(!strcmp(comp,">=")){
+				//			subtract varaiable from value in eauality			////
+				sprintf(command,"LOAD %ld",VAR2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"SUB %ld",CMP_VALUE->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//																				////
+
+				//blind jump forward if result is negative meaning that var > compare_vale which reuslts in the end of the cycle
+				sprintf(command,"BRANCHZNEG ");
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				push(total_comands,&stack); //push adress of bracnh command in sybol table so whe can reslove jump adress later
+				UPDATE_IF_BLOCKS(9)
+
+
+			}
+			else if(!strcmp(comp,"==")){
+				//			subtract varaiable from value in eauality			////
+				sprintf(command,"LOAD %ld",VAR2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"SUB %ld",CMP_VALUE->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//																				////
+
+				//			jump over next instuction if result of subtraction is 0 			////
+
+				sprintf(command,"BRANCHZERO %d",function_pointer+local_comands+2);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//     																			////
+
+				//			jump to end of loop otherwise				////
+				sprintf(command,"BRANCH ");
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				push(total_comands,&stack);
+				UPDATE_IF_BLOCKS(10)
+
+			}
+			else if(!strcmp(comp,"<")){
+				//			subtract value of compare value form Variable in equality			////
+				sprintf(command,"LOAD %ld",VAR2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"SUB %ld",CMP_VALUE->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//																				////
+
+				//if result is negative meaning that variable is less than compare value jump over next command//
+				sprintf(command,"BRANCNEG %d",function_pointer+local_comands+2);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//			jump to end of loop otherwise				////
+				sprintf(command,"BRANCH ");
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				push(total_comands,&stack);
+				UPDATE_IF_BLOCKS(10)
+
+
+
+			}
+			else if(!strcmp(comp,">")){
+				//			subtract value of compare value form Variable in equality			////
+				sprintf(command,"LOAD %ld",CMP_VALUE->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"SUB %ld",VAR2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//																				////
+
+				//if result is negative meaning that variable is less than compare value jump over next command//
+				sprintf(command,"BRANCNEG %d",function_pointer+local_comands+2);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//			jump to end of loop otherwise				////
+				sprintf(command,"BRANCH ");
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				push(total_comands,&stack);
+				UPDATE_IF_BLOCKS(10)
+
+								
+			}
+			flags[total_comands] = FOR;
+
+
+
+
+			//it causes sigabart
+			// free(var_nd_defV_saved);
+			// free(comparator_saved);
+			// free(step);
 		}
 
 
@@ -358,6 +627,7 @@ void first_compile(FILE *file){
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
 		}
+		line=saved;
 
 
 
@@ -419,12 +689,12 @@ void second_compile(){
 
 }
 
-TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int line_n,int function_pointer){
+TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int total_vars){
 	switch(type){
 		case'C':
-		for(int x=1;x<=line_n;x++){ //todo search from the top of array as there vars are stored
+		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
 			int a =MAX_CODE_SIZE - x;
-			if(symbolTable[a]!=NULL && symbolTable[a]->const_value==data &&(!strcmp(symbolTable[a]->fucn_name,fucn_name))){
+			if(symbolTable[a]!=NULL && symbolTable[a]->const_value==data){
 				return symbolTable[a]; // found
 				break;
 			}
@@ -432,7 +702,7 @@ TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int line_n,int fun
 		break;
 
 		case'V':
-		for(int x=1;x<=line_n;x++){ //todo search from the top of array as there vars are stored
+		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
 			int a = MAX_CODE_SIZE - x;
 			if(symbolTable[a]!=NULL && symbolTable[a]->symbol==data &&(!strcmp(symbolTable[a]->fucn_name,fucn_name))){
 				return symbolTable[a]; // found
@@ -440,14 +710,14 @@ TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int line_n,int fun
 		}
 		break;
 	}
-	//if not found create new
-	TABLE_ENTRY_PTR new = malloc(sizeof (TABLE_ENTRY));
-	new->location=function_pointer+MAX_STATIC_SIZE-line_n;
-	new->type=type;
-	new->const_value=data;
-	new->symbol=data;
-	strcpy(new->fucn_name,fucn_name);
-	return new;
+	// //if not found create new
+	// TABLE_ENTRY_PTR new = malloc(sizeof (TABLE_ENTRY));
+	// new->location=function_pointer+MAX_STATIC_SIZE-line_n;
+	// new->type=type;
+	// new->const_value=data;
+	// new->symbol=data;
+	// strcpy(new->fucn_name,fucn_name);
+	return NULL;
 
 }
 TABLE_ENTRY_PTR create_new(char type,int data,char *fucn_name,long location){
