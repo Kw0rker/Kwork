@@ -26,25 +26,25 @@ use in main function only ! as it depends on local variables
 				if(isdigit((int)f[0])){\
 					v1 = find_entry('C',atoi(f),fucn_name,total_vars);\
 					if(v1==NULL){\
-					v1= create_new('C',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					v1= create_new('C',atoi(f),fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
 					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v1;}\
 				}\
 				else{\
 					v1 = find_entry('V',f[0],fucn_name,total_vars);\
 					if(v1==NULL){\
-					v1 = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					v1 = create_new('V',f[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
 					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v1;}\
 				}\
 				if(isdigit((int)s[0])){\
 					v2 = find_entry('C',atoi(s),fucn_name,total_vars);\
 					if(v2==NULL){\
-					v2 = create_new('C',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					v2 = create_new('C',atoi(s),fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
 					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v2;}\
 				}\
 				else {\
 					v2 = find_entry('V',s[0],fucn_name,total_vars);\
 					if(v2==NULL){\
-					v2 = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
+					v2 = create_new('V',s[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
 					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v2;}\
 				}\
 			
@@ -275,7 +275,7 @@ void first_compile(FILE *file){
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 
-				sprintf(command,"BRANCHZNEG %d",function_pointer+local_comands+3); //jump over next branch command
+				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+3); //jump over next branch command
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 
@@ -303,7 +303,7 @@ void first_compile(FILE *file){
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 
-				sprintf(command,"BRANCHZNEG %d",function_pointer+local_comands+3); //jump over next branch command
+				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+3); //jump over next branch command
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 
@@ -326,7 +326,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//branzero and branch neg jump over branch statement 
 				
-				sprintf(command,"BRANCHZNEG %d",function_pointer+local_comands+2); //jump over next branch command
+				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2); //jump over next branch command
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 
@@ -349,7 +349,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//branzero and branch neg jump over branch statement 
 				
-				sprintf(command,"BRANCHZNEG %d",function_pointer+local_comands+2); //jump over next branch command
+				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2); //jump over next branch command
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 
@@ -439,13 +439,25 @@ void first_compile(FILE *file){
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR2;
 			}
 			int compareValue = atoi(comparator);
-			TABLE_ENTRY_PTR CMP_VALUE = find_entry(isdigit((int)comparator[0])?'C':'V',compareValue,fucn_name,total_vars);
+			TABLE_ENTRY_PTR CMP_VALUE;
+			if(isdigit((int)comparator[0])){
+				CMP_VALUE = find_entry('C',compareValue,fucn_name,total_vars);
+			}
+			else{
+				CMP_VALUE = find_entry('V',comparator[0],fucn_name,total_vars);
+			}
 			if(CMP_VALUE==NULL){
 				CMP_VALUE = create_new(isdigit((int)comparator[0])?'C':'V',compareValue,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = CMP_VALUE;
 			}
 			int defValue = atoi(var_nd_defV);
-			TABLE_ENTRY_PTR DEF_VALUE = find_entry(isdigit((int)var_nd_defV[0])?'C':'V',defValue,fucn_name,total_vars);
+			TABLE_ENTRY_PTR DEF_VALUE;
+			if(isdigit((int)var_nd_defV[0])){
+				DEF_VALUE =  find_entry('C',defValue,fucn_name,total_vars);
+			}
+			else{
+				DEF_VALUE =  find_entry('V',var_nd_defV[0],fucn_name,total_vars);
+			}
 			if(DEF_VALUE==NULL){
 				DEF_VALUE = create_new(isdigit((int)var_nd_defV[0])?'C':'V',defValue,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = DEF_VALUE;
@@ -504,7 +516,7 @@ void first_compile(FILE *file){
 				//																				////
 
 				//blind jump forward if result is negative meaning that var > compare_vale which reuslts in the end of the cycle
-				sprintf(command,"BRANCHZNEG ");
+				sprintf(command,"BRANCHNEG ");
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 				push(total_comands,&stack); //push adress of bracnh command in sybol table so whe can reslove jump adress later
@@ -525,7 +537,7 @@ void first_compile(FILE *file){
 				//																				////
 
 				//blind jump forward if result is negative meaning that var > compare_vale which reuslts in the end of the cycle
-				sprintf(command,"BRANCHZNEG ");
+				sprintf(command,"BRANCHNEG ");
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 				push(total_comands,&stack); //push adress of bracnh command in sybol table so whe can reslove jump adress later
