@@ -12,6 +12,9 @@
 #ifndef DEFNAME
 #define DEFNAME "out.kw"
 #endif
+#ifndef ASEM_NAME
+#define ASEM_NAME "input.kwac"
+#endif
 #define MEM_SIZE 10000
 #ifndef MAX_THREAD_POOL
 #define MAX_THREAD_POOL 1000

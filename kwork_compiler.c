@@ -571,7 +571,7 @@ void first_compile(FILE *file){
 				//																				////
 
 				//if result is negative meaning that variable is less than compare value jump over next command//
-				sprintf(command,"BRANCNEG %d",function_pointer+local_comands+2);
+				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 				//			jump to end of loop otherwise				////
@@ -596,7 +596,7 @@ void first_compile(FILE *file){
 				//																				////
 
 				//if result is negative meaning that variable is less than compare value jump over next command//
-				sprintf(command,"BRANCNEG %d",function_pointer+local_comands+2);
+				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 				//			jump to end of loop otherwise				////
@@ -618,7 +618,48 @@ void first_compile(FILE *file){
 			// free(comparator_saved);
 			// free(step);
 		}
-
+		else if(!strcmp(operator,"putc")){
+			TABLE_ENTRY_PTR VAR; 
+			if(isdigit((int)operand[0])){
+				VAR = find_entry('C',atoi(operand),fucn_name,total_vars);
+				if(VAR==NULL){
+					VAR = create_new('C',atoi(operand),fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+					symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR;
+				}
+			}
+			else{
+			 	VAR = find_entry('V',operand[0],fucn_name,total_vars);
+				if(VAR==NULL){
+					VAR = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+					symbolTable[MAX_CODE_SIZE-(++total_vars)]= VAR;
+				}
+			}
+			char temp[40];
+			sprintf(temp,"PRINT %ld",VAR->location);
+			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+			UPDATE_IF_BLOCKS(1);
+		}
+		else if(!strcmp(operator,"put")){
+			TABLE_ENTRY_PTR VAR = NULL; 
+			if(isdigit((int)operand[0])){
+			VAR = find_entry('C',atoi(operand),fucn_name,total_vars);
+				if(VAR==NULL){
+					VAR = create_new('C',atoi(operand),fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+					symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR;
+				}
+			}
+			else{
+			VAR = find_entry('V',operand[0],fucn_name,total_vars);
+				if(VAR==NULL){
+					VAR =  create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+					symbolTable[MAX_CODE_SIZE-(++total_vars)]= VAR;
+				}
+			}
+			char temp[40];
+			sprintf(temp,"WRITE %ld",VAR->location);
+			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+			UPDATE_IF_BLOCKS(1);
+		}
 
 
 
@@ -650,7 +691,7 @@ void second_compile(){
 	//print to file
 
 	FILE *file = NULL;
-	file = fopen(DEFNAME,"w");
+	file = fopen(ASEM_NAME,"w");
 	if(file==NULL){
 		perror("could not create kworker assembly file\n");
 	}

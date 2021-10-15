@@ -139,7 +139,7 @@ int main(){
 			  	printf("%d",(int)memory[operand]);
 			       break;
 			case PRINT:
-				printf("%c",(char) memory[(int)memory[operand]]);  // from pointer to adress and resolving pointer
+				printf("%c",(char) memory[operand]);  // from pointer to adress and resolving pointer
 			case LOAD:
 				acc=memory[operand];
 		 		break;
@@ -275,11 +275,13 @@ int main(){
 		}
 	}
 	//memory dump here
+	printf("-------------MEMORY DUMP---------------------\n");
 	printf("value in acc is %d\n",(int)acc);
 	printf("last instruction called is %d\n",instruction_counter);
 	printf("last operation code is %d\n",operation_code);
 	printf("last operand is %d\n",operand);
-	dump_memory(memory);
+	printf("---------------------------------------------\n");
+	//dump_memory(memory);
 }
 void dump_memory(long *arr){
 	printf("\r");
