@@ -411,17 +411,18 @@ void first_compile(FILE *file){
 				switch(flags[adress+1]){
 					case IF:
 					char t[40];
-					ELSE = 1; //set to one to show that we are outside if else block
 					sprintf(t,"BRANCH "); // jump to the end of if else structutres
 					symbolTable[total_comands++] = create_new('L',0,t,function_pointer+(local_comands++));
 					memset(t,0,sizeof(t));
 					push(total_comands,&if_stack); // push exit of if statemnt to diferent stacks
+					UPDATE_IF_BLOCKS(1)
+					ELSE = 1; //set to one to show that we are outside if else block
 
 					break;
 
 					case FOR:
 					// add jump to post incremnt
-					adress = pop(&stack);
+					adress = pop(&stack) -1;
 					int adress2 = pop(&for_stack);
 					char command[30];
 					sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
