@@ -51,10 +51,10 @@ use in main function only ! as it depends on local variables
 //used after each set of kwork assembly coomands to update any potential jumps 
 //coused by if or loop sturctures
 //@offset is number of instruction entered for each individual command
-#define UPDATE_IF_BLOCKS(offset)if(returns[total_comands-offset]!=NULL){\
-								TABLE_ENTRY_PTR assm = symbolTable[total_comands-offset];\
+#define UPDATE_IF_BLOCKS(offset)TABLE_ENTRY_PTR assm = symbolTable[total_comands-offset];\
 				 				char new_addres[30];\
 								sprintf(new_addres,"%ld",assm->location);\
+								if(returns[total_comands-offset]!=NULL){\
 								assert(assm!=NULL);\
 									while(!isEmpty(returns[total_comands-offset])){\
 										int adress = pop(&(returns[total_comands-offset]));\
@@ -62,19 +62,11 @@ use in main function only ! as it depends on local variables
 										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
-								if(!isEmpty(if_stack)&&strcmp(operator,"else") && strcmp(operator,"else\r\n") && ELSE){\
-									int adr2 = symbolTable[total_comands-offset]->location;\
-									char jmp_addres[40];\
-									sprintf(jmp_addres,"%d",adr2);\
-									if(!isEmpty(stack)){\
-										int adr1 = pop(&stack);\
-										char *new_addres = strcat(symbolTable[adr1-1]->fucn_name,jmp_addres);\
-										strcpy(symbolTable[adr1-1]->fucn_name,new_addres);\
-									}\
-									while(!isEmpty(if_stack)){\
-										int adr1 = pop(&if_stack);\
-										char *new_addres = strcat(symbolTable[adr1-1]->fucn_name,jmp_addres);\
-										strcpy(symbolTable[adr1-1]->fucn_name,new_addres);\
+								if(strcmp(operator,"else") || strcmp(operator,"else\r\n")){\
+									while(!isEmpty(if_out_stack)){\
+										int adress = pop(&if_out_stack)-1;\
+										char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
+										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
 /*
@@ -141,6 +133,8 @@ void first_compile(FILE *file){
 	STACKPTR stack = new_stack();
 	STACKPTR for_stack = new_stack();
 	STACKPTR if_stack = new_stack();
+	STACKPTR return_stack = new_stack();
+	STACKPTR if_out_stack = new_stack();
 	char *line = malloc(100);
 	STACKPTR returns[MAX_CODE_SIZE];
 	int local_created=0;
@@ -234,11 +228,11 @@ void first_compile(FILE *file){
 		UPDATE_IF_BLOCKS(1)
 		memset(KWAC_COMMAND,0,sizeof(KWAC_COMMAND));
 		}
-		else if(!strcmp(operator,"if") || (!strcmp(operator,"else") && operand[0]=='i' && operand[1]=='f')){
+	else if(!strcmp(operator,"if") || (!strcmp(operator,"else") && operand[0]=='i' && operand[1]=='f')){
 			//only if we have else if consturction
 			if(!strcmp(operator,"else")){
 				operand = strtok(NULL," ");
-				int adress = pop(&stack) -1;
+				int adress = pop(&if_stack) -1;
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 					push(adress,&(returns[total_comands]));
 
@@ -247,8 +241,6 @@ void first_compile(FILE *file){
 			TABLE_ENTRY_PTR v1;
 			TABLE_ENTRY_PTR v2;
 			char command[30];
-			ELSE=0; //to show that weare inside if else block so return jmp doesnt jump back inside 
-			//todo change if blocs as they dont support const bigger than 9 
 			char comparator[3];
 			int x=0;
 			int y =0;
@@ -283,7 +275,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+3] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&stack);
+				push(total_comands,&if_stack);
 				UPDATE_IF_BLOCKS(4)
 
 
@@ -311,7 +303,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+4] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&stack);
+				push(total_comands,&if_stack);
 				UPDATE_IF_BLOCKS(5)
 				
 
@@ -340,7 +332,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+4] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&stack);
+				push(total_comands,&if_stack);
 				UPDATE_IF_BLOCKS(5)
 			}
 
@@ -363,7 +355,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+local_comands+2] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&stack); 
+				push(total_comands,&if_stack); 
 				UPDATE_IF_BLOCKS(4)  
 
 			}
@@ -386,7 +378,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+3] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&stack); 
+				push(total_comands,&if_stack); 
 				UPDATE_IF_BLOCKS(4)   
 
 			}
@@ -396,8 +388,8 @@ void first_compile(FILE *file){
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
 		}
 		else if(!strcmp(operator,"else\r\n")){
-			int adress = pop(&stack) -1;
-			ELSE = 0;
+			//todo
+			int adress = pop(&if_stack) -1;
 			if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 			push(adress,&(returns[total_comands]));
 
@@ -405,43 +397,73 @@ void first_compile(FILE *file){
 		else if(line[0]=='}'){
 			printf("bracket found\n");
 			//we found clossing bracket now pop 
-			if(!isEmpty(stack)){
-				int adress = peek(&stack)-1;
 
-				switch(flags[adress+1]){
-					case IF:
-					char t[40];
-					sprintf(t,"BRANCH "); // jump to the end of if else structutres
-					symbolTable[total_comands++] = create_new('L',0,t,function_pointer+(local_comands++));
-					memset(t,0,sizeof(t));
-					push(total_comands,&if_stack); // push exit of if statemnt to diferent stacks
-					UPDATE_IF_BLOCKS(1)
-					ELSE = 1; //set to one to show that we are outside if else block
+			if(!isEmpty(if_stack)){
+				if(!isEmpty(return_stack)){
+					char temp[40];
+					int exit_address = symbolTable[peek(&return_stack) -1]->location;
+					sprintf(temp,"BRANCH %d",exit_address); //todo push adress of loop start to return stack
+					TABLE_ENTRY_PTR jmp_out = create_new('L',0,temp,function_pointer+(local_comands++)); //jmp command that jumps out of else if blocks 
+																										  	 //is executed after all the commands inside if block
+																										  	//have been executed
+																										   // NOTE: no commands must jmp to it! 
+					symbolTable[total_comands++] = jmp_out;
+					memset(temp,0,sizeof(temp));
+					//UPDATE_IF_BLOCKS(1)
+					sprintf(temp,"%d",exit_address);
+					// todo only if and if there is no else if blocks ahead
 
-					break;
+					if(!ELSE)while(!isEmpty(if_stack)){
+						int adress = pop(&if_stack)-1;
+						char *updated_cm = strcat(symbolTable[adress]->fucn_name,temp);
+						strcpy(symbolTable[adress]->fucn_name,updated_cm);
+					}
 
-					case FOR:
-					// add jump to post incremnt
-					adress = pop(&stack) -1;
-					int adress2 = pop(&for_stack);
-					char command[30];
-					sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
-					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-					memset(command,0,sizeof(command));
-					UPDATE_IF_BLOCKS(1)
+
+
+
+				}
+				else{
+					TABLE_ENTRY_PTR jmp_out = create_new('L',0,"BRACNH ",function_pointer+(local_comands++)); //jmp command that jumps out of else if blocks 
+																										  //is executed after all the commands inside if block
+																										  //have been executed
+																										  // NOTE: no commands must jmp to it! 
+					symbolTable[total_comands++] = jmp_out;
+					push(total_comands,&if_out_stack); //push to exit stack which is poped once there's no more else 																						   
+
+				}
+				// int adress = pop(&if_stack)-1; //get adress of last jmp command that's jumped if condition is false
+				// TABLE_ENTRY_PTR next_if = create_new('L',0,"BRACNH ",function_pointer+(local_comands++));
+				// symbolTable[total_comands++] = next_if;
+				// char jmp_address[40];
+				// sprintf(jmp_address,"%d",next_if->location);
+				// char *updated_jmp = strcat(symbolTable[adress]->fucn_name,jmp_address);
+				// strcpy(symbolTable[adress]->fucn_name,updated_jmp);
+				// push(total_comands,&if_stack);
+
+
+			}
+
+			  if(!ELSE) {
+				// add jump to post incremnt
+				int adress = pop(&stack) -1;
+				int adress2 = pop(&return_stack) -1;
+				char command[30];
+				sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				UPDATE_IF_BLOCKS(1)
 
 					//apped brancha adress
-					if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
-					push(adress,&(returns[total_comands]));
-					break;
+				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
+				push(adress,&(returns[total_comands]));
 				}
-				
-			}
-			else {
-				perror("extra bracket found");
-				ELSE=1;
-				//line_n--;
-			}
+
+	
+			// else {
+			// 	perror("extra bracket found");
+			// 	//line_n--;
+			// }
 		}
 		//check if line starts as for loop
 		else if (!strcmp(operator,"for")){
@@ -533,10 +555,11 @@ void first_compile(FILE *file){
 
 			// 				pre increment the value 			////
 			//				we have to jump here 				////
-			push(total_comands,&for_stack);
 			sprintf(command,"LOAD %ld",VAR1->location);
 			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 			memset(command,0,sizeof(command));
+			push(total_comands,&for_stack);
+			push(total_comands,&return_stack);
 			sprintf(command,"ADD %ld",step_->location);
 			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 			memset(command,0,sizeof(command));
@@ -722,10 +745,8 @@ void first_compile(FILE *file){
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
 		}
+		ELSE=line[0]=='}'?0:1;
 		line=saved;
-
-
-
 	}
 	fclose(file);
 	// free(operator);
