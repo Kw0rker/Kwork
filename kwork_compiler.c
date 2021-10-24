@@ -62,7 +62,7 @@ use in main function only ! as it depends on local variables
 										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
-								if( (strcmp(operator,"if") && strcmp(operator,"else") && strcmp(operator,"else\r\n") && !ELSE)){\
+								if(  strcmp(operator,"else") && strcmp(operator,"else\r\n") && !ELSE){\
 									while(!isEmpty(if_stack)){\
 										int adress = pop(&if_stack)-1;\
 										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
@@ -144,6 +144,7 @@ void first_compile(FILE *file){
 	STACKPTR return_stack = new_stack();
 	STACKPTR if_out_stack = new_stack();
 	STACKPTR stuck = new_stack();
+	STACKPTR elif = new_stack();
 	char *line = malloc(100);
 	STACKPTR returns[MAX_CODE_SIZE];
 	int local_created=0;
@@ -242,6 +243,7 @@ void first_compile(FILE *file){
 		}
 	else if(!strcmp(operator,"if") || (!strcmp(operator,"else") && operand[0]=='i' && operand[1]=='f')){
 			//only if we have else if consturction
+			if(isEmpty(elif))push(1,&elif);
 			if(!strcmp(operator,"else")){
 				//inELSE=1;
 				operand = strtok(NULL," ");
@@ -292,8 +294,15 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+3] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&if_stack);
-				UPDATE_IF_BLOCKS(4)
+				if(pop(&elif)){
+					UPDATE_IF_BLOCKS(4)
+					push(total_comands,&if_stack);
+				}
+				else{
+					push(total_comands,&if_stack);
+					UPDATE_IF_BLOCKS(4)
+				}
+			
 
 
 			}
@@ -320,8 +329,14 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+4] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&if_stack);
-				UPDATE_IF_BLOCKS(5)
+				if(pop(&elif)){
+					UPDATE_IF_BLOCKS(5)
+					push(total_comands,&if_stack);
+				}
+				else{
+					push(total_comands,&if_stack);
+					UPDATE_IF_BLOCKS(5)
+				}
 				
 
 			}
@@ -349,8 +364,14 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+4] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&if_stack);
-				UPDATE_IF_BLOCKS(5)
+				if(pop(&elif)){
+					UPDATE_IF_BLOCKS(5)
+					push(total_comands,&if_stack);
+				}
+				else{
+					push(total_comands,&if_stack);
+					UPDATE_IF_BLOCKS(5)
+				}
 			}
 
 			else if(!strcmp(comparator,">")){
@@ -372,8 +393,14 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+local_comands+2] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&if_stack); 
-				UPDATE_IF_BLOCKS(4)  
+				if(pop(&elif)){
+					UPDATE_IF_BLOCKS(4)
+					push(total_comands,&if_stack);
+				}
+				else{
+					push(total_comands,&if_stack);
+					UPDATE_IF_BLOCKS(4)
+				}
 
 			}
 			else if(!strcmp(comparator,"<")){
@@ -395,12 +422,23 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+3] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				push(total_comands,&if_stack); 
-				UPDATE_IF_BLOCKS(4)   
-
+				if(pop(&elif)){
+					UPDATE_IF_BLOCKS(4)
+					push(total_comands,&if_stack);
+				}
+				else{
+					push(total_comands,&if_stack);
+					UPDATE_IF_BLOCKS(4)
+				}
 			}
 			symbolTable[MAX_CODE_SIZE - (++total_vars)] = v1;
 			symbolTable[MAX_CODE_SIZE - (++total_vars)] = v2;
+			if(!strcmp(operator,"else")){
+				push(0,&elif);
+			}
+			else{
+				push(1,&elif);
+			}
 			//flags[function_pointer+local_comands+2] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
 		}
