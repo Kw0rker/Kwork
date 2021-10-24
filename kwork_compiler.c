@@ -62,13 +62,21 @@ use in main function only ! as it depends on local variables
 										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
-								if(strcmp(operator,"else") || strcmp(operator,"else\r\n")){\
-									while(!isEmpty(if_out_stack)){\
-										int adress = pop(&if_out_stack)-1;\
-										char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
-										strcpy(symbolTable[adress]->fucn_name,new_command);\
+								if( (strcmp(operator,"if") && strcmp(operator,"else") && strcmp(operator,"else\r\n") && !ELSE)){\
+									while(!isEmpty(if_stack)){\
+										int adress = pop(&if_stack)-1;\
+										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
+										strcpy(symbolTable[adress]->fucn_name,update);\
+									}\
+									if(peek(&stuck)){\
+										while(!isEmpty(if_out_stack)){\
+											int adress = pop(&if_out_stack) -1;\
+											char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
+											strcpy(symbolTable[adress]->fucn_name,new_command);\
+										}\
 									}\
 								}\
+
 /*
 @const value used for constants only
 @symbol is ansi representation of var name (var name is one char long as defined in standart)
@@ -135,21 +143,25 @@ void first_compile(FILE *file){
 	STACKPTR if_stack = new_stack();
 	STACKPTR return_stack = new_stack();
 	STACKPTR if_out_stack = new_stack();
+	STACKPTR stuck = new_stack();
 	char *line = malloc(100);
 	STACKPTR returns[MAX_CODE_SIZE];
 	int local_created=0;
 	int function_pointer;
 	int line_n=-1;
-	int ELSE = 1;
+	int R = 0;
+	int ELSE = 0; //shows if were insdie if else block
 	int local_comands =0 ;//number of commands in function and i have no fucking clue why it has to be  -8 lmao im fucking retard but it works this way
 	int total_vars=0; //total ammount of vars declareted
 	int total_comands = 0;
 	char *operator = malloc(20);
 	char *operand = malloc(20);
 	char *fucn_name = malloc(50);
+	char last_line[100];
 	fucn_name = "main"; //main by defual
 	while(!feof(file))
 	{
+	R=0;
 	fgets(line,100,file);
 	char *saved = line;
 	//fscanf(file,"%100s\n",line);
@@ -231,7 +243,12 @@ void first_compile(FILE *file){
 	else if(!strcmp(operator,"if") || (!strcmp(operator,"else") && operand[0]=='i' && operand[1]=='f')){
 			//only if we have else if consturction
 			if(!strcmp(operator,"else")){
+				//inELSE=1;
 				operand = strtok(NULL," ");
+				if(isEmpty(if_stack)){
+					fprintf(stderr,"else statment not followed by previus if block on line %d\n",line_n+1);
+					abort();
+				}
 				int adress = pop(&if_stack) -1;
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 					push(adress,&(returns[total_comands]));
@@ -394,76 +411,43 @@ void first_compile(FILE *file){
 			push(adress,&(returns[total_comands]));
 
 		}
+		else if(line[0]=='{'){
+			if(!strcmp(last_line,"if") || !strcmp(last_line,"else") || !strcmp(last_line,"else\r\n"))push(IF,&stuck);
+			else push(FOR,&stuck);
+			ELSE = 1; //show that we intered if block
+		}
 		else if(line[0]=='}'){
-			printf("bracket found\n");
-			//we found clossing bracket now pop 
-
-			if(!isEmpty(if_stack)){
-				if(!isEmpty(return_stack)){
-					char temp[40];
-					int exit_address = symbolTable[peek(&return_stack) -1]->location;
-					sprintf(temp,"BRANCH %d",exit_address); //todo push adress of loop start to return stack
-					TABLE_ENTRY_PTR jmp_out = create_new('L',0,temp,function_pointer+(local_comands++)); //jmp command that jumps out of else if blocks 
-																										  	 //is executed after all the commands inside if block
-																										  	//have been executed
-																										   // NOTE: no commands must jmp to it! 
-					symbolTable[total_comands++] = jmp_out;
-					memset(temp,0,sizeof(temp));
-					//UPDATE_IF_BLOCKS(1)
-					sprintf(temp,"%d",exit_address);
-					// todo only if and if there is no else if blocks ahead
-
-					if(!ELSE)while(!isEmpty(if_stack)){
-						int adress = pop(&if_stack)-1;
-						char *updated_cm = strcat(symbolTable[adress]->fucn_name,temp);
-						strcpy(symbolTable[adress]->fucn_name,updated_cm);
-					}
-
-
-
-
+				int if_or_for=0;
+				if(!isEmpty(stuck)){
+					if_or_for = peek(&stuck);
 				}
 				else{
-					TABLE_ENTRY_PTR jmp_out = create_new('L',0,"BRACNH ",function_pointer+(local_comands++)); //jmp command that jumps out of else if blocks 
-																										  //is executed after all the commands inside if block
-																										  //have been executed
-																										  // NOTE: no commands must jmp to it! 
-					symbolTable[total_comands++] = jmp_out;
-					push(total_comands,&if_out_stack); //push to exit stack which is poped once there's no more else 																						   
-
+					perror("Extra bracket found\n");
 				}
-				// int adress = pop(&if_stack)-1; //get adress of last jmp command that's jumped if condition is false
-				// TABLE_ENTRY_PTR next_if = create_new('L',0,"BRACNH ",function_pointer+(local_comands++));
-				// symbolTable[total_comands++] = next_if;
-				// char jmp_address[40];
-				// sprintf(jmp_address,"%d",next_if->location);
-				// char *updated_jmp = strcat(symbolTable[adress]->fucn_name,jmp_address);
-				// strcpy(symbolTable[adress]->fucn_name,updated_jmp);
-				// push(total_comands,&if_stack);
-
-
-			}
-
-			  if(!ELSE) {
-				// add jump to post incremnt
-				int adress = pop(&stack) -1;
-				int adress2 = pop(&return_stack) -1;
+				if(!isEmpty(if_stack) && flags[peek(&if_stack)]==IF){
+						symbolTable[total_comands++] = create_new('L',0,"BRANCH ",function_pointer+(local_comands++));
+						push(total_comands,&if_out_stack);
+						//UPDATE_IF_BLOCKS(1)
+				}
+				//to do add last check if its loop closing bracket
+				if(!isEmpty(stack) && !isEmpty(return_stack) &&if_or_for){
+				R=1;
+				int adress = pop(&stack) -1; //exit of loop
+				int adress2 = pop(&return_stack) -1; //begining of loop
 				char command[30];
 				sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
 				UPDATE_IF_BLOCKS(1)
-
+				memset(command,0,sizeof(command));
 					//apped brancha adress
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 				push(adress,&(returns[total_comands]));
-				}
-
+			}
+			if(!isEmpty(stuck)){
+					pop(&stuck);
+			}
+			ELSE=0;
 	
-			// else {
-			// 	perror("extra bracket found");
-			// 	//line_n--;
-			// }
 		}
 		//check if line starts as for loop
 		else if (!strcmp(operator,"for")){
@@ -745,8 +729,8 @@ void first_compile(FILE *file){
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
 		}
-		ELSE=line[0]=='}'?0:1;
 		line=saved;
+		strcpy(last_line,operator);
 	}
 	fclose(file);
 	// free(operator);
