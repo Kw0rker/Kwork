@@ -62,15 +62,17 @@ use in main function only ! as it depends on local variables
 										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
-								if(  strcmp(operator,"else") && strcmp(operator,"else\r\n") && !ELSE){\
+								if(  strcmp(operator,"else")!=0 && strcmp(operator,"else\r\n")!=0 && !ELSE){\
 									while(!isEmpty(if_stack)){\
 										int adress = pop(&if_stack)-1;\
 										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
 										strcpy(symbolTable[adress]->fucn_name,update);\
 									}\
-									if(peek(&stuck)){\
+									if(peek(&stuck)==IF){\
 										while(!isEmpty(if_out_stack)){\
 											int adress = pop(&if_out_stack) -1;\
+											/*fucking kludge here*/ \
+											if(symbolTable[adress]->location==assm->location)sprintf(new_addres,"%ld",assm->location+1);\
 											char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
 											strcpy(symbolTable[adress]->fucn_name,new_command);\
 										}\
@@ -162,7 +164,6 @@ void first_compile(FILE *file){
 	fucn_name = "main"; //main by defual
 	while(!feof(file))
 	{
-	R=0;
 	fgets(line,100,file);
 	char *saved = line;
 	//fscanf(file,"%100s\n",line);
@@ -462,14 +463,16 @@ void first_compile(FILE *file){
 				else{
 					perror("Extra bracket found\n");
 				}
-				if(!isEmpty(if_stack) && flags[peek(&if_stack)]==IF){
+				//this line causes fucking behavior fix uit 
+				if(!isEmpty(if_stack) && flags[peek(&if_stack)]==IF && if_or_for==IF){
 						symbolTable[total_comands++] = create_new('L',0,"BRANCH ",function_pointer+(local_comands++));
 						push(total_comands,&if_out_stack);
-						//UPDATE_IF_BLOCKS(1)
+						UPDATE_IF_BLOCKS(1)
+						R=1;
 				}
 				//to do add last check if its loop closing bracket
 				if(!isEmpty(stack) && !isEmpty(return_stack) &&if_or_for){
-				R=1;
+
 				int adress = pop(&stack) -1; //exit of loop
 				int adress2 = pop(&return_stack) -1; //begining of loop
 				char command[30];
