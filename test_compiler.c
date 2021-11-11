@@ -56,12 +56,19 @@ int compare_files(char *f1,char* f2){
 		char line2[100];
 		while(!feof(file1) && !feof(file2)){
 			line_n++;
-			fgets(line1,100,file1);
-			fgets(line2,100,file2);
+			char t1[40];
+			fscanf(file1,"%s%s",line1,t1);
+			strcat(line1,t1);
+			fscanf(file2,"%s%s",line2,t1);
+			strcat(line2,t1);
 			if(cmp_command(line1,line2)){
 			fprintf(stderr,"| %-38s%-10s%08d\n",f1,"FAILED",line_n);
 			if(mode=='F')fprintf(stderr,"%s-----\n%s",line1,line2);
 			STATUS = FAILURE; //return failure even if one line is deferent
+			if(mode =='E'){
+				fprintf(stderr,"%s-----\n%s",line1,line2);
+				return STATUS;
+			}
 			}
 		}
 	fclose(file1);fclose(file2);
@@ -71,11 +78,8 @@ int compare_files(char *f1,char* f2){
 	return SUCSESS;
 }
 int cmp_command(char* line, char *line2){
-	char l1 [50];
-	char l2[50];
-	sscanf(line,"%s",l1);
-	sscanf(line2,"%s",l2);
-	return strcmp(l1,l2);
+	return strcmp(line,line2);
+	
 }
 int compile_and_wait(char *name){
 
