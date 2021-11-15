@@ -68,7 +68,7 @@ use in main function only ! as it depends on local variables
 										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
 										strcpy(symbolTable[adress]->fucn_name,update);\
 									}\
-									if(peek(&stuck)==IF){\
+									if(if_or_for==IF){\
 										while(!isEmpty(if_out_stack)){\
 											int adress = pop(&if_out_stack) -1;\
 											/*fucking kludge here*/ \
@@ -151,6 +151,7 @@ void first_compile(FILE *file){
 	STACKPTR returns[MAX_CODE_SIZE];
 	int local_created=0;
 	int function_pointer;
+	int if_or_for=0;
 	int line_n=-1;
 	int R = 0;
 	int ELSE = 0; //shows if were insdie if else block
@@ -456,7 +457,6 @@ void first_compile(FILE *file){
 			ELSE = 1; //show that we intered if block
 		}
 		else if(line[0]=='}'){
-				int if_or_for=0;
 				if(!isEmpty(stuck)){
 					if_or_for = peek(&stuck);
 				}
@@ -472,7 +472,7 @@ void first_compile(FILE *file){
 				}
 				//to do add last check if its loop closing bracket
 				if(!isEmpty(stack) && !isEmpty(return_stack) &&if_or_for){
-
+				if(!isEmpty(if_out_stack)) if_or_for=IF;
 				int adress = pop(&stack) -1; //exit of loop
 				int adress2 = pop(&return_stack) -1; //begining of loop
 				char command[30];
@@ -484,6 +484,9 @@ void first_compile(FILE *file){
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 				push(adress,&(returns[total_comands]));
 			}
+			//poping here results in incorect if exit!
+			//but if we delete it it fucks of the entire loop
+			//tho i might fixed it
 			if(!isEmpty(stuck)){
 					pop(&stuck);
 			}

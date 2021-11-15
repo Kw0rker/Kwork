@@ -66,7 +66,7 @@ int compare_files(char *f1,char* f2){
 			if(mode=='F')fprintf(stderr,"%s-----\n%s",line1,line2);
 			STATUS = FAILURE; //return failure even if one line is deferent
 			if(mode =='E'){
-				fprintf(stderr,"%s-----\n%s",line1,line2);
+				fprintf(stderr,"%s-----\n%s\n",line1,line2);
 				return STATUS;
 			}
 			}
