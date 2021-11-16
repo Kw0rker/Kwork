@@ -24,7 +24,10 @@ int main(int argc, char const *argv[])
 	return 
 	(
 	//write tests	
-	TEST(if_inside_loop) + TEST(nested_if) + TEST (loop_inside_if)
+	TEST(if_inside_loop) +
+	TEST(nested_if) +
+	TEST (loop_inside_if) +
+	TEST(if_wall)
 	);
 }
 int compare_files(char *f1,char* f2){

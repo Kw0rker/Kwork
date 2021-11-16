@@ -1,0 +1,10 @@
+function main
+if x==1
+{
+	put x
+}
+if x==2
+{
+	put x
+}
+end

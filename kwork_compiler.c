@@ -62,14 +62,14 @@ use in main function only ! as it depends on local variables
 										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
-								if(  strcmp(operator,"else")!=0 && strcmp(operator,"else\r\n")!=0 && !ELSE){\
-									while(!isEmpty(if_stack)){\
+								if(  strcmp(operator,"else")!=0 && strcmp(operator,"else\r\n")!=0 && !ELSE ){\
+									if(!isEmpty(if_stack)){\
 										int adress = pop(&if_stack)-1;\
 										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
 										strcpy(symbolTable[adress]->fucn_name,update);\
 									}\
 									if(if_or_for==IF){\
-										while(!isEmpty(if_out_stack)){\
+										if(!isEmpty(if_out_stack)){\
 											int adress = pop(&if_out_stack) -1;\
 											/*fucking kludge here*/ \
 											if(symbolTable[adress]->location==assm->location)sprintf(new_addres,"%ld",assm->location+1);\
@@ -77,6 +77,15 @@ use in main function only ! as it depends on local variables
 											strcpy(symbolTable[adress]->fucn_name,new_command);\
 										}\
 									}\
+								}\
+								if(strcmp(operator,"if")!=0 && strcmp(operator,"else")!=0  && !ELSE){\
+									while(!isEmpty(if_out_stack)){\
+											int adress = pop(&if_out_stack) -1;\
+											/*fucking kludge here*/ \
+											if(symbolTable[adress]->location==assm->location)sprintf(new_addres,"%ld",assm->location+1);\
+											char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
+											strcpy(symbolTable[adress]->fucn_name,new_command);\
+										}\
 								}\
 
 /*
