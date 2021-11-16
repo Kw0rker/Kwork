@@ -54,6 +54,7 @@ int main(int argc, char const *argv[])
 //translates kwork assembly code to kwork file 
 translate_code(FILE *inp,FILE *out){
 	char *command= malloc(50);
+	char *save =command;
 	int operand;
 	while(!feof(inp)){
 		fscanf(inp,"%s",command);
@@ -109,7 +110,7 @@ translate_code(FILE *inp,FILE *out){
 	
 
 	}
-	free(command);
+	free(save);
 }
 int getLine(char *buf,FILE *pt){
 	char c;
