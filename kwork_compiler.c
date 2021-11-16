@@ -62,6 +62,7 @@ use in main function only ! as it depends on local variables
 										strcpy(symbolTable[adress]->fucn_name,new_command);\
 									}\
 								}\
+
 								if(  strcmp(operator,"else")!=0 && strcmp(operator,"else\r\n")!=0 && !ELSE ){\
 									if(!isEmpty(if_stack)){\
 										int adress = pop(&if_stack)-1;\
@@ -151,11 +152,13 @@ void compile(FILE *file){
 void first_compile(FILE *file){
 	STACKPTR stack = new_stack();
 	STACKPTR for_stack = new_stack();
+
 	STACKPTR if_stack = new_stack();
 	STACKPTR return_stack = new_stack();
 	STACKPTR if_out_stack = new_stack();
 	STACKPTR stuck = new_stack();
 	STACKPTR elif = new_stack();
+
 	char *line = malloc(100);
 	STACKPTR returns[MAX_CODE_SIZE];
 	int local_created=0;
@@ -164,6 +167,7 @@ void first_compile(FILE *file){
 	int line_n=-1;
 	int R = 0;
 	int ELSE = 0; //shows if were insdie if else block
+
 	int local_comands =0 ;//number of commands in function and i have no fucking clue why it has to be  -8 lmao im fucking retard but it works this way
 	int total_vars=0; //total ammount of vars declareted
 	int total_comands = 0;
@@ -433,6 +437,7 @@ void first_compile(FILE *file){
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+3] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+
 				if(pop(&elif)){
 					UPDATE_IF_BLOCKS(4)
 					push(total_comands,&if_stack);
