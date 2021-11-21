@@ -2,8 +2,8 @@
 ## This page is the home for yet unfamous, but promising project **Kwork**
 >So what's all about?
 
-
 You may be woundering.
+
 This project is all you need to Develop, Deploy, and Run anything and everywhere !
 
 The project is consisted of 3 main parts:
@@ -27,4 +27,16 @@ Fully emulated operation system with simple file system and with console ui.
 Emulates hardware.
 # Kwork project contributors section
 
-
+## Kwork OS 
+- [ ] Hardware emulation
+  - [ ] Standart input device
+  - [ ] Standart output device
+  - [ ] Storage device
+  - [ ] Timer device
+  - [ ] signals
+- [ ] Kernel
+  - [ ] Memory managment
+  - [ ] File system
+  - [ ] Program execution
+  - [ ] Signals handling
+ - [ ] User space 
