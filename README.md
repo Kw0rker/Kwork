@@ -2,7 +2,7 @@
 ## This page is the home for yet unfamous, but promising project **Kwork**
 >So what's all abot?
 You may be woundering.
-This project is all you need to *** Develop, Deploy, and Run *** *anything and everywhere !
+This project is all you need to Develop, Deploy, and Run anything and everywhere !
 The project is consisted of 3 main parts:
 - ### Kwork Virtual CPU
   -Capable of runing generated Kwork Assembly code
