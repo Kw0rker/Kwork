@@ -275,7 +275,7 @@ int main(){
 		}
 	}
 	//memory dump here
-	printf("-------------MEMORY DUMP---------------------\n");
+	printf("\n-------------MEMORY DUMP---------------------\n");
 	printf("value in acc is %d\n",(int)acc);
 	printf("last instruction called is %d\n",instruction_counter);
 	printf("last operation code is %d\n",operation_code);

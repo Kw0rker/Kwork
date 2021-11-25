@@ -7,8 +7,11 @@
 #include <limits.h>
 #include <syscalls.h>
 #include <fast_math.h>
-//#include <utils.h>
+#include <utils.h>
+#ifndef DATA_STR_H
 #include <data_str.h>
+#define DATA_STR_H
+#endif
 #ifndef DEFNAME
 #define DEFNAME "out.kw"
 #endif

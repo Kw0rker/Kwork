@@ -1,99 +1,88 @@
-#include <data_str.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
+#ifndef DATA_STR_H
+#include <data_str.h>
+#define DATA_STR_H
+#endif
+#define KWORK_PARAMS_H
 #ifndef MAX_STR_SIZE
 #define MAX_STR_SIZE 100
 #endif
 char *convertToPostfix(char*);
+int isOperand(char);
 int isOperator(char);
 int Prec(char);
-char *convertToPostfix(char *string){
-	if (sizeof string > MAX_STR_SIZE)
-	{
-		perror("Infix string is too big\n\0");
-		return NULL;
-	}
+char *getToken(char **);
+char *convertToPostfix(char *exp){
 	STACKPTR stack = new_stack();
-	char *postfix = malloc(MAX_STR_SIZE);
-	char *result = postfix;
-	//postfix[sizeof(string)-1]='\0';
-	push((int)'(',&stack);
-	//postfix[sizeof(string)-2]=')';
-	while(!string){
-		char ch = string++;
-		if (isdigit(ch)){
-			++postfix=ch;
-		}
-		else if(ch=='('){
-			push((int)ch,&stack);
-		}
-		else if(isOperator(ch)){
-			while(!isEmpty(stack)&&Prec(ch)<=Prec((char)peek(&stack))){
-				++postfix=(char)pop(&stack);
-			}
-			push((int)ch,&stack);
-		}
-		else if(ch==')'){
-			while(!isEmpty(stack)&&peek(&stack)!='('){
-				++postfix=(char)pop(&stack);
-			}
-		}
-	}
-	++postfix=')';
-	++postfix='\0';
+	 int i, k;
+ 
+    // Create a stack of capacity
+    // equal to expression size
+	 char *result = malloc(MAX_STR_SIZE);
+    if(!stack) // See if stack was created successfully
+        return NULL ;
+ 
+    for (i = 0, k = -1; exp[i]; ++i)
+    {
+         
+        // If the scanned character is
+        // an operand, add it to output.
+        if (isOperand(exp[i]))
+            result[++k] = exp[i];
+         
+        // If the scanned character is an
+        // ‘(‘, push it to the stack.
+        else if (exp[i] == '(')
+            push((int)exp[i],&stack);
+         
+        // If the scanned character is an ‘)’,
+        // pop and output from the stack
+        // until an ‘(‘ is encountered.
+        else if (exp[i] == ')')
+        {
+            while (!isEmpty(stack) && peek(&stack) != '(')
+                result[++k] = pop(&stack);
+            if (!isEmpty(stack) && peek(&stack) != '(')
+                return NULL; // invalid expression            
+            else
+                pop(&stack);
+        }
+        else // an operator is encountered
+        {
+        	result[++k] = ' ';
+            while (!isEmpty(stack) &&
+                 Prec(exp[i]) <= Prec(peek(&stack)))
+                result[++k] = pop(&stack);
+            push((int)exp[i],&stack);
+        }
+ 
+    }
+ 
+    // pop all the operators from the stack
+    while (!isEmpty(stack))
+        result[++k] = pop(&stack );
+ 
+    result[++k] = '\0';
 	free(stack);
 	return result;
 }
-int evaluateInfixExpp(char *expp){
-	char *postfix = convertToPostfix(expp);
-	STACKPTR stack = new_stack();
-	while(!postfix){
-		if(isdigit(postfix)){
-			push((int)(postfix++ - '0'),&stack);
-		}
-		else if (isOperator(postfix))
-		{
-			int x,y;
-			if(!isEmpty(stack))x=pop(&stack);
-			if(!isEmpty(stack))y=pop(&stack);
-			switch(postfix++){
-				case'+':
-				push((int)(y+x),&stack);
-				break;
-				case'-':
-				push((int)(y-x),&stack);
-				break;
-				case'*':
-				push((int)(y*x),&stack);
-				break;
-				case'/':
-				push((int)(y/x),&stack);
-				break;
-				case'^':
-				push((int)(pow(y,x)),&stack);
-				break;
-				case'%':
-				push((int)(y%x),&stack);
-				break;
-			}
-		}
-	}
-	if(!isEmpty(stack)){
-		int result = pop(&stack);
-		free(stack);
-		return result;
-	}
-	return 0;
-}
 
+int isOperand(char ch){
+	 return (ch >= 'a' && ch <= 'z') ||
+           	(ch >= 'A' && ch <= 'Z') ||
+           	isdigit((int)ch);
+}
 int isOperator(char ch){
-	return 		ch=='+'||
-				ch=='-'||
-				ch=='*'||	
-				ch=='/'||
-				ch=='^'||
-				ch=='%';
+	return ch=='+' ||
+		   ch=='-' ||
+		   ch=='/' ||
+		   ch=='*' ||
+		   ch=='%' ||
+		   ch=='^';
 }
 int Prec(char c){
 	 switch (c)
@@ -111,4 +100,17 @@ int Prec(char c){
         return 3;
     }
     return -1;
+}
+char *getToken(char **str){
+	char *temp = (*str);
+	int toWrtie = 0;
+	while(temp[0]!='\0' && !isOperand(temp[0]) && temp[0]!=')' && temp[0]!=')'){
+		temp++;
+		toWrtie++;
+	}
+	char *result  = malloc(toWrtie+1);
+	snprintf(result,toWrtie+1,"%s",(*str));
+	(*str)+=toWrtie;
+	return result;
+
 }
