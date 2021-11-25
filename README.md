@@ -60,8 +60,8 @@ Emulates hardware.
     - [ ] structs
     - [x] static memory
     - [ ] dynamic memory
-  - [x] Assembler
-    -[x] All operations  supported
+ - [x] Assembler
+    - [x] All operations  supported
  - [x] Virtual cpu
   - [x] threading and locks
   - [ ] floating point numbers support
