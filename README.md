@@ -63,12 +63,12 @@ Emulates hardware.
  - [x] Assembler
     - [x] All operations  supported
  - [x] Virtual cpu
-  - [x] threading and locks
-  - [ ] floating point numbers support
-  - [x] basic math and jump instuctions
-  - [x] bitwise instructions
-  - [x] pointers
-  - [x] basic system calls
-  - [x] stack   
+   - [x] threading and locks
+   - [ ] floating point numbers support
+   - [x] basic math and jump instuctions
+   - [x] bitwise instructions
+   - [x] pointers
+   - [x] basic system calls
+   - [x] stack   
   
   
