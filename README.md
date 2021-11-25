@@ -40,35 +40,35 @@ Emulates hardware.
   - [ ] Program execution
   - [ ] Signals handling
   - [ ] User space 
-- [ ] Kwork Lang
-   - [ ] Compiler 
-    - [x] basic expressions support
-    - [ ] floating numbers math and support
-    - [ ] string literals support
-    - [ ] static type checks
-    - [ ] compile time checks
-    - [ ] compile time execution
-    - [ ] preprocessor
-    - [ ] optimization
-    - [ ] functions
-    - [x] loops
-    - [x] conditional statements
-    - [x] basic input and output
-    - [ ] arrays
-    - [ ] pointers
-    - [x] bitwise operations
-    - [ ] structs
-    - [x] static memory
-    - [ ] dynamic memory
- - [x] Assembler
-    - [x] All operations  supported
- - [x] Virtual cpu
-   - [x] threading and locks
-   - [ ] floating point numbers support
-   - [x] basic math and jump instuctions
-   - [x] bitwise instructions
-   - [x] pointers
-   - [x] basic system calls
-   - [x] stack   
+## Kwork Lang
+- [ ] Compiler 
+  - [x] basic expressions support
+  - [ ] floating numbers math and support
+  - [ ] string literals support
+  - [ ] static type checks
+  - [ ] compile time checks
+  - [ ] compile time execution
+  - [ ] preprocessor
+  - [ ] optimization
+  - [ ] functions
+  - [x] loops
+  - [x] conditional statements
+  - [x] basic input and output
+  - [ ] arrays
+  - [ ] pointers
+  - [x] bitwise operations
+  - [ ] structs
+  - [x] static memory
+  - [ ] dynamic memory
+- [x] Assembler
+  - [x] All operations  supported
+## Virtual cpu
+ - [x] threading and locks
+ - [ ] floating point numbers support
+ - [x] basic math and jump instuctions
+ - [x] bitwise instructions
+ - [x] pointers
+ - [x] basic system calls
+ - [x] stack   
   
   
