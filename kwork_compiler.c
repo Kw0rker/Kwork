@@ -91,6 +91,7 @@ use in main function only ! as it depends on local variables
 #define EV_POSTFIX_EXPP(expp)char *postfix = convertToPostfix(expp);\
 		STACKPTR stack = new_stack();\
 		int created = total_vars;\
+		int lines=0;\
 		while(postfix[0]!='\0'){\
 			while(isspace((int)postfix[0]))postfix++;\
 			if(isdigit((int)postfix[0])){\
@@ -136,6 +137,8 @@ use in main function only ! as it depends on local variables
 				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ \
 				sprintf(command,"LOAD %ld",symbolTable[y]->location); \
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));\
+				if(lines==0){UPDATE_IF_BLOCKS(1)}
+				lines++;	
 				switch ( (int) (postfix++[0]) ){\
 					case'+':\
 					sprintf(command,"ADD %ld",symbolTable[x]->location); \
