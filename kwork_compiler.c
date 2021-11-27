@@ -104,7 +104,7 @@ use in main function only ! as it depends on local variables
 				int c_value = atoi(dig);\
 				int ad = find_location ('C',c_value,fucn_name,total_vars);\
 				if(ad<0){\
-					TABLE_ENTRY_PTR CONST = create_new('C',c_value,fucn_name,MAX_CODE_SIZE - total_vars++);\
+					TABLE_ENTRY_PTR CONST = create_new('C',c_value,fucn_name,MAX_CODE_SIZE - total_const++);\
 					ad = MAX_CODE_SIZE-(++total_vars);\
 					symbolTable[ad]=CONST;\
 				}\
@@ -199,6 +199,7 @@ use in main function only ! as it depends on local variables
 			char command[40];\
 			sprintf(command,"LOAD %ld",symbolTable[result]->location);\
 			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));\
+			if(code_lines==0){UPDATE_IF_BLOCKS(1)}\
 			/*todo: clear all temp vars */ \
 			free(stack);\
 		}\
@@ -282,6 +283,7 @@ void first_compile(FILE *file){
 	int local_created=0;
 	int function_pointer;
 	int if_or_for=0;
+	int total_const=1;
 	int line_n=-1;
 	int R = 0;
 	int ELSE = 0; //shows if were insdie if else block
@@ -676,7 +678,12 @@ void first_compile(FILE *file){
 				CMP_VALUE = find_entry('V',comparator[0],fucn_name,total_vars);
 			}
 			if(CMP_VALUE==NULL){
-				CMP_VALUE = create_new(isdigit((int)comparator[0])?'C':'V',compareValue,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				if(isdigit((int)comparator[0])){
+					CMP_VALUE = create_new('C',compareValue,fucn_name,MAX_CODE_SIZE - total_const++);
+				}
+				else{
+					CMP_VALUE = create_new('V',(int)comparator[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				}
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = CMP_VALUE;
 			}
 			int defValue = atoi(var_nd_defV);
@@ -688,7 +695,12 @@ void first_compile(FILE *file){
 				DEF_VALUE =  find_entry('V',var_nd_defV[0],fucn_name,total_vars);
 			}
 			if(DEF_VALUE==NULL){
-				DEF_VALUE = create_new(isdigit((int)var_nd_defV[0])?'C':'V',defValue,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				if(isdigit((int)var_nd_defV[0])){
+					DEF_VALUE = create_new('C',defValue,fucn_name,MAX_CODE_SIZE - total_const++);
+				}
+				else{
+					DEF_VALUE = create_new('V',(int)var_nd_defV[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+				}
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = DEF_VALUE;
 			}
 			TABLE_ENTRY_PTR step_ = find_entry('C',step_value,fucn_name,total_vars);
@@ -872,7 +884,7 @@ void first_compile(FILE *file){
 			else{
 			 	VAR = find_entry('V',operand[0],fucn_name,total_vars);
 				if(VAR==NULL){
-					VAR = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+					VAR = create_new('V',operand[0],fucn_name,MAX_CODE_SIZE - total_const++);
 					symbolTable[MAX_CODE_SIZE-(++total_vars)]= VAR;
 				}
 			}
