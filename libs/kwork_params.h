@@ -32,3 +32,7 @@
 #ifndef MAX_STACK_SIZE
 #define MAX_STACK_SIZE 1000
 #endif
+#ifndef MAX_CONST_POOL
+#define MAX_CONST_POOL 254
+#endif
+#define ESP_ADR (MEM_SIZE - MAX_CONST_POOL)

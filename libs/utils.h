@@ -28,10 +28,15 @@ char *convertToPostfix(char *exp){
  
     for (i = 0, k = -1; exp[i]; ++i)
     {
-         
-        // If the scanned character is
+        if(exp[i]=='{'){
+            while(exp[i]!='}'){
+                result[++k] = exp[i++];
+            }
+            result[++k] = exp[i++];
+        }
+         // If the scanned character is
         // an operand, add it to output.
-        if (isOperand(exp[i]))
+        if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) )
             result[++k] = exp[i];
          
         // If the scanned character is an

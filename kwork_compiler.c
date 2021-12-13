@@ -7,6 +7,15 @@
 #define MAX_STATIC_SIZE 500 //max static space for each function, containging kworker assembly instructions and variables
 #endif
 #define input "READ \0"
+#ifndef ARG_SEPARATOR
+#define ARG_SEPARATOR ","
+#endif
+#ifndef MAX_ARG_L
+#define MAX_ARG_L 100
+#endif
+#ifndef MAX_FUNC_L
+#define MAX_FUNC_L 80
+#endif
 
 int flags[MAX_CODE_SIZE]={0};
 char *KWAC[MAX_CODE_SIZE];
@@ -88,125 +97,6 @@ use in main function only ! as it depends on local variables
 										}\
 								}\
 
-#define EV_POSTFIX_EXPP(expp)char *postfix = convertToPostfix(expp);\
-		STACKPTR stack = new_stack();\
-		int created = total_vars;\
-		int code_lines=0;\
-		while(postfix[0]!='\0'){\
-			while(isspace((int)postfix[0]))postfix++;\
-			if(isdigit((int)postfix[0])){\
-				char *dig = malloc(50);\
-				int x=0;\
-				while(!isspace((int)postfix[0]) && !isOperator(postfix[0])){\
-					dig[x++]=postfix[0];\
-					postfix++;\
-				}\
-				int c_value = atoi(dig);\
-				int ad = find_location ('C',c_value,fucn_name,total_vars);\
-				if(ad<0){\
-					TABLE_ENTRY_PTR CONST = create_new('C',c_value,fucn_name,MAX_CODE_SIZE - total_const++);\
-					ad = MAX_CODE_SIZE-(++total_vars);\
-					symbolTable[ad]=CONST;\
-				}\
-				push(ad,&stack);\
-			}\
-			else if (isOperand(postfix[0])){\
-				int ad = find_location ('V',(int)postfix[0],fucn_name,total_vars);\
-				if(ad<0){\
-					fprintf(stderr,"Variable (%c) is undefined!\n",postfix[0]);\
-					TABLE_ENTRY_PTR VAR = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++)));\
-					int ad = MAX_CODE_SIZE-(created++) -50;\
-					symbolTable[ad]=VAR;\
-				}\
-				push(ad,&stack);\
-				postfix++;\
-			}\
-			else if (isOperator(postfix[0]))\
-			{\
-				int x,y;\
-				int pstore=0;\
-				if(!isEmpty(stack))x=pop(&stack);\
-				if(!isEmpty(stack))y=pop(&stack);\
-				/*we pop adress of vars in table here*/ \
-				created++;\
-				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);\
-				int adress = MAX_CODE_SIZE-(created) -50;\
-				symbolTable[adress] = temp;\
-				char command[50];\
-				char command2[50];\
-				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ \
-				sprintf(command,"LOAD %ld",symbolTable[y]->location); \
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));\
-				if(code_lines==0){UPDATE_IF_BLOCKS(1)}\
-				code_lines++;\
-				switch ( (int) (postfix++[0]) ){\
-					case'+':\
-					sprintf(command,"ADD %ld",symbolTable[x]->location); \
-					break;\
-					case'-':\
-					sprintf(command,"SUB %ld",symbolTable[x]->location); \
-					break;\
-					case'*':\
-					sprintf(command,"MUL %ld",symbolTable[x]->location); \
-					break;\
-					case'/':\
-					sprintf(command,"DIV %ld",symbolTable[x]->location); \
-					break;\
-					case'%':\
-					sprintf(command,"MOD %ld",symbolTable[x]->location); \
-					break;\
-					case'<': \
-					sprintf(command,"BIT_S_L %ld",symbolTable[x]->location); \
-					break; \
-					case'>': \
-					sprintf(command,"BIT_S_R %ld",symbolTable[x]->location); \
-					break; \
-					case'|': \
-					sprintf(command,"BIT_OR %ld",symbolTable[x]->location); \
-					break; \
-					case'&': \
-					sprintf(command,"BIT_AND %ld",symbolTable[x]->location); \
-					break; \
-					case'^': \
-					sprintf(command,"BIT_XOR %ld",symbolTable[x]->location); \
-					break; \
-					case'@': \
-					/*derefernce pointer*/ \
-					sprintf(command,"PSTORE %ld",symbolTable[x]->location); \
-					pstore=1;\
-					break; \
-					/*Unary operations*/ \
-					case'~': \
-					sprintf(command,"BIT_INV %ld",symbolTable[x]->location); \
-					push(x,&stack); /*push second operand back as we dont use it */ \
-					break; \
-					case'#': \
-					/*dereference pointer*/ \
-					sprintf(command,"PLOAD %ld",symbolTable[y]->location); \
-					push(x,&stack); /*push second operand back as we dont use it */ \
-					break; \
-				}\
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));\
-				/*perform operation*/ \
-				if(!pstore)symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));\
-				/*store result in temp variable*/ \
-				push(adress,&stack);	\
-			}\
-		}\
-		int result=-1;\
-		while(!isEmpty(stack))result = pop(&stack);\
-		if(result>=0){\
-			char command[40];\
-			sprintf(command,"LOAD %ld",symbolTable[result]->location);\
-			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));\
-			if(code_lines==0){UPDATE_IF_BLOCKS(1)}\
-			/*todo: clear all temp vars */ \
-			free(stack);\
-		}\
-		else{\
-			fprintf(stderr,"Stack is empty\n");\
-		}\
-
 
 /*
 @const value used for constants only
@@ -215,6 +105,7 @@ use in main function only ! as it depends on local variables
 		C -> constant
 		L -> line_number
 		V -> variable
+		F -> Function
 	  }
 @location adress in the memory	 
 @fucn_name servers as frame for local vars of function, but if type os L serves as LINE OF CODE 
@@ -247,9 +138,35 @@ void first_compile(FILE *);
 void second_compile();
 TABLE_ENTRY_PTR find_entry(char ,int ,char *,int );
 int find_location(char ,int ,char *,int );
+int EV_POSTFIX_EXPP(char *);
 
 TABLE_ENTRY_PTR create_new(char ,int ,char *,long);
-
+//global vars
+	static STACKPTR stack = NULL;
+	static STACKPTR for_stack = NULL;
+	static STACKPTR if_stack = NULL;
+	static STACKPTR return_stack = NULL;
+	static STACKPTR if_out_stack = NULL;
+	static STACKPTR stuck = NULL;
+	static STACKPTR elif = NULL;
+	static char *line = NULL;
+	static STACKPTR returns[MAX_CODE_SIZE];
+	static int local_created=0;
+	static int function_pointer=0;
+	static int if_or_for=0;
+	static int total_const=1;
+	static int line_n=-1;
+	static int R = 0;
+	static int ELSE = 0; //shows if were insdie if else block
+	static int local_comands =0 ;//number of commands in function and i have no fucking clue why it has to be  -8 lmao im fucking retard but it works this way
+	static int total_comands = 0;
+	static int total_vars=0;
+	static char *operator =NULL;
+	static char *operand  =NULL;
+	static char *fucn_name  =NULL;
+	static char last_line[100];
+	static char *rest =NULL;
+//	
 int main(int argc, char const *argv[])
 {	
 	if(argc<1){
@@ -271,31 +188,20 @@ void compile(FILE *file){
 	second_compile();
 }
 void first_compile(FILE *file){
-	STACKPTR stack = new_stack();
-	STACKPTR for_stack = new_stack();
-	STACKPTR if_stack = new_stack();
-	STACKPTR return_stack = new_stack();
-	STACKPTR if_out_stack = new_stack();
-	STACKPTR stuck = new_stack();
-	STACKPTR elif = new_stack();
-	char *line = malloc(100);
-	STACKPTR returns[MAX_CODE_SIZE];
-	int local_created=0;
-	int function_pointer;
-	int if_or_for=0;
-	int total_const=1;
-	int line_n=-1;
-	int R = 0;
-	int ELSE = 0; //shows if were insdie if else block
-	int local_comands =0 ;//number of commands in function and i have no fucking clue why it has to be  -8 lmao im fucking retard but it works this way
-	int total_vars=0; //total ammount of vars declareted
-	int total_comands = 0;
-	char *operator = malloc(20);
-	char *operand = malloc(20);
-	char *fucn_name = malloc(50);
-	char last_line[100];
-	char *rest= malloc(100);
-	fucn_name = "main"; //main by defual
+	stack = new_stack();
+	for_stack = new_stack();
+	if_stack = new_stack();
+	return_stack = new_stack();
+	if_out_stack = new_stack();
+	stuck = new_stack();
+	elif = new_stack();
+	line = malloc(100);
+	operator = malloc(20);
+	operand = malloc(20);
+	fucn_name = malloc(50);
+	rest= malloc(100);
+	fucn_name = malloc(100);
+	strcpy(fucn_name,"main"); //main by defual
 	while(!feof(file))
 	{
 	fgets(line,100,file);
@@ -313,47 +219,86 @@ void first_compile(FILE *file){
 		line_n--;
 	}
 	else if(!strcmp(operator,"function")){
-		//strcpy(fucn_name,operand);
+		strcpy(fucn_name,operand);
 		//fucn_name=operand;
-		TABLE_ENTRY_PTR func = malloc(sizeof(TABLE_ENTRY));
-		func->type='L';
+
 		if(!strcmp(operand,"main\r\n")){
 			function_pointer=0;
-			strcpy(func->fucn_name,"&0\nMAIN");
 		}
 		else {
 			function_pointer = function_pointer + MAX_STATIC_SIZE + 1;
-			strcpy(func->fucn_name,"FUNC");
-		}
-		func->location=function_pointer;
-		symbolTable[total_comands++] = func;
-	}
-	else if(!strcmp(operator,"end")){
-		// line_n=-1;
-		// while(!feof(file)){
-		// 	fscanf(file,"%100s\n",line);
+			local_comands=0;
+			strcpy(fucn_name,operand);
+			char *fucntion_name = strtok(fucn_name,"(");
+			char *function_args  = rest;
+			while(function_args[0]!='\0' && function_args[0]!='(') function_args++;
+			if(function_args[0]=='(')function_args++;
+			char *arg  = strtok(function_args,ARG_SEPARATOR);
+			int number_of_args=0;
+			char temp[50];
+			// sprintf(temp,"&%d\nFUNC",function_pointer);
+			// symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
+			STACKPTR arg_stack = new_stack();
+			while(arg!=NULL){
+				push((int)arg[0],&arg_stack);
+				arg  = strtok(NULL,ARG_SEPARATOR);
+			}
+			while(!isEmpty(arg_stack)){
+				//todo pop in reverse !
+				TABLE_ENTRY_PTR var = create_new('V',(int)(pop(&arg_stack) +'\0' ),fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
+				sprintf(temp,"POP %ld",var->location);//pop value from stack to the mem adress
+				symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
+				number_of_args++;
+			}
+			int function_address = find_location('F',number_of_args,fucntion_name,total_vars);
 
-		// 	operator = strtok(line," ");
-		// 	operand = strtok(NULL," ");
-		// 	if(!strcmp(operator,"function")){
-		// 		fucn_name=operand;
-		// 		TABLE_ENTRY_PTR func = malloc(sizeof(TABLE_ENTRY));
-		// 		func->type='L';
-		// 		if(!strcmp(operand,"main\r\n")){
-		// 			function_pointer=0;
-		// 			strcpy(func->fucn_name,"MAIN");
-		// 		}
-		// 		else {
-		// 		function_pointer = function_pointer + MAX_STATIC_SIZE + 1;
-		// 		strcpy(func->fucn_name,"FUNC");
-		// 		}
-		// 	func->location=function_pointer;
-		// 	symbolTable[total_comands++] = func;
-		// 	break; //we found next function now repead
-		// 	}
-		// }
+			TABLE_ENTRY_PTR function = find_entry('C',function_pointer,fucn_name,total_vars);
+			if(function==NULL){
+				function = create_new('C',function_pointer,fucn_name,MAX_CODE_SIZE - total_const++);
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = function;
+			}
+			//if we find function we define it's adress
+			if(function_address>0){
+				if(symbolTable[function_address]->location!=-1){
+					fprintf(stderr,"function %s is already defined at %d\n",fucntion_name,function_address);
+				}
+				symbolTable[function_address]->location=function_pointer;
+			}
+			else{
+				function_address = MAX_CODE_SIZE - (++total_vars);
+				symbolTable[function_address] = create_new('F',number_of_args,fucntion_name,function_pointer);
+			}
+			for(int i=0;i<MAX_CODE_SIZE;i++){
+				if(flags[i]>0 && symbolTable[flags[i]]!=NULL &&  symbolTable[flags[i]]->type=='F'){
+					sprintf(symbolTable[i]->fucn_name,"CALL %ld",function->location);
+				}
+			}
+		}
+	}
+	else if(!strncmp(operator,"end",2)){
 		symbolTable[total_comands++] = create_new('L',0,"HALT 00",function_pointer+(local_comands++));
 		UPDATE_IF_BLOCKS(1)
+		//todo do while search for next function in file
+	}
+	else if(!strcmp(operator,"return")){
+		char *r_expression = rest;
+		while(!isspace((int)r_expression[0]))r_expression++;
+		r_expression++;
+		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,MAX_CODE_SIZE - 1 - 50);
+		int adress = MAX_CODE_SIZE- 1 -50;
+		symbolTable[adress] = ret_;
+		char command[50];
+		sprintf(command,"POP %ld",ret_->location);
+		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+		UPDATE_IF_BLOCKS(1)
+		int r_value_adress = EV_POSTFIX_EXPP(r_expression);
+		sprintf(command,"PUSH %d",r_value_adress);
+		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+		sprintf(command,"CALL %ld",ret_->location);
+		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+		free(ret_);
+		
 		//todo do while search for next function in file
 	}
 	else if(!strcmp(operator,"input")){
@@ -971,6 +916,7 @@ void second_compile(){
 		perror("could not create kworker assembly file\n");
 	}
 	int last_adr = 0;
+	fprintf(file,"&0\nMAIN\n");
 	for(int a=0;a<MAX_CODE_SIZE;a++){
 		if(symbolTable[a]!=NULL){
 			#ifdef _DEBUG
@@ -989,10 +935,10 @@ void second_compile(){
 				//if adress is different with preivus command we place & and specify andress
 				//& - sets kernel instruction input adress by value
 				if( (symbolTable[a]->location - last_adr ) >1){
-					fprintf(file,"&%ld\n%s\n",symbolTable[a]->location, symbolTable[a]->fucn_name);
+					fprintf(file,"&%ld\n%s\n",symbolTable[a]->location, "FUNC");
 					last_adr = symbolTable[a]->location;
 				}
-				else {
+				if(1) {
 					fprintf(file,"%s\n",symbolTable[a]->fucn_name);
 					last_adr++;
 				}
@@ -1047,10 +993,19 @@ TABLE_ENTRY_PTR create_new(char type,int data,char *fucn_name,long location){
 }
 int find_location(char type,int data,char *fucn_name,int total_vars){
 	switch(type){
+		case'F':
+		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
+			int a =MAX_CODE_SIZE - x;
+			if(symbolTable[a]!=NULL && symbolTable[a]->type=='F'&& symbolTable[a]->const_value==data){
+				return a; // found
+				break;
+			}
+		}
+		break;
 		case'C':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
 			int a =MAX_CODE_SIZE - x;
-			if(symbolTable[a]!=NULL && symbolTable[a]->const_value==data){
+			if(symbolTable[a]!=NULL && symbolTable[a]->type=='C' &&symbolTable[a]->const_value==data){
 				return a; // found
 				break;
 			}
@@ -1069,3 +1024,221 @@ int find_location(char type,int data,char *fucn_name,int total_vars){
 	return -1;
 
 }
+int EV_POSTFIX_EXPP(char *expp){
+	//todo after func call doesnt evalueate the rest of the expression
+	char *postfix = convertToPostfix(expp);
+		STACKPTR stack = new_stack();
+		int created = total_vars;
+		int code_lines=0;
+		int negative_number=1;
+		while(postfix!=NULL &&  postfix[0]!='\0'){
+			while(isspace((int)postfix[0]))postfix++;
+			if(isdigit((int)postfix[0]) || (postfix[0]=='-' && negative_number)){
+				char *dig = malloc(50);
+				int x=0;
+				while(postfix[0]!='\0' && !isspace((int)postfix[0]) && (!isOperator(postfix[0]) || negative_number ) ){
+					dig[x++]=postfix[0];
+					postfix++;
+				}\
+				int c_value = atoi(dig);
+				int ad = find_location ('C',c_value,fucn_name,total_vars);
+				if(ad<0){
+					TABLE_ENTRY_PTR CONST = create_new('C',c_value,fucn_name,MAX_CODE_SIZE - total_const++);
+					ad = MAX_CODE_SIZE-(++total_vars);
+					symbolTable[ad]=CONST;
+				}\
+				push(ad,&stack);
+			}
+			else if (isOperand(postfix[0])){
+				if(postfix[0]=='C' && postfix[1]=='A' && postfix[2]=='L' && postfix[3]=='L'){
+					//cut 'CALL'away from the beggining of the string
+					postfix+=4;
+					int x=0;
+					char *fucntion_name = malloc(MAX_FUNC_L);
+					while(postfix[0]!='{'){
+						fucntion_name[x++]=postfix[0];
+						postfix++;
+					}
+					postfix++;
+					char *arguments = malloc(MAX_ARG_L);
+					x=0;
+					while(postfix[0]!='}'){
+						arguments[x++]=postfix[0];
+						postfix++;
+					}
+					postfix++;
+					char *arg = strtok(arguments,ARG_SEPARATOR);
+					int number_of_args =0;
+					char command[40];
+					//push return adress of the function calling
+					TABLE_ENTRY_PTR function = find_entry('C',total_comands+1,fucn_name,total_vars);
+					if(function==NULL){
+						function = create_new('C',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
+						symbolTable[MAX_CODE_SIZE-(++total_vars)] = function;
+					}
+
+					sprintf(command,"PUSH %ld",function->location);
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					//push the arguments on the stack
+					while(arg!=NULL){
+						//evaluate epression
+						int adress = EV_POSTFIX_EXPP(arg);
+						char command[40];
+						//and push it on the stack
+						sprintf(command,"PUSH %d",adress);
+						symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+						arg=strtok(NULL,ARG_SEPARATOR);
+						number_of_args++;
+					}
+	
+					free(arguments);
+					//move pointer to the end of function args (to closing bracket)
+					// EXMP sum(5,6) + 1324 
+					// ->
+					// + 1324
+					
+					// if(postfix!=NULL) strtok(postfix,"{");
+					// if(postfix!=NULL) postfix=strtok(NULL,"}");
+					//push return value on stack
+					int call_address = total_comands++;
+
+
+					int function_address = find_location('F',number_of_args,fucntion_name,total_vars);
+					//if function not found or it's still undefined
+					if(function_address < 0 || symbolTable[function_address]->location==-1){
+						symbolTable[call_address] = create_new('L',0,"CALL ",function_pointer+(local_comands++));
+						// create a undefined function with mem adress of -1 so we can resolve function call later
+						TABLE_ENTRY_PTR func = create_new('F',number_of_args,fucntion_name,-1);
+						int function_address = MAX_CODE_SIZE - (++total_vars);
+						flags[call_address] = function_address;
+						symbolTable[function_address]=func;
+					}
+					//if found we make function call to it's adress
+					else{
+						char command[50];
+						TABLE_ENTRY_PTR function = find_entry('C',symbolTable[function_address]->location ,fucn_name,total_vars);
+						if(function==NULL){
+							function = create_new('C',symbolTable[function_address]->location,fucn_name,MAX_CODE_SIZE - total_const++);
+							symbolTable[MAX_CODE_SIZE-(++total_vars)] = function;
+						}
+						sprintf(command,"CALL %ld",function->location);
+						symbolTable[call_address] = create_new('L',0,command,function_pointer+(local_comands++));
+					}
+					created++;
+					TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
+					int adress = MAX_CODE_SIZE-(created) -50;
+					symbolTable[adress] = temp;
+					sprintf(command,"POP %d",adress);
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					push(adress,&stack);
+					// todo pop return value from stack and store in temp var
+					function->const_value = function_pointer+ local_comands-1; 
+
+
+					
+				}
+				else{
+					int ad = find_location ('V',(int)postfix[0],fucn_name,total_vars);
+					if(ad<0){
+						fprintf(stderr,"Variable (%c) is undefined!\n",postfix[0]);
+						TABLE_ENTRY_PTR VAR = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++)));
+						int ad = MAX_CODE_SIZE-(created++) -50;
+					symbolTable[ad]=VAR;
+					}
+					push(ad,&stack);
+					postfix++;
+				}
+			}
+			else if (isOperator(postfix[0]))
+			{
+				int x,y;
+				int pstore=0;
+				if(!isEmpty(stack))x=pop(&stack);
+				if(!isEmpty(stack))y=pop(&stack);
+				/*we pop adress of vars in table here*/ 
+				created++;
+				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
+				int adress = MAX_CODE_SIZE-(created) -50;
+				symbolTable[adress] = temp;
+				char command[50];
+				char command2[50];
+				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ 
+				sprintf(command,"LOAD %ld",symbolTable[y]->location); 
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				if(code_lines==0){UPDATE_IF_BLOCKS(1)}
+				code_lines++;
+				switch ( (int) (postfix++[0]) ){
+					case'+':
+					sprintf(command,"ADD %ld",symbolTable[x]->location); 
+					break;
+					case'-':
+					sprintf(command,"SUB %ld",symbolTable[x]->location); 
+					break;
+					case'*':
+					sprintf(command,"MUL %ld",symbolTable[x]->location); 
+					break;
+					case'/':
+					sprintf(command,"DIV %ld",symbolTable[x]->location); 
+					break;
+					case'%':
+					sprintf(command,"MOD %ld",symbolTable[x]->location); 
+					break;
+					case'<': 
+					sprintf(command,"BIT_S_L %ld",symbolTable[x]->location); 
+					break; 
+					case'>': 
+					sprintf(command,"BIT_S_R %ld",symbolTable[x]->location); 
+					break; 
+					case'|': 
+					sprintf(command,"BIT_OR %ld",symbolTable[x]->location); 
+					break; 
+					case'&': 
+					sprintf(command,"BIT_AND %ld",symbolTable[x]->location); 
+					break; 
+					case'^': 
+					sprintf(command,"BIT_XOR %ld",symbolTable[x]->location); 
+					break; 
+					case'@': 
+					/*derefernce pointer*/ 
+					sprintf(command,"PSTORE %ld",symbolTable[x]->location); 
+					pstore=1;
+					break; 
+					/*Unary operations*/ 
+					case'~': 
+					sprintf(command,"BIT_INV %ld",symbolTable[x]->location); 
+					push(x,&stack); /*push second operand back as we dont use it */ 
+					break; 
+					case'#': 
+					/*dereference pointer*/ 
+					sprintf(command,"PLOAD %ld",symbolTable[y]->location); 
+					push(x,&stack); /*push second operand back as we dont use it */ 
+					break; 
+				}
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				/*perform operation*/ 
+				if(!pstore)symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
+				/*store result in temp variable*/ 
+				push(adress,&stack);
+			
+			}
+			negative_number=0;
+		}
+		int result=-1;
+		while(!isEmpty(stack)){
+			result = pop(&stack);
+		}
+		if(result>=0){
+			char command[40];
+			sprintf(command,"LOAD %ld",symbolTable[result]->location);
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			if(code_lines==0){UPDATE_IF_BLOCKS(1)}
+			/*todo: clear all temp vars */ 
+			free(stack);
+			return symbolTable[result]->location;
+		}\
+		else{
+			fprintf(stderr,"Stack is empty\n");
+			return -1;
+		}
+	}
+

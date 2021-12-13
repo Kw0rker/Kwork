@@ -89,6 +89,9 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"CALL"))fprintf(out, "%d%d\n",opcodes[CALL],operand);
 		else if(!strcmp(command,"PLOAD"))fprintf(out, "%d%d\n",opcodes[PLOAD],operand);
 		else if(!strcmp(command,"PSTORE"))fprintf(out, "%d%d\n",opcodes[PSTORE],operand);
+		else if(!strcmp(command,"PUSH"))fprintf(out, "%d%d\n",opcodes[PUSH],operand);
+		else if(!strcmp(command,"POP"))fprintf(out, "%d%d\n",opcodes[POP],operand);
+		else if(!strcmp(command,"CALL"))fprintf(out, "%d%d\n",opcodes[CALL],operand);
 		else if(!strcmp(command,"MAIN"))fprintf(out, "%s\n",MAIN);
 		else if(!strcmp(command,"FUNC"))fprintf(out, "%s\n",FUNC);
 		//sets up addres datta at address

@@ -15,7 +15,7 @@
 #define BRANCHNEG 41 // go to mem adress if acc < 0 
 #define BRANCHZERO 42 // go to mem adress if acc==0
 #define HALT 43 //stop, executes after programs finished
-#define CALL 44 // calls a function from memory adress and expect return value in acc
+#define CALL 44 // calls a function from memory adress and expect return value on stack
 #define BIT_S_R 50 //bit shifts acc to the right with the value from pointer to memory memory[operand], result stored in acc
 #define BIT_S_L 51 //bit shifts acc to the left with the value from pointer to memory memory[operand], result stored in acc
 #define BIT_OR 52 // Binary OR acc with the value from pointer to memory memory[operand], result stored in acc
@@ -48,7 +48,7 @@ void dump_memory(long*);
 
 int main(){
 	long acc ;
-	int ESP; //esp register
+	int ESP = ESP_ADR; //esp register
 	int EBP = MEM_SIZE-1; //ebp register points to highest adressable memory
 	int instruction_counter;
 	long  instruction_register;
@@ -266,7 +266,7 @@ int main(){
 				memory[ESP--] = memory[operand]; //as stack grows upward to the memory
 				break;
 				case POP:
-				memory[operand] = memory[ESP++]; // pops value from stack
+				memory[operand] = memory[++ESP]; // pops value from stack
 				break;
 				case CALL:
 				instruction_counter = memory[operand];
