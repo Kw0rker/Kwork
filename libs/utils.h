@@ -87,7 +87,9 @@ int isOperator(char ch){
 		   ch=='/' ||
 		   ch=='*' ||
 		   ch=='%' ||
-		   ch=='^';
+		   ch=='^' ||
+           ch=='@' ||
+           ch=='#';
 }
 int Prec(char c){
 	 switch (c)

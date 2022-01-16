@@ -650,6 +650,7 @@ void first_compile(FILE *file){
 			}
 			TABLE_ENTRY_PTR step_ = find_entry('C',step_value,fucn_name,total_vars);
 			if(step_==NULL){
+				//todo check this step it looks sus
 				step_ = create_new('C',step_value,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = step_;
 			}
@@ -868,6 +869,12 @@ void first_compile(FILE *file){
 			}
 			char *var_n = strtok(operand,"=");
 			char *equation = strtok(NULL,"=");
+
+			if(var_n[0]=='@'){
+				int XXX = EV_POSTFIX_EXPP(var_n);
+
+			}
+
 			TABLE_ENTRY_PTR var =find_entry('V',var_n[0],fucn_name,total_vars);
 			// if not found create new
 			if(var==NULL){
@@ -882,7 +889,9 @@ void first_compile(FILE *file){
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 
 		}
+		else if(!strcmp(operator,"NEW_THREAD")){
 
+		}
 
 
 		else{
@@ -1028,6 +1037,8 @@ int EV_POSTFIX_EXPP(char *expp){
 	//todo after func call doesnt evalueate the rest of the expression
 	char *postfix = convertToPostfix(expp);
 		STACKPTR stack = new_stack();
+		STACKPTR operations = new_stack();
+		enum OPERATIONS{UNARY,BINARY};
 		int created = total_vars;
 		int code_lines=0;
 		int negative_number=1;
@@ -1154,7 +1165,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				int x,y;
 				int pstore=0;
 				if(!isEmpty(stack))x=pop(&stack);
-				if(!isEmpty(stack))y=pop(&stack);
+				if(!isEmpty(stack) && peek(&operations)==BINARY)y=pop(&stack);
 				/*we pop adress of vars in table here*/ 
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
@@ -1163,61 +1174,86 @@ int EV_POSTFIX_EXPP(char *expp){
 				char command[50];
 				char command2[50];
 				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ 
-				sprintf(command,"LOAD %ld",symbolTable[y]->location); 
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				//we only load it if not unary operation
+				if(!isEmpty(operations) && pop(&operations) == BINARY){
+					sprintf(command,"LOAD %ld",symbolTable[y]->location); 
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				}
 				if(code_lines==0){UPDATE_IF_BLOCKS(1)}
 				code_lines++;
 				switch ( (int) (postfix++[0]) ){
 					case'+':
-					sprintf(command,"ADD %ld",symbolTable[x]->location); 
+					sprintf(command,"ADD %ld",symbolTable[x]->location);
+					push(BINARY,&operations);
 					break;
 					case'-':
 					sprintf(command,"SUB %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break;
 					case'*':
 					sprintf(command,"MUL %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break;
 					case'/':
 					sprintf(command,"DIV %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break;
 					case'%':
 					sprintf(command,"MOD %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break;
 					case'<': 
 					sprintf(command,"BIT_S_L %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break; 
 					case'>': 
 					sprintf(command,"BIT_S_R %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break; 
 					case'|': 
 					sprintf(command,"BIT_OR %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break; 
 					case'&': 
 					sprintf(command,"BIT_AND %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
 					break; 
 					case'^': 
 					sprintf(command,"BIT_XOR %ld",symbolTable[x]->location); 
-					break; 
-					case'@': 
-					/*derefernce pointer*/ 
-					sprintf(command,"PSTORE %ld",symbolTable[x]->location); 
-					pstore=1;
+					push(BINARY,&operations);
 					break; 
 					/*Unary operations*/ 
 					case'~': 
 					sprintf(command,"BIT_INV %ld",symbolTable[x]->location); 
-					push(x,&stack); /*push second operand back as we dont use it */ 
+					push(UNARY,&operations);
 					break; 
 					case'#': 
+					/*get pointer*/ 
+					adress = find_location ('C',(int)symbolTable[x]->location,fucn_name,total_vars);
+					if(adress<0){
+						TABLE_ENTRY_PTR VAR = create_new('C',(int)symbolTable[x]->location,fucn_name,MAX_CODE_SIZE - total_const++);
+						adress = MAX_CODE_SIZE-(++total_vars);
+					symbolTable[adress]=VAR;
+					}
+					pstore=1;
+					push(UNARY,&operations);
+					break; 
+					case'@': 
 					/*dereference pointer*/ 
-					sprintf(command,"PLOAD %ld",symbolTable[y]->location); 
-					push(x,&stack); /*push second operand back as we dont use it */ 
+					
+					sprintf(command,"PLOAD %ld",symbolTable[x]->location);
+					push(UNARY,&operations);
+				
 					break; 
 				}
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				/*perform operation*/ 
-				if(!pstore)symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
-				/*store result in temp variable*/ 
+				 
+				if(!pstore){
+					/*perform operation*/
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					/*store result in temp variable*/
+					symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
+				}
+				 
 				push(adress,&stack);
 			
 			}
