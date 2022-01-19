@@ -863,6 +863,7 @@ void first_compile(FILE *file){
 		else if(!strcmp(operator,"let")){
 			strtok(rest," ");
 			char *t = strtok(NULL," ");
+			strcpy(operand,"");//temp fix
 			while(t!=NULL){
 				operand =  strcat(operand,t);
 				t=strtok(NULL," ");
@@ -871,10 +872,18 @@ void first_compile(FILE *file){
 			char *equation = strtok(NULL,"=");
 
 			if(var_n[0]=='@'){
-				int XXX = EV_POSTFIX_EXPP(var_n);
+				var_n++;
+				//get adress where we store
+				int adress = EV_POSTFIX_EXPP(var_n);
+				//evaluate right side of equation
+				EV_POSTFIX_EXPP(equation);
+				//result in acc
+				char temp[40];
+				sprintf(temp,"PSTORE %d",adress);
+				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 
 			}
-
+			else{
 			TABLE_ENTRY_PTR var =find_entry('V',var_n[0],fucn_name,total_vars);
 			// if not found create new
 			if(var==NULL){
@@ -887,6 +896,7 @@ void first_compile(FILE *file){
 			char temp[40];
 			sprintf(temp,"STORE %ld",var->location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+			}
 
 		}
 		else if(!strcmp(operator,"NEW_THREAD")){
@@ -1165,7 +1175,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				int x,y;
 				int pstore=0;
 				if(!isEmpty(stack))x=pop(&stack);
-				if(!isEmpty(stack) && peek(&operations)==BINARY)y=pop(&stack);
+				if(!isEmpty(stack) && (isEmpty(operations) || peek(&operations)==BINARY))y=pop(&stack);
 				/*we pop adress of vars in table here*/ 
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
@@ -1175,7 +1185,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				char command2[50];
 				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ 
 				//we only load it if not unary operation
-				if(!isEmpty(operations) && pop(&operations) == BINARY){
+				if(isEmpty(operations) || pop(&operations) == BINARY){
 					sprintf(command,"LOAD %ld",symbolTable[y]->location); 
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				}
