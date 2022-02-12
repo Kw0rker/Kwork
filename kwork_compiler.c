@@ -106,6 +106,7 @@ use in main function only ! as it depends on local variables
 		L -> line_number
 		V -> variable
 		F -> Function
+		A -> Array
 	  }
 @location adress in the memory	 
 @fucn_name servers as frame for local vars of function, but if type os L serves as LINE OF CODE 
@@ -351,7 +352,7 @@ void first_compile(FILE *file){
 			printf ("operand ->%s\n",operand);
 			#endif
 			while(operand[x]!='\0' && y<3){
-				if(operand[x]=='=' || operand[x]=='<' || operand[x]=='>')comparator[y++] = operand[x];
+				if(operand[x]=='=' || operand[x]=='<' || operand[x]=='>' || operand[x]=='!')comparator[y++] = operand[x];
 				x++;
 			}
 			comparator[y] = '\0';
@@ -375,6 +376,31 @@ void first_compile(FILE *file){
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				memset(command,0,sizeof(command));
 				//flags[function_pointer+line_n+3] = total_comands;
+				//push adreess of brach command so we can resolve jump forward address once '}' encountered
+				if(pop(&elif)){
+					UPDATE_IF_BLOCKS(4)
+					push(total_comands,&if_stack);
+				}
+				else{
+					push(total_comands,&if_stack);
+					UPDATE_IF_BLOCKS(4)
+				}
+			
+
+
+			}
+			if(!strcmp(comparator,"!=")){
+				GET_VARS(!=)
+				sprintf(command,"LOAD %ld",v1->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				sprintf(command,"SUB %ld",v2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"BRANCHZERO "); //jump over next branch command
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
 				if(pop(&elif)){
 					UPDATE_IF_BLOCKS(4)
@@ -600,7 +626,8 @@ void first_compile(FILE *file){
 			char comp[] = {comparator[0],
 							   (comparator[1]=='>'||
 							   	comparator[1]=='<'||
-							   	comparator[1]=='=')?comparator[1]++:'\0', //increment by one if there 2 signs
+							   	comparator[1]=='='||
+							   	comparator[1]=='!')?comparator[1]++:'\0', //increment by one if there 2 signs
 							   '\0'};
 			comparator++;//increment pointer so it points to compare value
 			//if one ony equality sign found incrment only by one, if 2 increment by 2				   
@@ -759,6 +786,28 @@ void first_compile(FILE *file){
 				UPDATE_IF_BLOCKS(10)
 
 			}
+			else if(!strcmp(comp,"!=")){
+				//			subtract varaiable from value in eauality			////
+				sprintf(command,"LOAD %ld",VAR2->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+
+				sprintf(command,"SUB %ld",CMP_VALUE->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				//																				////
+
+				//			jump to end of loop if result of subtraction is 0 			////
+
+				sprintf(command,"BRANCHZERO ");
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				memset(command,0,sizeof(command));
+				push(total_comands,&stack);
+				UPDATE_IF_BLOCKS(10)
+
+	
+
+			}
 			else if(!strcmp(comp,"<")){
 				//			subtract value of compare value form Variable in equality			////
 				sprintf(command,"LOAD %ld",VAR2->location);
@@ -812,7 +861,6 @@ void first_compile(FILE *file){
 
 
 
-
 			//it causes sigabart
 			// free(var_nd_defV_saved);
 			// free(comparator_saved);
@@ -830,6 +878,7 @@ void first_compile(FILE *file){
 			else{
 			 	VAR = find_entry('V',operand[0],fucn_name,total_vars);
 				if(VAR==NULL){
+					printf("Variable (%c) is undefined!\n",operand[0]);
 					VAR = create_new('V',operand[0],fucn_name,MAX_CODE_SIZE - total_const++);
 					symbolTable[MAX_CODE_SIZE-(++total_vars)]= VAR;
 				}
@@ -861,16 +910,22 @@ void first_compile(FILE *file){
 			UPDATE_IF_BLOCKS(1);
 		}
 		else if(!strcmp(operator,"let")){
-			strtok(rest," ");
-			char *t = strtok(NULL," ");
+			//strtok(rest," ");
+			//char *t = strtok(NULL," ");
 			strcpy(operand,"");//temp fix
-			while(t!=NULL){
-				operand =  strcat(operand,t);
-				t=strtok(NULL," ");
-			}
+			while(rest[0]!='\0' && rest[0]==' ')rest++;
+			strtok(rest,"let");
+			operand = strtok(NULL,"let");
+			//operand = rest+5;
+
+			// while(t!=NULL){
+			// 	operand =  strcat(operand,t);
+			// 	t=strtok(NULL," ");
+			// }
 			char *var_n = strtok(operand,"=");
 			char *equation = strtok(NULL,"=");
-
+			while(equation[0]!='\0' && equation[0]==' ')equation++;
+			while(var_n[0]!='\0' && var_n[0]==' ')var_n++;
 			if(var_n[0]=='@'){
 				var_n++;
 				//get adress where we store
@@ -942,6 +997,7 @@ void second_compile(){
 			Table_EntryToString(symbolTable[a]);
 			#endif
 			switch (symbolTable[a]->type){
+				case'A':
 				case'C':
 				//#location
 				//number
@@ -1045,6 +1101,73 @@ int find_location(char type,int data,char *fucn_name,int total_vars){
 }
 int EV_POSTFIX_EXPP(char *expp){
 	//todo after func call doesnt evalueate the rest of the expression
+	if(expp[0]=='"'){
+		STACKPTR array = new_stack();
+		expp++;
+		while(expp[0]!='\0' && expp[0]!='"'){
+			//todo add special char support
+			int value=0;
+			if(expp[0]=='\\'){
+				switch(expp[1]){
+					case'\\':
+					value=(int)'\\';
+					break;
+					case'n':
+					value=(int)'\n';
+					break;
+					case'\'':
+					value=(int)'\'';
+					break;
+					case'\"':
+					value=(int)'\"';
+					break;
+					case'a':
+					value=(int)'\a';
+					break;
+					case'f':
+					value=(int)'\f';
+					break;
+					case'r':
+					value=(int)'\r';
+					break;
+					case't':
+					value=(int)'\t';
+					break;
+					case'v':
+					value=(int)'\v';
+					break;
+				}
+				expp+=2;
+			}
+			else{
+				value=(int)expp[0];
+				expp++;
+			}
+			push(value,&array);
+		}
+		push( (int)'\0',&array);
+
+		while(!isEmpty(array)){
+			int value = pop(&array);
+			TABLE_ENTRY_PTR CHAR = create_new('A',value,fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));
+			symbolTable[MAX_CODE_SIZE-(++total_vars)] = CHAR;
+			if(isEmpty(array)){
+				// if poped element is last
+				char command[40];
+				int string_pointer = find_location ('C',CHAR->location,fucn_name,total_vars);
+				if(string_pointer<0){
+					TABLE_ENTRY_PTR CONST = create_new('C',CHAR->location,fucn_name,MAX_CODE_SIZE - total_const++);
+					string_pointer = MAX_CODE_SIZE-(++total_vars);
+					symbolTable[string_pointer]=CONST;
+				}
+				sprintf(command,"LOAD %ld", symbolTable[string_pointer]->location);
+				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+				{UPDATE_IF_BLOCKS(1)}
+				return  symbolTable[string_pointer]->location;	
+			}
+
+		}
+	}
 	char *postfix = convertToPostfix(expp);
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
@@ -1174,8 +1297,12 @@ int EV_POSTFIX_EXPP(char *expp){
 			{
 				int x,y;
 				int pstore=0;
+				int flag=0;
 				if(!isEmpty(stack))x=pop(&stack);
-				if(!isEmpty(stack) && (isEmpty(operations) || peek(&operations)==BINARY))y=pop(&stack);
+				if(!isEmpty(stack) && (isEmpty(operations) || peek(&operations)==BINARY)){
+					y=pop(&stack);
+					flag=1;
+				}
 				/*we pop adress of vars in table here*/ 
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
@@ -1185,7 +1312,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				char command2[50];
 				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ 
 				//we only load it if not unary operation
-				if(isEmpty(operations) || pop(&operations) == BINARY){
+				if(flag > 0 && (isEmpty(operations) || pop(&operations) == BINARY)  ){
 					sprintf(command,"LOAD %ld",symbolTable[y]->location); 
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				}
