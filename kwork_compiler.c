@@ -603,6 +603,33 @@ void first_compile(FILE *file){
 			ELSE=0;
 	
 		}
+		else if(!strcmp(operator,"while")){
+			char *left_eq = malloc(50);
+			char *right_eq = malloc(50);
+			char *comparator = malloc(3);
+			int x=0;
+			int y=0;
+			while(operand[x]!='!' ||
+				 operand[x]!='='  ||
+				 operand[x]!='<'  ||
+				 operand[x]!='>')
+			{
+			left_eq[x]=operand[x];
+			x++;
+			}
+			comparator[0]=operand[x++];
+			if(operand[x]=='=' || operand[x]=='<' || operand[x]=='>'){
+				comparator[1]=operand[x++];
+			}
+			while(operand[x]!='\0'){
+				right_eq[y++] = operand[x++];
+			}
+
+			free(left_eq);
+			free(right_eq);
+			free(comparator);
+		}
+
 		//check if line starts as for loop
 		else if (!strcmp(operator,"for")){
 			//for exmaple
@@ -1183,14 +1210,25 @@ int EV_POSTFIX_EXPP(char *expp){
 				while(postfix[0]!='\0' && !isspace((int)postfix[0]) && (!isOperator(postfix[0]) || negative_number ) ){
 					dig[x++]=postfix[0];
 					postfix++;
-				}\
+				}
 				int c_value = atoi(dig);
 				int ad = find_location ('C',c_value,fucn_name,total_vars);
 				if(ad<0){
 					TABLE_ENTRY_PTR CONST = create_new('C',c_value,fucn_name,MAX_CODE_SIZE - total_const++);
 					ad = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[ad]=CONST;
-				}\
+				}
+				push(ad,&stack);
+			}
+			else if(postfix[0]=='\''){
+				int ad = find_location ('C',postfix[1],fucn_name,total_vars);
+				//printf("");
+				if(ad<0){
+					TABLE_ENTRY_PTR CONST = create_new('C',postfix[1],fucn_name,MAX_CODE_SIZE - total_const++);
+					ad = MAX_CODE_SIZE-(++total_vars);
+					symbolTable[ad]=CONST;
+				}
+				postfix+=3;
 				push(ad,&stack);
 			}
 			else if (isOperand(postfix[0])){
@@ -1318,7 +1356,9 @@ int EV_POSTFIX_EXPP(char *expp){
 				}
 				if(code_lines==0){UPDATE_IF_BLOCKS(1)}
 				code_lines++;
-				switch ( (int) (postfix++[0]) ){
+				int comp = (int) (postfix[0]) + ((postfix[2]=='=' ||  postfix[2]=='<' || postfix[1]=='>'|| postfix[2]=='+'|| postfix[2]=='-')?postfix[2]:0);
+				postfix+= 1 + (comp>'>')*2;
+				switch ( comp ){
 					case'+':
 					sprintf(command,"ADD %ld",symbolTable[x]->location);
 					push(BINARY,&operations);
@@ -1339,11 +1379,11 @@ int EV_POSTFIX_EXPP(char *expp){
 					sprintf(command,"MOD %ld",symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break;
-					case'<': 
+					case'<'+'<': 
 					sprintf(command,"BIT_S_L %ld",symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break; 
-					case'>': 
+					case'>'+'>': 
 					sprintf(command,"BIT_S_R %ld",symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break; 
@@ -1359,8 +1399,13 @@ int EV_POSTFIX_EXPP(char *expp){
 					sprintf(command,"BIT_XOR %ld",symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break; 
+					case'<': 
+					sprintf(command,"SUB %ld",symbolTable[x]->location); 
+					push(BINARY,&operations);
+					break; 
+
 					/*Unary operations*/ 
-					case'~': 
+					case'!': 
 					sprintf(command,"BIT_INV %ld",symbolTable[x]->location); 
 					push(UNARY,&operations);
 					break; 
@@ -1382,6 +1427,38 @@ int EV_POSTFIX_EXPP(char *expp){
 					push(UNARY,&operations);
 				
 					break; 
+
+					case ('+'+'+'):
+					//todo add cosnt assigment check
+					sprintf(command,"LOAD %ld",symbolTable[x]->location); 
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+
+					adress = find_location ('C',1,fucn_name,total_vars);
+					if(adress<0){
+						TABLE_ENTRY_PTR VAR = create_new('C',1,fucn_name,MAX_CODE_SIZE - total_const++);
+						adress = MAX_CODE_SIZE-(++total_vars);
+					symbolTable[adress]=VAR;
+					}
+					sprintf(command,"ADD %ld",symbolTable[adress]->location);
+					sprintf(command2,"STORE %ld",symbolTable[x]->location);/*overwrite same var*/ 
+					push(UNARY,&operations);
+					adress=x;
+					break;
+
+					case ('-'+'-'):
+					sprintf(command,"LOAD %ld",symbolTable[x]->location); 
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					int adress = find_location ('C',1,fucn_name,total_vars);
+					if(adress<0){
+						TABLE_ENTRY_PTR VAR = create_new('C',1,fucn_name,MAX_CODE_SIZE - total_const++);
+						adress = MAX_CODE_SIZE-(++total_vars);
+					symbolTable[adress]=VAR;
+					}
+					sprintf(command,"SUB %ld",symbolTable[adress]->location);
+					sprintf(command2,"STORE %ld",symbolTable[x]->location);/*overwrite same var*/ 
+					push(UNARY,&operations);
+					adress=x;
+					break;
 				}
 				 
 				if(!pstore){

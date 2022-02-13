@@ -22,6 +22,8 @@
 #define BIT_AND 53 // Binary AND acc with the value from pointer to memory memory[operand], result stored in acc
 #define BIT_XOR 54 // Binary XOR acc with the value from pointer to memory memory[operand], result stored in acc
 #define BIT_INV 55 //inverts bytes of acc result stored in acc
+#define LOG_LESS 80 //compares if acc less than zero
+#define LOG_LESSEQ 81 // compares if acc less or equal zero
 #define SYSCALL 70 //calls kwork system call, by operand as syscall id
 #define PUSH 71 //pushes data from memory on the stack
 #define POP 72 //pops data from the stack to memory adress
@@ -133,6 +135,7 @@ int main(){
 		switch(operation_code){
 			case READ:
 				//printf("Enter value\n");
+				
 				scanf("%ld",&memory[operand]);
                            break;
 			case WRITE:
@@ -270,6 +273,12 @@ int main(){
 				break;
 				case CALL:
 				instruction_counter = memory[operand];
+				break;
+				case LOG_LESS:
+				acc=acc<0;
+				break;
+				case LOG_LESSEQ:
+				acc=acc<=0;
 				break;
 
 		}

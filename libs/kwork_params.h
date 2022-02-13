@@ -8,7 +8,7 @@
 #include <syscalls.h>
 #include <fast_math.h>
 #include <utils.h>
- #include<fcntl.h> 
+#include<fcntl.h> 
 #ifndef DATA_STR_H
 #include <data_str.h>
 #define DATA_STR_H

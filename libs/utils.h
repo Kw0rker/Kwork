@@ -79,7 +79,7 @@ char *convertToPostfix(char *exp){
 int isOperand(char ch){
 	 return (ch >= 'a' && ch <= 'z') ||
            	(ch >= 'A' && ch <= 'Z') ||
-           	isdigit((int)ch);
+           	isdigit((int)ch) || ch=='\'';
 }
 int isOperator(char ch){
 	return ch=='+' ||
