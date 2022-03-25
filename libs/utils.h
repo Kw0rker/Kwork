@@ -62,7 +62,13 @@ char *convertToPostfix(char *exp){
             while (!isEmpty(stack) &&
                  Prec(exp[i]) <= Prec(peek(&stack)))
                 result[++k] = pop(&stack);
+            int t=0;
+            if(exp[i+1]=='='){
+                push((int)exp[i+1],&stack);
+                t=1;
+            }
             push((int)exp[i],&stack);
+            i+=t;
         }
  
     }
@@ -89,6 +95,9 @@ int isOperator(char ch){
 		   ch=='%' ||
 		   ch=='^' ||
            ch=='@' ||
+           ch=='<' ||
+           ch=='>' ||
+           ch=='!' ||
            ch=='#';
 }
 int Prec(char c){

@@ -37,3 +37,6 @@
 #define MAX_CONST_POOL 254
 #endif
 #define ESP_ADR (MEM_SIZE - MAX_CONST_POOL)
+#ifndef MAX_NESTED_LOOPS_VALUE
+#define MAX_NESTED_LOOPS_VALUE 40
+#endif
