@@ -142,6 +142,7 @@ int main(){
 			  	printf("%d",(int)memory[operand]);
 			       break;
 			case PRINT:
+				//fwrite(&memory[operand],sizeof(char),acc,stdout);
 				printf("%c",(char) memory[operand]);  // from pointer to adress and resolving pointer
 			case LOAD:
 				acc=memory[operand];

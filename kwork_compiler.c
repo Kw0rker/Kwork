@@ -722,269 +722,6 @@ void first_compile(FILE *file){
 			//free(incrementExpp);
 		}
 
-		//check if line starts as for loop
-		// else if (!strcmp(operator,"fors")){
-		// 	//for exmaple
-		// 	// for x=0;x<10;1
-		// 	//	init value;comparasing;step
-		// 	char *var_nd_defV = malloc(40); //variable and its asign value
-		// 	char *comparator = malloc(3);
-		// 	char *comparator_saved = comparator; //so we can free it's later after pointer ariphmetics been done
-		// 	char *var_nd_defV_saved = var_nd_defV;
-		// 	char *step = malloc(40);
-		// 	var_nd_defV = strtok(operand,";");
-		// 	comparator = strtok(NULL,";");
-		// 	step = strtok(NULL,";");
-		// 	//int step_value = atoi(step);
-		// 	char var = var_nd_defV[0];
-		// 	char var2 = comparator[0];
-		// 	var_nd_defV+=2;//increment pointer so it points to var deflaut value
-		// 	comparator++;
-		// 	//increment pointer by one so it points to 
-		// 	//so next element afer variable must be equaltiy sign 1 or 2 bits 
-		// 	char comp[] = {comparator[0],
-		// 					   (comparator[1]=='>'||
-		// 					   	comparator[1]=='<'||
-		// 					   	comparator[1]=='='||
-		// 					   	comparator[1]=='!')?comparator[1]++:'\0', //increment by one if there 2 signs
-		// 					   '\0'};
-		// 	comparator++;//increment pointer so it points to compare value
-		// 	//if one ony equality sign found incrment only by one, if 2 increment by 2				   
-		// 	TABLE_ENTRY_PTR VAR1 = find_entry('V',var,fucn_name,total_vars);
-		// 	if(VAR1==NULL){
-		// 		VAR1 = create_new('V',var,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		// 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR1;
-		// 	}
-		// 	TABLE_ENTRY_PTR VAR2 = find_entry('V',var2,fucn_name,total_vars);
-		// 	if(VAR2==NULL){
-		// 		VAR2 = create_new('V',var2,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		// 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR2;
-		// 	}
-		// 	int compareValue = atoi(comparator);
-		// 	TABLE_ENTRY_PTR CMP_VALUE;
-		// 	if(isdigit((int)comparator[0])){
-		// 		CMP_VALUE = find_entry('C',compareValue,fucn_name,total_vars);
-		// 	}
-		// 	else{
-		// 		CMP_VALUE = find_entry('V',comparator[0],fucn_name,total_vars);
-		// 	}
-		// 	if(CMP_VALUE==NULL){
-		// 		if(isdigit((int)comparator[0])){
-		// 			CMP_VALUE = create_new('C',compareValue,fucn_name,MAX_CODE_SIZE - total_const++);
-		// 		}
-		// 		else{
-		// 			CMP_VALUE = create_new('V',(int)comparator[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		// 		}
-		// 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = CMP_VALUE;
-		// 	}
-		// 	int defValue = atoi(var_nd_defV);
-		// 	TABLE_ENTRY_PTR DEF_VALUE;
-		// 	if(isdigit((int)var_nd_defV[0])){
-		// 		DEF_VALUE =  find_entry('C',defValue,fucn_name,total_vars);
-		// 	}
-		// 	else{
-		// 		DEF_VALUE =  find_entry('V',var_nd_defV[0],fucn_name,total_vars);
-		// 	}
-		// 	if(DEF_VALUE==NULL){
-		// 		if(isdigit((int)var_nd_defV[0])){
-		// 			DEF_VALUE = create_new('C',defValue,fucn_name,MAX_CODE_SIZE - total_const++);
-		// 		}
-		// 		else{
-		// 			DEF_VALUE = create_new('V',(int)var_nd_defV[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		// 		}
-		// 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = DEF_VALUE;
-		// 	}
-		// 	// TABLE_ENTRY_PTR step_ = find_entry('C',step_value,fucn_name,total_vars);
-		// 	// if(step_==NULL){
-		// 	// 	//todo check this step it looks sus
-		// 	// 	step_ = create_new('C',step_value,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		// 	// 	symbolTable[MAX_CODE_SIZE-(++total_vars)] = step_;
-		// 	// }
-		// 	TABLE_ENTRY_PTR one = find_entry('C',1,fucn_name,total_vars);
-		// 	//check if vars and consts was intialized 
-		// 	if(one==NULL){
-		// 		one = create_new('C',1,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++)));
-		// 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = one;
-		// 	}
-
-
-		// 	char command[40];
-		// 	//generate kwork asm code //
-		// 	//			asign variable its default value -1 ////
-		// 	//			as we pre increment 				////
-		// 	sprintf(command,"LOAD %ld",DEF_VALUE->location);
-		// 	symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 	memset(command,0,sizeof(command));
-		// 	sprintf(command,"SUB %d",EV_POSTFIX_EXPP(step));
-		// 	symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 	memset(command,0,sizeof(command));
-		// 	sprintf(command,"STORE %ld",VAR1->location);
-		// 	symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 	memset(command,0,sizeof(command));
-
-		// 	// 				pre increment the value 			////
-		// 	//				we have to jump here 				////
-		// 	sprintf(command,"LOAD %ld",VAR1->location);
-		// 	symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 	memset(command,0,sizeof(command));
-		// 	push(total_comands,&for_stack);
-		// 	push(total_comands,&return_stack);
-		// 	sprintf(command,"ADD %d",EV_POSTFIX_EXPP(step));
-		// 	symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 	memset(command,0,sizeof(command));
-		// 	sprintf(command,"STORE %ld",VAR1->location);
-		// 	symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 	memset(command,0,sizeof(command));
-
-		// 	//                                           ////
-
-		// 	if(!strcmp(comp,"<=")){
-		// 		//			subtract value of compare value form Variable in equality			////
-		// 		sprintf(command,"LOAD %ld",CMP_VALUE->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-
-		// 		sprintf(command,"SUB %ld",VAR2->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//																				////
-
-		// 		//blind jump forward if result is negative meaning that var > compare_vale which reuslts in the end of the cycle
-		// 		sprintf(command,"BRANCHNEG ");
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		push(total_comands,&stack); //push adress of bracnh command in sybol table so whe can reslove jump adress later
-		// 		UPDATE_IF_BLOCKS(9)
-
-
-
-		// 	}
-		// 	else if(!strcmp(comp,">=")){
-		// 		//			subtract varaiable from value in eauality			////
-		// 		sprintf(command,"LOAD %ld",VAR2->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-
-		// 		sprintf(command,"SUB %ld",CMP_VALUE->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//																				////
-
-		// 		//blind jump forward if result is negative meaning that var > compare_vale which reuslts in the end of the cycle
-		// 		sprintf(command,"BRANCHNEG ");
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		push(total_comands,&stack); //push adress of bracnh command in sybol table so whe can reslove jump adress later
-		// 		UPDATE_IF_BLOCKS(9)
-
-
-		// 	}
-		// 	else if(!strcmp(comp,"==")){
-		// 		//			subtract varaiable from value in eauality			////
-		// 		sprintf(command,"LOAD %ld",VAR2->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-
-		// 		sprintf(command,"SUB %ld",CMP_VALUE->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//																				////
-
-		// 		//			jump over next instuction if result of subtraction is 0 			////
-
-		// 		sprintf(command,"BRANCHZERO %d",function_pointer+local_comands+2);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//     																			////
-
-		// 		//			jump to end of loop otherwise				////
-		// 		sprintf(command,"BRANCH ");
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		push(total_comands,&stack);
-		// 		UPDATE_IF_BLOCKS(10)
-
-		// 	}
-		// 	else if(!strcmp(comp,"!=")){
-		// 		//			subtract varaiable from value in eauality			////
-		// 		sprintf(command,"LOAD %ld",VAR2->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-
-		// 		sprintf(command,"SUB %ld",CMP_VALUE->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//																				////
-
-		// 		//			jump to end of loop if result of subtraction is 0 			////
-
-		// 		sprintf(command,"BRANCHZERO ");
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		push(total_comands,&stack);
-		// 		UPDATE_IF_BLOCKS(10)
-
-	
-
-		// 	}
-		// 	else if(!strcmp(comp,"<")){
-		// 		//			subtract value of compare value form Variable in equality			////
-		// 		sprintf(command,"LOAD %ld",VAR2->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-
-		// 		sprintf(command,"SUB %ld",CMP_VALUE->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//																				////
-
-		// 		//if result is negative meaning that variable is less than compare value jump over next command//
-		// 		sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//			jump to end of loop otherwise				////
-		// 		sprintf(command,"BRANCH ");
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		push(total_comands,&stack);
-		// 		UPDATE_IF_BLOCKS(10)
-
-
-
-		// 	}
-		// 	else if(!strcmp(comp,">")){
-		// 		//			subtract value of compare value form Variable in equality			////
-		// 		sprintf(command,"LOAD %ld",CMP_VALUE->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-
-		// 		sprintf(command,"SUB %ld",VAR2->location);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//																				////
-
-		// 		//if result is negative meaning that variable is less than compare value jump over next command//
-		// 		sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2);
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		//			jump to end of loop otherwise				////
-		// 		sprintf(command,"BRANCH ");
-		// 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-		// 		memset(command,0,sizeof(command));
-		// 		push(total_comands,&stack);
-		// 		UPDATE_IF_BLOCKS(10)
-
-								
-		// 	}
-		// 	flags[total_comands] = FOR;
-
-
-
-		// 	//it causes sigabart
-		// 	// free(var_nd_defV_saved);
-		// 	// free(comparator_saved);
-		// 	// free(step);
-		// }
 		else if(!strcmp(operator,"putc")){
 			TABLE_ENTRY_PTR VAR; 
 			if(isdigit((int)operand[0])){
@@ -1029,19 +766,11 @@ void first_compile(FILE *file){
 			UPDATE_IF_BLOCKS(1);
 		}
 		else if(!strcmp(operator,"let")){
-			//strtok(rest," ");
-			//char *t = strtok(NULL," ");
 			strcpy(operand,"");//temp fix
 			while(rest[0]!='\0' && rest[0]==' ')rest++;
 			while(rest[0]!=' ')rest++;
-			//strtok(rest,"let");
 			while(rest[0]!='\0' && rest[0]==' ')rest++;
 			operand = rest;
-
-			// while(t!=NULL){
-			// 	operand =  strcat(operand,t);
-			// 	t=strtok(NULL," ");
-			// }
 			char *var_n = operand;
 			char *equation  = strchr(operand,'=') + 1;
 			if(equation==NULL){
@@ -1070,7 +799,6 @@ void first_compile(FILE *file){
 			var = create_new('V',var_n[0],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
 			symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
 			}
-			int save = total_comands;
 			EV_POSTFIX_EXPP(equation);
 			//UPDATE_IF_BLOCKS(total_comands - save);
 			char temp[40];
@@ -1150,7 +878,61 @@ void second_compile(){
 	fclose(file);
 
 }
+int AllocateArray(STACKPTR *stack){
+	//better check if stack is empty but i dont fucking care!
+	int array_size = pop(stack);
+	int zero_element = reserveMemory(array_size);
 
+	if(isEmpty((*stack))){
+		return symbolTable[zero_element]->location;
+	}
+	else{
+		//sub array size
+		int sub_arr_s = pop(stack);
+		//push array_size of subarray sizes because for each member of array in array size 
+		//distance we create sub array by poping
+		for(int a=0;a<array_size;a++){
+			push(sub_arr_s,stack);
+			//fill created array with pointers to coresponding pointers to subarrays
+			TABLE_ENTRY_PTR pointer = create_new('A',AllocateArray(stack),fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));
+			symbolTable[MAX_CODE_SIZE-(++total_vars)]=pointer;
+			symbolTable[zero_element+a]->const_value=pointer->location;
+			symbolTable[zero_element+a]->type='A';
+
+		}
+		//return location of first element
+		return symbolTable[zero_element+array_size-1]->location;
+	}
+}
+/*
+	(z1-1)*y*x+(y1-1)*x+x1 for 3D array to find
+
+	pse function calc_add(stack subscr,sizes [], sizepoint)
+	{
+		x = pop(subscr)
+		if subscr empty
+		return x
+		else
+		y=1
+		for(i<sizepoint-1)
+		y*=size[i]
+		return (x-1)*y+calc_add(subscr,sizes,sizepoint-1)
+	}
+	pse function getAdd(){
+		fill stack with array subsriptions
+		return calc_add(subs,get array sizes,get array dismention - 1)
+	}
+*/
+
+
+int reserveMemory(int size){
+	for(int a=0;a<size;a++){
+		TABLE_ENTRY_PTR array_element = create_new('R',0,fucn_name,MAX_CODE_SIZE - total_const++);
+		symbolTable[MAX_CODE_SIZE-(++total_vars)] = array_element;
+	}
+	//return adress in table
+	return MAX_CODE_SIZE-(total_vars);
+}
 TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int total_vars){
 	switch(type){
 		case'C':
@@ -1293,6 +1075,26 @@ int EV_POSTFIX_EXPP(char *expp){
 
 		}
 	}
+	// if array declaration
+	else if(expp[0]=='['){
+		STACKPTR array_sizes = new_stack();
+		while(rest[0]!='[')rest++;
+		char *numb = strtok(rest,"]");
+		int array_size;
+		while(numb!=NULL){
+			numb++; // skip opening bracket assume there is !
+			//for now we only init arrays with consts values
+			array_size=atoi(numb);
+			if(array_size>0)push(array_size,&array_sizes);
+			numb = strtok(NULL,"]");
+		}
+		int array_pointer = AllocateArray(&array_sizes);
+		char command[40];
+		sprintf(command,"LOAD %d",array_pointer);
+		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+		return array_pointer;
+	}
+
 	char *postfix = convertToPostfix(expp);
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
@@ -1417,6 +1219,7 @@ int EV_POSTFIX_EXPP(char *expp){
 
 					
 				}
+				else if(postfix[0]==' ')postfix++;
 				else{
 					int ad = find_location ('V',(int)postfix[0],fucn_name,total_vars);
 					if(ad<0){
@@ -1429,15 +1232,35 @@ int EV_POSTFIX_EXPP(char *expp){
 					postfix++;
 				}
 			}
+			else if(postfix[0]=='['){
+				postfix++;
+				int x = 0;
+				char array_sub[40];
+				memset(array_sub,0,sizeof(array_sub));
+				while(postfix[0]!=']'){
+					array_sub[x]=postfix[0];
+					postfix++;
+				}
+				postfix--;//go back to elements so we rewrite them with corespponding operations
+				postfix[0]='+';
+				postfix[1]='@';
+				EV_POSTFIX_EXPP(array_sub);
+				//push(temp,&stack); //push adress of temp var
+				int arr_p= pop(&stack);
+				push(-1,&stack);
+				push(arr_p,&stack);
+				//so we sum it up with array pointer
+				//then dereference
+			}
 			else if (isOperator(postfix[0]))
 			{
 				int x,y;
 				int pstore=0;
 				int flag=0;
 				if(!isEmpty(stack))x=pop(&stack);
-				if(!isEmpty(stack) && (isEmpty(operations) || peek(&operations)==BINARY)){
+				if(!isEmpty(stack) && (isEmpty(operations) || pop(&operations)==BINARY)){
 					y=pop(&stack);
-					flag=1;
+					if(y>0)flag=1;
 				}
 				/*we pop adress of vars in table here*/ 
 				created++;
@@ -1457,7 +1280,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				code_lines++;
 				int t = postfix[1]==' ';
 				int comp = (int) (postfix[0]) + ((postfix[1+t]=='=' ||  postfix[1+t]=='<' || postfix[1+t]=='>'|| postfix[1+t]=='+'|| postfix[1+t]=='-')*postfix[1+t]);
-				postfix+= 1 + (comp>'>')*2;
+				postfix+= 1 + (comp>'@')*2;
 				switch ( comp ){
 					case'+':
 					sprintf(command,"ADD %ld",symbolTable[x]->location);
@@ -1590,7 +1413,11 @@ int EV_POSTFIX_EXPP(char *expp){
 					/*store result in temp variable*/
 					symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
 				}
-				 
+				if(y==-1){
+					pop(&operations);
+					push(BINARY,&operations);
+					//fucking kludge here
+				}
 				push(adress,&stack);
 			
 			}
