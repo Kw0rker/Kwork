@@ -765,7 +765,8 @@ void first_compile(FILE *file){
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
-		else if(!strcmp(operator,"let")){
+		else if(!strcmp(operator,"let"))
+		{
 			strcpy(operand,"");//temp fix
 			while(rest[0]!='\0' && rest[0]==' ')rest++;
 			while(rest[0]!=' ')rest++;
@@ -792,20 +793,85 @@ void first_compile(FILE *file){
 				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 
 			}
-			else{
+
+			else
+			{
+			//load adress of array first element	
 			TABLE_ENTRY_PTR var =find_entry('V',var_n[0],fucn_name,total_vars);
-			// if not found create new
-			if(var==NULL){
-			var = create_new('V',var_n[0],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
-			symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
+			char *save;
+			char *array_sub = strtok(var_n,"[");
+			var_n = array_sub;
+			array_sub = strtok(NULL,"[");
+			char temp[40];
+			//if we find bracket that means that we have array subscriptoion assigment here
+			if (array_sub)
+			{
+				var =find_entry('V',var_n[0],fucn_name,total_vars);
+				if (!var)
+				{
+
+					fprintf(stderr,"Array %c hasnt been initlized!\n",var_n[0]);
+					continue;
+				}
+				TABLE_ENTRY_PTR temp_v = create_new('V',0,fucn_name,MAX_CODE_SIZE - total_const - 50);
+				int adress = MAX_CODE_SIZE-(total_const) -50;
+				symbolTable[adress] = temp_v;
+
+				 // sprintf(temp,"LOAD %ld",var->location);
+				 // symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+				while (array_sub)
+				{
+				    save=array_sub;
+				    array_sub=strtok(NULL,"[");
+				    if(!array_sub){
+					//if save was last array_subsriction
+					//we evaluate array subsription and add it with an adress of last element
+				    EV_POSTFIX_EXPP(strtok(save,"]"));	
+					sprintf(temp,"ADD %ld",var->location);
+					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+					sprintf(temp,"STORE %ld",temp_v->location);
+					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+	
+				    }
+				    else
+				    {
+					// if there're more array subs
+					// add adress with substicption (offset)
+				    EV_POSTFIX_EXPP(strtok(save,"]"));	
+					sprintf(temp,"ADD %ld",var->location);
+					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+					sprintf(temp,"STORE %ld",temp_v->location);
+					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+					sprintf(temp,"PLOAD %ld",temp_v->location);
+					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+					sprintf(temp,"STORE %ld",temp_v->location);
+					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+					var=temp_v;
+				    }
+			    }
+
+				// by the end of the loop we must have an adress memory where to store
+				//asume its present in acc
+
+				//todo store it in temp var
+				EV_POSTFIX_EXPP(equation);
+				sprintf(temp,"PSTORE %ld",temp_v->location);
+				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			}
+			else
+			{
+			// if not found create new
+				if(var==NULL)
+				{
+				var = create_new('V',var_n[0],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
+				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
+				}	
 			EV_POSTFIX_EXPP(equation);
 			//UPDATE_IF_BLOCKS(total_comands - save);
-			char temp[40];
 			sprintf(temp,"STORE %ld",var->location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
-			}
-
+			}	
+		}
 		}
 		else if(!strcmp(operator,"NEW_THREAD")){
 
@@ -1081,7 +1147,9 @@ int EV_POSTFIX_EXPP(char *expp){
 		while(rest[0]!='[')rest++;
 		char *numb = strtok(rest,"]");
 		int array_size;
+		int dism = -1;
 		while(numb!=NULL){
+			dism++; 
 			numb++; // skip opening bracket assume there is !
 			//for now we only init arrays with consts values
 			array_size=atoi(numb);
@@ -1090,8 +1158,17 @@ int EV_POSTFIX_EXPP(char *expp){
 		}
 		int array_pointer = AllocateArray(&array_sizes);
 		char command[40];
+		if(dism==1)
+		{
+		TABLE_ENTRY_PTR CONST = create_new('C',array_pointer,fucn_name,MAX_CODE_SIZE - total_const++);
+		symbolTable[ MAX_CODE_SIZE-(++total_vars)]= CONST;
+		sprintf(command,"LOAD %ld",CONST->location);
+		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+		}
+		else{
 		sprintf(command,"LOAD %d",array_pointer);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+		}
 		return array_pointer;
 	}
 
