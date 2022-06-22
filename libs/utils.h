@@ -29,10 +29,14 @@ char *convertToPostfix(char *exp){
     for (i = 0, k = -1; exp[i]; ++i)
     {
         if(exp[i]=='{'){
-            while(exp[i]!='}'){
+            int bracket = 0; 
+            //while bracket is not 0
+            do{
+                if(exp[i]=='{')bracket++;
+                else if (exp[i]=='}')bracket--;
                 result[++k] = exp[i++];
-            }
-            result[++k] = exp[i++];
+            }while(bracket);
+            //result[++k] = exp[i++];
         }
         if(exp[i]=='['){
             while(exp[i]!=']'){

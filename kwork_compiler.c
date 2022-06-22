@@ -679,6 +679,10 @@ void first_compile(FILE *file){
 					var_adress=MAX_CODE_SIZE-(++total_vars);
 					symbolTable[var_adress] = temp;
 			}
+			var_adress = symbolTable[var_adress]->location;
+
+			//this line is under investigation !
+			//why did i code it this way
 			int adress = EV_POSTFIX_EXPP(left_side);
 			if(adress==-1){
 				//some shit happend i duno lol
@@ -696,11 +700,6 @@ void first_compile(FILE *file){
 			
 			//evaluate RHS//
 			EV_POSTFIX_EXPP(right_side);
-			// //subtract increment expression coz we pre increment
-
-			// sprintf(command,"SUB %d",EV_POSTFIX_EXPP(incrementExpp));
-			// symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-			// memset(command,0,sizeof(command));
 			loop_increments[loop_inc_pointer] = malloc(50);
 			strcpy(loop_increments[loop_inc_pointer++],incrementExpp);
 			//result in acc store to var
@@ -1215,19 +1214,45 @@ int EV_POSTFIX_EXPP(char *expp){
 					postfix+=4;
 					int x=0;
 					char *fucntion_name = malloc(MAX_FUNC_L);
+					//move string to the begging of arguments
 					while(postfix[0]!='{'){
 						fucntion_name[x++]=postfix[0];
 						postfix++;
 					}
+					int bracket = 0;
+					//here we use bracket to see if we are inside brackets
+					//for each { we increment by one and for each } decriment by one
+					//so if bracket is 0 that means we can split the argument by comma 
+
+					//cut first char
 					postfix++;
+
 					char *arguments = malloc(MAX_ARG_L);
 					x=0;
-					while(postfix[0]!='}'){
+					int y=0;
+					//while last closing bracket is found
+					int last_bracket = strrchr(postfix,'}') - postfix;
+					while(y<last_bracket){
+						if (postfix[0]=='{'){
+							bracket++;
+							arguments[x++]=postfix[0];
+						}
+						else if (postfix[0]=='}'){
+							bracket--;
+							arguments[x++]=postfix[0];
+						}
+						else if (postfix[0]==',' && !bracket){
+							arguments[x++]='$';
+						}
+						else
+						{
 						arguments[x++]=postfix[0];
+						}
 						postfix++;
+						y++;
 					}
 					postfix++;
-					char *arg = strtok(arguments,ARG_SEPARATOR);
+					char *arg = strtok(arguments,"$");
 					int number_of_args =0;
 					char command[40];
 					//push return adress of the function calling
@@ -1240,6 +1265,7 @@ int EV_POSTFIX_EXPP(char *expp){
 					sprintf(command,"PUSH %ld",function->location);
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//push the arguments on the stack
+
 					while(arg!=NULL){
 						//evaluate epression
 						int adress = EV_POSTFIX_EXPP(arg);
@@ -1247,7 +1273,7 @@ int EV_POSTFIX_EXPP(char *expp){
 						//and push it on the stack
 						sprintf(command,"PUSH %d",adress);
 						symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-						arg=strtok(NULL,ARG_SEPARATOR);
+						arg=strtok(NULL,"$");
 						number_of_args++;
 					}
 	
