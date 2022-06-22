@@ -1254,6 +1254,11 @@ int EV_POSTFIX_EXPP(char *expp){
 					postfix++;
 					char *arg = strtok(arguments,"$");
 					int number_of_args =0;
+					char *args [MAX_ARGS];
+					while(arg!=NULL){
+						args[number_of_args++]=arg;
+						arg=strtok(NULL,"$");
+					}
 					char command[40];
 					//push return adress of the function calling
 					TABLE_ENTRY_PTR function = find_entry('C',total_comands+1,fucn_name,total_vars);
@@ -1266,15 +1271,14 @@ int EV_POSTFIX_EXPP(char *expp){
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//push the arguments on the stack
 
-					while(arg!=NULL){
+					for(int a=0;a<number_of_args;a++){
 						//evaluate epression
-						int adress = EV_POSTFIX_EXPP(arg);
+						int adress = EV_POSTFIX_EXPP(args[a]);
 						char command[40];
 						//and push it on the stack
 						sprintf(command,"PUSH %d",adress);
 						symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-						arg=strtok(NULL,"$");
-						number_of_args++;
+						
 					}
 	
 					free(arguments);
