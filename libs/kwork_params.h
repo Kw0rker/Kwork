@@ -40,3 +40,6 @@
 #ifndef MAX_NESTED_LOOPS_VALUE
 #define MAX_NESTED_LOOPS_VALUE 40
 #endif
+#ifndef MAX_ARGS
+#define MAX_ARGS 35
+#endif

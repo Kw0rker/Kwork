@@ -670,6 +670,7 @@ void first_compile(FILE *file){
 			char *left_side = strtok(defaultValueExpp,"=");
 			char *right_side = strtok(NULL,"=");
 			if(left_side==NULL||right_side==NULL||comparingExpp==NULL||incrementExpp==NULL){
+				fprintf(stderr,"For loop is incomplete on line %s\n",rest);
 				//todo error handle
 			}
 			int var_adress = find_location('V',left_side[0],fucn_name,total_vars);
@@ -693,10 +694,6 @@ void first_compile(FILE *file){
 			char command[40];
 
 
-			//push next_asm_instruction to stack so we jump to it in order to iterate thru loop
-				push(total_comands+1,&for_stack);
-				push(total_comands+1,&return_stack);
-				push(FOR,&stuck);
 			
 			//evaluate RHS//
 			EV_POSTFIX_EXPP(right_side);
@@ -706,7 +703,11 @@ void first_compile(FILE *file){
 			sprintf(command,"STORE %d",var_adress);
 			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 			memset(command,0,sizeof(command));
-
+			
+			//push next_asm_instruction to stack so we jump to it in order to iterate thru loop
+				push(total_comands+1,&for_stack);
+				push(total_comands+1,&return_stack);
+				push(FOR,&stuck);
 			EV_POSTFIX_EXPP(comparingExpp);
 			//result in acc 0/1
 			//jump to end if false
@@ -1378,6 +1379,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				char command2[50];
 				char load[50];
 				char temp_s [40];
+				memset(temp_s,0,sizeof temp_s);
 				sprintf(command2,"STORE %ld",temp->location);/*result of all operations is stored in acc*/ 
 				//we only load it if not unary operation
 				if(flag > 0){
