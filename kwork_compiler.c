@@ -1109,6 +1109,9 @@ int EV_POSTFIX_EXPP(char *expp){
 					case't':
 					value=(int)'\t';
 					break;
+					case '0':
+					value=(int)'\0';
+					break;
 					case'v':
 					value=(int)'\v';
 					break;
@@ -1175,6 +1178,7 @@ int EV_POSTFIX_EXPP(char *expp){
 		return array_pointer;
 	}
 
+
 	char *postfix = convertToPostfix(expp);
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
@@ -1201,11 +1205,53 @@ int EV_POSTFIX_EXPP(char *expp){
 				}
 				push(ad,&stack);
 			}
-			else if(postfix[0]=='\''){
-				int ad = find_location ('C',postfix[1],fucn_name,total_vars);
-				//printf("");
+			else if(postfix[0]=='\'')
+			{
+				int value=(int)postfix[1];
+				if(postfix[1]=='\\'){
+				switch(postfix[2])
+				{
+					case'\\':
+					value=(int)'\\';
+					break;
+					case'n':
+					value=(int)'\n';
+					break;
+					case'\'':
+					value=(int)'\'';
+					break;
+					case'\"':
+					value=(int)'\"';
+					break;
+					case'a':
+					value=(int)'\a';
+					break;
+					case'f':
+					value=(int)'\f';
+					break;
+					case'r':
+					value=(int)'\r';
+					break;
+					case't':
+					value=(int)'\t';
+					break;
+					case'v':
+					value=(int)'\v';
+					break;
+					case'0':
+					value=(int)'\0';
+					break;
+				}
+				postfix+=4;
+			}
+			else
+			{
+				postfix+=3;
+			}
+				int ad = find_location ('C',value,fucn_name,total_vars);
+				printf("");
 				if(ad<0){
-					TABLE_ENTRY_PTR CONST = create_new('C',postfix[1],fucn_name,MAX_CODE_SIZE - total_const++);
+					TABLE_ENTRY_PTR CONST = create_new('C',value,fucn_name,MAX_CODE_SIZE - total_const++);
 					ad = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[ad]=CONST;
 				}
