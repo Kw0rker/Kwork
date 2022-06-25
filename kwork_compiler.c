@@ -273,8 +273,10 @@ void first_compile(FILE *file){
 				function_address = MAX_CODE_SIZE - (++total_vars);
 				symbolTable[function_address] = create_new('F',number_of_args,fucntion_name,function_pointer);
 			}
+			//this code block needs optimization
 			for(int i=0;i<MAX_CODE_SIZE;i++){
-				if(flags[i]>0 && symbolTable[flags[i]]!=NULL &&  symbolTable[flags[i]]->type=='F'){
+				if(flags[i]>0 && symbolTable[flags[i]]!=NULL &&  symbolTable[flags[i]]->type=='F'
+					&&!strcmp(symbolTable[flags[i]]->fucn_name,fucntion_name)){
 					sprintf(symbolTable[i]->fucn_name,"CALL %ld",function->location);
 				}
 			}
@@ -1044,11 +1046,12 @@ int find_location(char type,int data,char *fucn_name,int total_vars){
 		case'F':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
 			int a =MAX_CODE_SIZE - x;
-			if(symbolTable[a]!=NULL && symbolTable[a]->type=='F'&& symbolTable[a]->const_value==data){
+			if(symbolTable[a]!=NULL && symbolTable[a]->type=='F'&& symbolTable[a]->const_value==data &&!strcmp(symbolTable[a]->fucn_name,fucn_name)){
 				return a; // found
 				break;
 			}
 		}
+		return -1;
 		break;
 		case'C':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
@@ -1216,6 +1219,7 @@ int EV_POSTFIX_EXPP(char *expp){
 					int x=0;
 					char *fucntion_name = malloc(MAX_FUNC_L);
 					//move string to the begging of arguments
+					while(postfix[0]!='\0'&&postfix[0]==' ')postfix++;
 					while(postfix[0]!='{'){
 						fucntion_name[x++]=postfix[0];
 						postfix++;
