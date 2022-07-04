@@ -44,18 +44,18 @@ Emulates hardware.
 - [ ] Compiler 
   - [x] basic expressions support
   - [ ] floating numbers math and support
-  - [ ] string literals support
+  - [x] string literals support
   - [ ] static type checks
   - [ ] compile time checks
   - [ ] compile time execution
   - [ ] preprocessor
   - [ ] optimization
-  - [ ] functions
+  - [x] functions
   - [x] loops
   - [x] conditional statements
   - [x] basic input and output
-  - [ ] arrays
-  - [ ] pointers
+  - [x] arrays
+  - [x] pointers
   - [x] bitwise operations
   - [ ] structs
   - [x] static memory
