@@ -76,7 +76,9 @@ Kwork lang is multiplatform static JET compiled programming language with dynami
 Every program must start with main function declaration following by end keyword at the end of the frame
 Every variable name is one char length! 
 function main
+
 … your code 
+
 end
 every key word is caps sensitive 
 
