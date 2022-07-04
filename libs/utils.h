@@ -45,6 +45,14 @@ char *convertToPostfix(char *exp){
             result[++k] = exp[i++];
             // while(exp[i]==' ' && exp[i]!='\0')i++;
         }
+        if(exp[i]=='\''){
+
+            do{
+                result[++k] = exp[i++];
+            } while(exp[i]!='\'');
+            result[++k] = exp[i++];
+            // while(exp[i]==' ' && exp[i]!='\0')i++;
+        }
          // If the scanned character is
         // an operand, add it to output.
         if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) )
