@@ -196,7 +196,7 @@ o	unary operations
 	
 @ -> dereference the pointer
 	
-# -> get a pointer
+#-> get a pointer
 	
 •	Comments 
 	
