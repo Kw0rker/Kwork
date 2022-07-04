@@ -75,47 +75,56 @@ Emulates hardware.
 Kwork lang is multiplatform static JET compiled programming language with dynamic data types and every variable is static and global in the specific frame. There is NO semicolons so only one command can be in the line (does not include nested calls ex function calls params).
 Every program must start with main function declaration following by end keyword at the end of the frame
 Every variable name is one char length! 
+```
 function main
 
 … your code 
 
 end
+```
 every key word is caps sensitive 
 
 Existing features:
 •	Variable declaration
 let lvalue = rvalue 
 rValue can be const/var/array/immutable string/expression
+```
 1.	let a = “Hello world\n"
 2.	let a = b
 3.	let a = [20][20]
 4.	let D = b*b-(4*a*c)
+```
 lValue can be array subscription/memory dereferencing/one char letter
+```
 1.	let a[2] = 1337
 2.	let a[B]….[Bn] = 69
 3.	let @(lvalue) = 101 
 4.	let D = “This language is trash\a\n”
-
+```
 
 
 
 •	loops
-loops can be for loop/
+loops can be for loop
+```
 1.	for lvalue=rvalue;rvalue;rvalue
 {
 …. Your code
 }
+```
 First rvalue is starting value
 Second rvalue is expression which is true or false 1/0
 Third rvalue is increment
+```
 for a=0;a<10;a++
 {
 ….. do smt
 }
-•	putc 
+```
+•	```putc ```
 puts char from var to stdout
 (supports only var as input rn)
-•	put 
+•	```put ```
 puts number from var to stdout
 (supports only var as input rn)
 
@@ -124,36 +133,43 @@ puts number from var to stdout
 
 1.	if statement
 compares 2 variables
+```
 if a<b
 {
 …your code
 }
+```
 2.	else if statement
 compares 2 variable only if previous if or else if frame failed
+```
 else if a>=b
 {
 …your code
 }
+```
 3.	else statement
 executed only if all others if or else if frames failed
+```
 else
 {
 ….your code here
 }
-•	input 
+```
+•	```input ```
 reads from stdin to variable
 •	functions declaration
+```
 function “Name_of_you function” (arg1,arg2,…,argN)
 …your code
 return rvalue
-
+```
 •	rvalue expression
 CALL “your function name” {rvalue1,rvalue2,…,rvalueN}
 Will call a function with parameters
 o	binary operands
 1.	supports all basic math operations + * - / %
 	
-let a = (b%10)*(10/3+(5-7))
+```let a = (b%10)*(10/3+(5-7))```
 	
 2.	supports all basic bitwise operations  && || ^ >> <<
 	
