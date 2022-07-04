@@ -152,22 +152,38 @@ CALL “your function name” {rvalue1,rvalue2,…,rvalueN}
 Will call a function with parameters
 o	binary operands
 1.	supports all basic math operations + * - / %
+	
 let a = (b%10)*(10/3+(5-7))
+	
 2.	supports all basic bitwise operations  && || ^ >> <<
+	
 && - >binary and
+	
 || -> binary or
+	
 ^ ->binary XOR
+	
 >> -> bit shift right
+	
 << -> bit shift left
+	
 3.	logical operations < > <= >=
+	
 o	unary operations
 4.	++ -- @ # !
+	
 ! -> bit inverse
+	
 ++ -> increment value by one
-		-- -> decrement value by one
-		@ -> dereference the pointer
-		# -> get a pointer
+			
+-- -> decrement value by one
+	
+@ -> dereference the pointer
+	
+# -> get a pointer
+	
 •	Comments 
+	
 // your comment
 Pointer can be any value even the const
 let @(10) = 3010 
