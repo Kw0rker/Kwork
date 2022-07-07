@@ -53,13 +53,17 @@ int main(int argc, char const *argv[])
 }
 //translates kwork assembly code to kwork file 
 translate_code(FILE *inp,FILE *out){
-	char *command= malloc(50);
-	char *save =command;
+	//char *command[50];
+	//char *save =command;
 	int operand;
 	while(!feof(inp)){
+		char command[50];
 		fscanf(inp,"%s",command);
 		//printf("%s\n",command);
 		fscanf(inp,"%d",&operand);
+		if(operand<0||command==NULL){
+			fprintf(stderr,"ERROORR!\n");
+		}
 		//fscanf(inp,"%s\n",command);//vuln to bufferoverflow fix later
 
 			 if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
@@ -98,16 +102,14 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"FUNC"))fprintf(out, "%s\n",FUNC);
 		//sets up addres datta at address
 		else if(command[0]=='#'){
-			command++;
-			fprintf(out, "-%s\n",command);
+			fprintf(out, "-%s\n",command+1);
 			fscanf(inp,"%d",&operand);
 			fprintf(out, "%d\n",operand);
 		}
 		//sets up adress for folowing command
 		else if (command[0]=='&')
 		{
-			command++;
-			fprintf(out, "-%s\n",command);
+			fprintf(out, "-%s\n",command+1);
 		}
 		else{
 			fprintf(stderr,"Undefined command -> %s\n",command);
@@ -115,7 +117,7 @@ translate_code(FILE *inp,FILE *out){
 	
 
 	}
-	free(save);
+	//free(save);
 }
 int getLine(char *buf,FILE *pt){
 	char c;

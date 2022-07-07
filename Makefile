@@ -2,6 +2,7 @@
 A=kwork_assembler
 K=kwork_kernel
 C=kwork_compiler
+bundle= A K C
 OBJECTS=
 CFLAGS = -g -Wall -O0 -Ilibs -D_DEBUG
 LDLIBS = 

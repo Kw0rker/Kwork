@@ -201,7 +201,7 @@ void first_compile(FILE *file){
 	line = malloc(100);
 	operator = malloc(20);
 	operand = malloc(20);
-	fucn_name = malloc(50);
+	//fucn_name = malloc(50);
 	rest= malloc(100);
 	fucn_name = malloc(100);
 
@@ -209,7 +209,7 @@ void first_compile(FILE *file){
 	while(!feof(file))
 	{
 	fgets(line,100,file);
-	char *saved = line;
+	char *saved = rest;
 	strcpy(rest,line);
 	//fscanf(file,"%100s\n",line);
 	//printf("%s\n",line );
@@ -291,9 +291,9 @@ void first_compile(FILE *file){
 		char *r_expression = rest;
 		while(!isspace((int)r_expression[0]))r_expression++;
 		r_expression++;
-		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,MAX_CODE_SIZE - 1 - 50);
-		int adress = MAX_CODE_SIZE- 1 -50;
-		symbolTable[adress] = ret_;
+		//this line is causing memory overwrite
+		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+		symbolTable[MAX_CODE_SIZE-(++total_vars)] = ret_;
 		char command[50];
 		sprintf(command,"POP %ld",ret_->location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
@@ -885,7 +885,7 @@ void first_compile(FILE *file){
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
 		}
-		line=saved;
+		rest=saved;
 		strcpy(last_line,operator);
 	}
 	fclose(file);
@@ -1128,7 +1128,7 @@ int EV_POSTFIX_EXPP(char *expp){
 
 		while(!isEmpty(array)){
 			int value = pop(&array);
-			TABLE_ENTRY_PTR CHAR = create_new('A',value,fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));
+			TABLE_ENTRY_PTR CHAR = create_new('A',value,fucn_name,MAX_CODE_SIZE - total_const++);
 			symbolTable[MAX_CODE_SIZE-(++total_vars)] = CHAR;
 			if(isEmpty(array)){
 				// if poped element is last
