@@ -117,7 +117,7 @@ use in main function only ! as it depends on local variables
 struct table_entry
 {
 	int const_value;
-	int symbol;
+	unsigned int symbol;
 	char type;
 	long location;
 	char fucn_name[50];	
@@ -139,11 +139,11 @@ compiles code to KWAC (kworker assembly code)
 void compile(FILE *);
 void first_compile(FILE *);
 void second_compile();
-TABLE_ENTRY_PTR find_entry(char ,int ,char *,int );
-int find_location(char ,int ,char *,int );
+TABLE_ENTRY_PTR find_entry(char ,unsigned int ,char *,int );
+int find_location(char ,unsigned int ,char *,int );
 int EV_POSTFIX_EXPP(char *);
 
-TABLE_ENTRY_PTR create_new(char ,int ,char *,long);
+TABLE_ENTRY_PTR create_new(char , unsigned int ,char *,long);
 //global vars
 	static STACKPTR stack = NULL;
 	static STACKPTR for_stack = NULL;
@@ -237,19 +237,19 @@ void first_compile(FILE *file){
 			char *function_args  = rest;
 			while(function_args[0]!='\0' && function_args[0]!='(') function_args++;
 			if(function_args[0]=='(')function_args++;
+			function_args=strtok(function_args,")");
 			char *arg  = strtok(function_args,ARG_SEPARATOR);
 			int number_of_args=0;
 			char temp[50];
-			// sprintf(temp,"&%d\nFUNC",function_pointer);
-			// symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
 			STACKPTR arg_stack = new_stack();
+			unsigned int params[123];
+			int p=0;
 			while(arg!=NULL){
-				push((int)arg[0],&arg_stack);
+				params[p++]=hash((unsigned char*)arg);
 				arg  = strtok(NULL,ARG_SEPARATOR);
 			}
-			while(!isEmpty(arg_stack)){
-				//todo pop in reverse !
-				TABLE_ENTRY_PTR var = create_new('V',(int)(pop(&arg_stack) +'\0' ),fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
+			while(p>0){
+				TABLE_ENTRY_PTR var = create_new('V',params[--p],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
 				sprintf(temp,"POP %ld",var->location);//pop value from stack to the mem adress
 				symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
@@ -798,17 +798,27 @@ void first_compile(FILE *file){
 
 			else
 			{
-			//load adress of array first element	
-			TABLE_ENTRY_PTR var =find_entry('V',var_n[0],fucn_name,total_vars);
+			//load adress of array first element
+			unsigned char *var_name = (unsigned char*)var_n;
+				while(var_n[0]!='\0'&& (!isOperator(var_n[0])&&var_n[0]!='['))
+				{
+					var_n++;
+				}
+			//(var_n-1)[0]='\0';
+			char temp_char=var_n[0];	
+			var_n[0]='\0';	
+			unsigned int hash_value = hash(var_name);
+			var_n[0]=temp_char;			
+			TABLE_ENTRY_PTR var =find_entry('V',hash_value,fucn_name,total_vars);
 			char *save;
 			char *array_sub = strtok(var_n,"[");
-			var_n = array_sub;
-			array_sub = strtok(NULL,"[");
+			// var_n = array_sub;
+			// array_sub = strtok(NULL,"[");
 			char temp[40];
 			//if we find bracket that means that we have array subscriptoion assigment here
 			if (array_sub)
 			{
-				var =find_entry('V',var_n[0],fucn_name,total_vars);
+				var =find_entry('V',hash_value,fucn_name,total_vars);
 				if (!var)
 				{
 
@@ -865,7 +875,7 @@ void first_compile(FILE *file){
 			// if not found create new
 				if(var==NULL)
 				{
-				var = create_new('V',var_n[0],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
+				var = create_new('V',hash_value,fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
 				}	
 			EV_POSTFIX_EXPP(equation);
@@ -1001,7 +1011,7 @@ int reserveMemory(int size){
 	//return adress in table
 	return MAX_CODE_SIZE-(total_vars);
 }
-TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int total_vars){
+TABLE_ENTRY_PTR find_entry(char type,unsigned data,char *fucn_name,int total_vars){
 	switch(type){
 		case'C':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
@@ -1032,7 +1042,7 @@ TABLE_ENTRY_PTR find_entry(char type,int data,char *fucn_name,int total_vars){
 	return NULL;
 
 }
-TABLE_ENTRY_PTR create_new(char type,int data,char *fucn_name,long location){
+TABLE_ENTRY_PTR create_new(char type,unsigned int data,char *fucn_name,long location){
 	TABLE_ENTRY_PTR new = malloc(sizeof (TABLE_ENTRY));
 	new->location=location;
 	new->type=type;
@@ -1041,7 +1051,7 @@ TABLE_ENTRY_PTR create_new(char type,int data,char *fucn_name,long location){
 	strcpy(new->fucn_name,fucn_name);
 	return new;
 }
-int find_location(char type,int data,char *fucn_name,int total_vars){
+int find_location(char type,unsigned int data,char *fucn_name,int total_vars){
 	switch(type){
 		case'F':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
@@ -1185,7 +1195,6 @@ int EV_POSTFIX_EXPP(char *expp){
 		enum OPERATIONS{UNARY,BINARY};
 		int created = total_vars;
 		int code_lines=0;
-		printf("");
 		int negative_number=1;
 		while(postfix!=NULL &&  postfix[0]!='\0'){
 			while(isspace((int)postfix[0]))postfix++;
@@ -1379,15 +1388,24 @@ int EV_POSTFIX_EXPP(char *expp){
 				}
 				else if(postfix[0]==' ')postfix++;
 				else{
-					int ad = find_location ('V',(int)postfix[0],fucn_name,total_vars);
+					//if var name 
+					unsigned char *var_name = (unsigned char*)postfix;
+					while(postfix[0]!='\0' && postfix[0]!=' '){
+						postfix++;
+					}
+					postfix[0]='\0';
+
+					unsigned int hash_value = hash(var_name);
+					postfix[0]=' ';
+					int ad = find_location ('V',hash_value,fucn_name,total_vars);
 					if(ad<0){
-						fprintf(stderr,"Variable (%c) is undefined!\n",postfix[0]);
+						fprintf(stderr,"Variable (%s) is undefined!\n",var_name);
 						TABLE_ENTRY_PTR VAR = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++)));
 						int ad = MAX_CODE_SIZE-(created++) -50;
+						abort();
 					symbolTable[ad]=VAR;
 					}
 					push(ad,&stack);
-					postfix++;
 				}
 			}
 			else if(postfix[0]=='['){

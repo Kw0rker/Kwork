@@ -41,35 +41,3 @@ int peek(STACKPTR *pt){
 int isEmpty(STACKPTR pt){
 	return pt->next==NULL;
 }
-// STACK END HERE
-
-
-//QUEUE
-// struct list{
-// 	Void *data;
-// 	struct stack *next;
-// };
-// typedef struct list LIST;
-// typedef LIST *LISTPTR;
-// LISTPTR new_list(){
-// 	LISTPTR list = malloc(sizeof(LIST));
-// 	list->next=NULL;
-// 	list->data=0;
-// 	return list;
-// }
-// Void *list_get(int pos,LISTPTR list){
-// 	// -1 is root 
-// 	int x=-1;
-// 	int return=0;
-// 	while(x!=pos && list->next!=NULL){
-// 		x++;
-// 		list=list->next;
-// 	}
-// 	if(x==pos){
-// 		return list->data;
-// 	}
-// 	else{
-// 		fprintf(stderr, "index %d is out of bonds\n",pos );
-// 		return 0;
-// 	}
-// }
