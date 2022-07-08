@@ -725,45 +725,17 @@ void first_compile(FILE *file){
 		}
 
 		else if(!strcmp(operator,"putc")){
-			TABLE_ENTRY_PTR VAR; 
-			if(isdigit((int)operand[0])){
-				VAR = find_entry('C',atoi(operand),fucn_name,total_vars);
-				if(VAR==NULL){
-					VAR = create_new('C',atoi(operand),fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-					symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR;
-				}
-			}
-			else{
-			 	VAR = find_entry('V',operand[0],fucn_name,total_vars);
-				if(VAR==NULL){
-					printf("Variable (%c) is undefined!\n",operand[0]);
-					VAR = create_new('V',operand[0],fucn_name,MAX_CODE_SIZE - total_const++);
-					symbolTable[MAX_CODE_SIZE-(++total_vars)]= VAR;
-				}
-			}
+			
 			char temp[40];
-			sprintf(temp,"PRINT %ld",VAR->location);
+			while(rest[0]!=' ')rest++;
+			sprintf(temp,"PRINT %d",EV_POSTFIX_EXPP(rest));
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
 		else if(!strcmp(operator,"put")){
-			TABLE_ENTRY_PTR VAR = NULL; 
-			if(isdigit((int)operand[0])){
-			VAR = find_entry('C',atoi(operand),fucn_name,total_vars);
-				if(VAR==NULL){
-					VAR = create_new('C',atoi(operand),fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-					symbolTable[MAX_CODE_SIZE-(++total_vars)] = VAR;
-				}
-			}
-			else{
-			VAR = find_entry('V',operand[0],fucn_name,total_vars);
-				if(VAR==NULL){
-					VAR =  create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-					symbolTable[MAX_CODE_SIZE-(++total_vars)]= VAR;
-				}
-			}
 			char temp[40];
-			sprintf(temp,"WRITE %ld",VAR->location);
+			while(rest[0]!=' ')rest++;
+			sprintf(temp,"WRITE %d",EV_POSTFIX_EXPP(rest));
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
@@ -806,7 +778,9 @@ void first_compile(FILE *file){
 				}
 			//(var_n-1)[0]='\0';
 			char temp_char=var_n[0];	
-			var_n[0]='\0';	
+			var_n[0]='\0';
+			remove_spaces((char *)var_name);
+
 			unsigned int hash_value = hash(var_name);
 			var_n[0]=temp_char;			
 			TABLE_ENTRY_PTR var =find_entry('V',hash_value,fucn_name,total_vars);
@@ -1274,6 +1248,10 @@ int EV_POSTFIX_EXPP(char *expp){
 					int x=0;
 					char *fucntion_name = malloc(MAX_FUNC_L);
 					//move string to the begging of arguments
+					if(!*postfix){
+						fprintf(stderr,"SOME SHIT HAPPENED\n");
+						continue;
+					}
 					while(postfix[0]!='\0'&&postfix[0]==' ')postfix++;
 					while(postfix[0]!='{'){
 						fucntion_name[x++]=postfix[0];
