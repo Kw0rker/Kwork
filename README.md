@@ -74,7 +74,6 @@ Emulates hardware.
 ## Kwork Lang Documentation
 Kwork lang is multiplatform static JET compiled programming language with dynamic data types and every variable is static and global in the specific frame. There is NO semicolons so only one command can be in the line (does not include nested calls ex function calls params).
 Every program must start with main function declaration following by end keyword at the end of the frame
-Every variable name is one char length! 
 ```
 function main
 
@@ -122,17 +121,14 @@ for a=0;a<10;a++
 }
 ```
 •	```putc ```
-puts char from var to stdout
-(supports only var as input rn)
+puts char from var to stdout argument rvalue
 •	```put ```
-puts number from var to stdout
-(supports only var as input rn)
+puts number from var to stdout argument rvalue
 
 •	branches
-(supports only vars as input rn)
 
 1.	if statement
-compares 2 variables
+computes rvalue expression executes if true (any value >0)
 ```
 if a<b
 {
@@ -140,7 +136,7 @@ if a<b
 }
 ```
 2.	else if statement
-compares 2 variable only if previous if or else if frame failed
+computes rvalue only if previous if or else if frame failed
 ```
 else if a>=b
 {
