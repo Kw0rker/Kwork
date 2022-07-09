@@ -344,208 +344,45 @@ void first_compile(FILE *file){
 					push(adress,&(returns[total_comands]));
 
 			}
+			while(rest[0]!='\0' && rest[0]!=' ')rest++;
+			//move rest pointer till whitespace char
+			while(rest[0]!='\0'&&rest[0]==' ')rest++;
+			//move till next operand
+			if(
+				rest[0]=='i'&&
+				rest[1]=='f'&&
+				rest[2]==' '
+			)rest+=3;
 
-			TABLE_ENTRY_PTR v1;
-			TABLE_ENTRY_PTR v2;
+			char comparingExpp[MAX_IF_EXPP_LEN];
+			int x=1;
+			comparingExpp[0]='(';
+			while(rest[0]!='!'&&
+				  rest[0]!='='&&
+				  rest[0]!='<'&&
+				  rest[0]!='>'
+			)comparingExpp[x++] = *rest++;
+			comparingExpp[x++]=')';
+			while(
+				  rest[0]=='='||
+				  rest[0]=='<'||
+				  rest[0]=='>'||
+				  rest[0]=='!'
+			)comparingExpp[x++] = *rest++;
+			comparingExpp[x++]='(';
+			while(isprint((int)rest[0]))comparingExpp[x++]=*rest++;
+			comparingExpp[x]=')';
+			comparingExpp[x+1]='\0';
+
+			EV_POSTFIX_EXPP(comparingExpp);
+			//result is 0/1 in acc
 			char command[30];
-			char comparator[3];
-			int x=0;
-			int y =0;
-			//while end of the string is not encountered
-			//get comparator from the operand
-			#ifdef _DEBUG
-			printf ("operand ->%s\n",operand);
-			#endif
-			while(operand[x]!='\0' && y<3){
-				if(operand[x]=='=' || operand[x]=='<' || operand[x]=='>' || operand[x]=='!')comparator[y++] = operand[x];
-				x++;
-			}
-			comparator[y] = '\0';
-			#ifdef _DEBUG
-			printf("comparator -> %s\n",comparator);
-			#endif
-			if(!strcmp(comparator,"==")){
-				GET_VARS(==)
-				sprintf(command,"LOAD %ld",v1->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				sprintf(command,"SUB %ld",v2->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCHZERO %d",function_pointer+local_comands+2); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//flags[function_pointer+line_n+3] = total_comands;
-				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				if(pop(&elif)){
-					UPDATE_IF_BLOCKS(4)
-					push(total_comands,&if_stack);
-				}
-				else{
-					push(total_comands,&if_stack);
-					UPDATE_IF_BLOCKS(4)
-				}
-			
+			sprintf(command,"BRANCHZERO "); //cond jump to the end of if block
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));	
 
 
-			}
-			if(!strcmp(comparator,"!=")){
-				GET_VARS(!=)
-				sprintf(command,"LOAD %ld",v1->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				sprintf(command,"SUB %ld",v2->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCHZERO "); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				if(pop(&elif)){
-					UPDATE_IF_BLOCKS(4)
-					push(total_comands,&if_stack);
-				}
-				else{
-					push(total_comands,&if_stack);
-					UPDATE_IF_BLOCKS(4)
-				}
-			
-
-
-			}
-			else if(!strcmp(comparator,"<=")){
-				GET_VARS(<=)
-				//v1 -v2
-				sprintf(command,"LOAD %ld",v1->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				sprintf(command,"SUB %ld",v2->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//branzero and branch neg jump over branch statement 
-				sprintf(command,"BRANCHZERO %d",function_pointer+local_comands+3); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+3); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//flags[function_pointer+line_n+4] = total_comands;
-				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				if(pop(&elif)){
-					UPDATE_IF_BLOCKS(5)
-					push(total_comands,&if_stack);
-				}
-				else{
-					push(total_comands,&if_stack);
-					UPDATE_IF_BLOCKS(5)
-				}
-				
-
-			}
-			else if(!strcmp(comparator,">=")){
-				GET_VARS(>=)
-				//v2 -v1
-
-				sprintf(command,"LOAD %ld",v2->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				sprintf(command,"SUB %ld",v1->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//branzero and branch neg jump over branch statement 
-				sprintf(command,"BRANCHZERO %d",function_pointer+local_comands+3); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+3); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//flags[function_pointer+line_n+4] = total_comands;
-				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				if(pop(&elif)){
-					UPDATE_IF_BLOCKS(5)
-					push(total_comands,&if_stack);
-				}
-				else{
-					push(total_comands,&if_stack);
-					UPDATE_IF_BLOCKS(5)
-				}
-			}
-
-			else if(!strcmp(comparator,">")){
-				GET_VARS(>)
-				sprintf(command,"LOAD %ld",v2->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				sprintf(command,"SUB %ld",v1->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//branzero and branch neg jump over branch statement 
-				
-				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//flags[function_pointer+local_comands+2] = total_comands;
-				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				if(pop(&elif)){
-					UPDATE_IF_BLOCKS(4)
-					push(total_comands,&if_stack);
-				}
-				else{
-					push(total_comands,&if_stack);
-					UPDATE_IF_BLOCKS(4)
-				}
-
-			}
-			else if(!strcmp(comparator,"<")){
-				GET_VARS(<)
-				sprintf(command,"LOAD %ld",v1->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				sprintf(command,"SUB %ld",v2->location);
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//branzero and branch neg jump over branch statement 
-				
-				sprintf(command,"BRANCHNEG %d",function_pointer+local_comands+2); //jump over next branch command
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-
-				sprintf(command,"BRANCH "); // jump forward to the end of if block we define adress on second compilation
-				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-				memset(command,0,sizeof(command));
-				//flags[function_pointer+line_n+3] = total_comands;
-				//push adreess of brach command so we can resolve jump forward address once '}' encountered
-				if(pop(&elif)){
-					UPDATE_IF_BLOCKS(4)
-					push(total_comands,&if_stack);
-				}
-				else{
-					push(total_comands,&if_stack);
-					UPDATE_IF_BLOCKS(4)
-				}
-			}
-			symbolTable[MAX_CODE_SIZE - (++total_vars)] = v1;
-			symbolTable[MAX_CODE_SIZE - (++total_vars)] = v2;
+			push(total_comands,&if_stack);
 			if(!strcmp(operator,"else")){
 				push(0,&elif);
 			}
@@ -1232,7 +1069,6 @@ int EV_POSTFIX_EXPP(char *expp){
 				postfix+=3;
 			}
 				int ad = find_location ('C',value,fucn_name,total_vars);
-				printf("");
 				if(ad<0){
 					TABLE_ENTRY_PTR CONST = create_new('C',value,fucn_name,MAX_CODE_SIZE - total_const++);
 					ad = MAX_CODE_SIZE-(++total_vars);
@@ -1368,11 +1204,11 @@ int EV_POSTFIX_EXPP(char *expp){
 				else{
 					//if var name 
 					unsigned char *var_name = (unsigned char*)postfix;
-					while(postfix[0]!='\0' && postfix[0]!=' '){
+					while(postfix[0]!='\0' && postfix[0]!=' '&& postfix[0]!='='&& postfix[0]!='!'&& postfix[0]!='<'&& postfix[0]!='>'){
 						postfix++;
 					}
 					postfix[0]='\0';
-
+					printf("");
 					unsigned int hash_value = hash(var_name);
 					postfix[0]=' ';
 					int ad = find_location ('V',hash_value,fucn_name,total_vars);
@@ -1431,11 +1267,10 @@ int EV_POSTFIX_EXPP(char *expp){
 				if(flag > 0){
 					sprintf(load,"LOAD %ld",symbolTable[y]->location); 
 				}
-				if(code_lines==0){UPDATE_IF_BLOCKS(1)}
 				code_lines++;
 				int t = postfix[1]==' ';
 				int comp = (int) (postfix[0]) + ((postfix[1+t]=='=' ||  postfix[1+t]=='<' || postfix[1+t]=='>'|| postfix[1+t]=='+'|| postfix[1+t]=='-')*postfix[1+t]);
-				postfix+= 1 + (comp>'@')*2;
+				comp+=(postfix[0]=='!')*(postfix[1+t]=='=');
 				switch ( comp ){
 					case'+':
 					sprintf(command,"ADD %ld",symbolTable[x]->location);
@@ -1499,7 +1334,17 @@ int EV_POSTFIX_EXPP(char *expp){
 					sprintf(command,"LOG_LESSEQ %d",0); 
 					push(BINARY,&operations);
 					break;
-
+					case '='+'=':
+					sprintf(load,"LOAD %ld",symbolTable[x]->location);
+					sprintf(temp_s,"SUB %ld",symbolTable[y]->location);
+					sprintf(command,"LOG_INV %d",0); 
+					push(BINARY,&operations);
+					break;
+					case '!'+'='+1:
+					sprintf(load,"LOAD %ld",symbolTable[x]->location);
+					sprintf(command,"SUB %ld",symbolTable[y]->location); 
+					push(BINARY,&operations);
+					break;
 					/*Unary operations*/ 
 					case'!': 
 					sprintf(command,"BIT_INV %ld",symbolTable[x]->location); 
@@ -1556,15 +1401,21 @@ int EV_POSTFIX_EXPP(char *expp){
 					adress=x;
 					break;
 				}
+				postfix+= 1 + (comp>'@')*2;
 					/*load first operand*/
-				if(flag)symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++)); 
+				if(flag){
+					symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++)); 
+					if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+				}
 				if(!pstore){
 					/*perform operation*/
 					if(temp_s[1]){
 						symbolTable[total_comands++] = create_new('L',0,temp_s,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
 						memset(temp_s,0,sizeof(temp_s));
 					}
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					if(code_lines==1){UPDATE_IF_BLOCKS(1)}
 					/*store result in temp variable*/
 					symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
 				}

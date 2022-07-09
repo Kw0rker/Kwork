@@ -82,7 +82,7 @@ char *convertToPostfix(char *exp){
                  Prec(exp[i]) <= Prec(peek(&stack)))
                 result[++k] = pop(&stack);
             int t=0;
-            if(exp[i+1]=='='){
+            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'){
                 push((int)exp[i+1],&stack);
                 t=1;
             }
@@ -93,8 +93,10 @@ char *convertToPostfix(char *exp){
     }
  
     // pop all the operators from the stack
-    while (!isEmpty(stack))
+    while (!isEmpty(stack)){
+        result[++k]=' ';
         result[++k] = pop(&stack );
+    }
  
     result[++k] = '\0';
 	free(stack);
@@ -117,6 +119,7 @@ int isOperator(char ch){
            ch=='<' ||
            ch=='>' ||
            ch=='!' ||
+           ch=='=' ||
            ch=='#';
 }
 int Prec(char c){

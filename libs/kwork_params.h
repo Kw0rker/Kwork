@@ -43,3 +43,6 @@
 #ifndef MAX_ARGS
 #define MAX_ARGS 35
 #endif
+#ifndef MAX_IF_EXPP_LEN
+#define MAX_IF_EXPP_LEN 228
+#endif

@@ -24,6 +24,7 @@
 #define BIT_INV 55 //inverts bytes of acc result stored in acc
 #define LOG_LESS 80 //compares if acc less than zero
 #define LOG_LESSEQ 81 // compares if acc less or equal zero
+#define LOG_INV 82 //inverts value of acc
 #define SYSCALL 70 //calls kwork system call, by operand as syscall id
 #define PUSH 71 //pushes data from memory on the stack
 #define POP 72 //pops data from the stack to memory adress
@@ -282,6 +283,10 @@ int main(){
 				case LOG_LESSEQ:
 				acc=acc<=0;
 				break;
+				case LOG_INV:
+				acc=!acc;
+				break;
+
 
 		}
 	}
