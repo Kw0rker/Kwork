@@ -131,7 +131,7 @@ TABLE_ENTRY_PTR symbolTable[MAX_CODE_SIZE];
 precompiles code
 with defines and includes
 */
-void precompile(FILE *);
+FILE * precompile(FILE *);
 
 /*
 compiles code to KWAC (kworker assembly code)
@@ -182,10 +182,58 @@ int main(int argc, char const *argv[])
 		perror("No file found\n");	
 	    return -1;
 	}
+	//file=precompile(file);
 	compile(file);
 	memset(flags,-1,sizeof(flags));
 	return 0;
 }
+FILE *precompile(FILE *file){
+	char *libs[MAX_LIBS];
+	char *functions[MAX_LIB_FUNCTIONS];
+	int lib_point=0;
+	FILE * temp = tmpfile();
+	if(!temp){
+		fprintf(stderr,"ERROR while creating temp file");
+		abort();
+	}
+	while(!feof(file))
+	{
+		fgets(line,100,file);
+		char *rest = line;
+		while(*rest++==' ');
+		if(!strncmp(rest,"#include ",sizeof("#include ")-1)){
+			rest+=(sizeof("#include ")-1);
+			strcpy(libs[lib_point++],rest);
+			//create a array of included libs so we can search for functions there later on
+		}
+		else{
+			fprintf(temp,rest);
+			//else just coppy line from orig file to the temp one
+
+			strtok(rest,"CALL ");
+			char *temp_line;
+			int x=-1;
+			while((temp_line=strtok(NULL,"CALL "))){
+				char *func_name = malloc(sizeof(char)*100);
+				while(temp_line[++x]!=' ')func_name[x]=temp_line[x];
+				func_name[x]='\0';
+
+				int key = (hash((unsigned char*)func_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
+
+				if(!functions[key]){
+					functions[key]=func_name;
+				}
+				else{
+					//if key already exsists its coleration(i hope not) or entry is present
+
+				}
+			}
+		}
+	}
+	return temp;
+}
+
+
 void compile(FILE *file){
 	first_compile(file);
 	second_compile();
@@ -1204,7 +1252,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				else{
 					//if var name 
 					unsigned char *var_name = (unsigned char*)postfix;
-					while(postfix[0]!='\0' && postfix[0]!=' '&& postfix[0]!='='&& postfix[0]!='!'&& postfix[0]!='<'&& postfix[0]!='>'){
+					while(postfix[0]!='\0' && postfix[0]!=' '&&!isOperator(postfix[0])){
 						postfix++;
 					}
 					postfix[0]='\0';

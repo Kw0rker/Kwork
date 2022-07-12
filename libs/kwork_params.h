@@ -46,3 +46,9 @@
 #ifndef MAX_IF_EXPP_LEN
 #define MAX_IF_EXPP_LEN 228
 #endif
+#ifndef MAX_LIBS
+#define MAX_LIBS 212
+#endif
+#ifndef MAX_LIB_FUNCTIONS
+#define MAX_LIB_FUNCTIONS 424
+#endif

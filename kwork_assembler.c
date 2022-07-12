@@ -61,9 +61,6 @@ translate_code(FILE *inp,FILE *out){
 		fscanf(inp,"%s",command);
 		//printf("%s\n",command);
 		fscanf(inp,"%d",&operand);
-		if(operand<0||command==NULL){
-			fprintf(stderr,"ERROORR!\n");
-		}
 		//fscanf(inp,"%s\n",command);//vuln to bufferoverflow fix later
 
 			 if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
