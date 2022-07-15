@@ -26,39 +26,7 @@ enum TYPES{IF,FOR,WHILE};
 #define Table_EntryToString(entry)												\
 			printf("Struct table_entry{\nint const_value %d\nint symbol %d;\nchar type %c;\nlong location %ld;\nchar fucn_name %s;\n}\n",entry->const_value, entry->symbol,entry->type,entry->location,entry->fucn_name)		\
 
-/*
-use in main function only ! as it depends on local variables
-@comp is comparator == or <= etc
-*/
-#define GET_VARS(comp) char *f;\
-				char *s;\
-				f = strtok(operand,#comp);\
-				s = strtok(NULL,#comp);\
-				if(isdigit((int)f[0])){\
-					v1 = find_entry('C',atoi(f),fucn_name,total_vars);\
-					if(v1==NULL){\
-					v1= create_new('C',atoi(f),fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
-					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v1;}\
-				}\
-				else{\
-					v1 = find_entry('V',f[0],fucn_name,total_vars);\
-					if(v1==NULL){\
-					v1 = create_new('V',f[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
-					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v1;}\
-				}\
-				if(isdigit((int)s[0])){\
-					v2 = find_entry('C',atoi(s),fucn_name,total_vars);\
-					if(v2==NULL){\
-					v2 = create_new('C',atoi(s),fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
-					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v2;}\
-				}\
-				else {\
-					v2 = find_entry('V',s[0],fucn_name,total_vars);\
-					if(v2==NULL){\
-					v2 = create_new('V',s[0],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));\
-					symbolTable[MAX_CODE_SIZE-(++total_vars)] = v2;}\
-				}\
-			
+
 //used after each set of kwork assembly coomands to update any potential jumps 
 //coused by if or loop sturctures
 //@offset is number of instruction entered for each individual command
@@ -343,6 +311,7 @@ void first_compile(FILE *file){
 		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = ret_;
 		char command[50];
+		if(!isprint((int)r_expression[0]))continue;
 		sprintf(command,"POP %ld",ret_->location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 		UPDATE_IF_BLOCKS(1)
@@ -483,10 +452,10 @@ void first_compile(FILE *file){
 				sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				UPDATE_IF_BLOCKS(1)
-				memset(command,0,sizeof(command));
-					//apped brancha adress
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 				push(adress,&(returns[total_comands]));
+				memset(command,0,sizeof(command));
+					//apped brancha adress
 			}
 			//poping here results in incorect if exit!
 			//but if we delete it it fucks of the entire loop
@@ -560,10 +529,11 @@ void first_compile(FILE *file){
 				fprintf(stderr,"For loop is incomplete on line %s\n",rest);
 				//todo error handle
 			}
-			int var_adress = find_location('V',left_side[0],fucn_name,total_vars);
+			int hash_value=hash((unsigned char*)left_side);
+			int var_adress = find_location('V',hash_value,fucn_name,total_vars);
 			if(var_adress<0){
 				TABLE_ENTRY_PTR temp;
-					temp = create_new('V',left_side[0],fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
+					temp = create_new('V',hash_value,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
 					var_adress=MAX_CODE_SIZE-(++total_vars);
 					symbolTable[var_adress] = temp;
 			}
@@ -1122,7 +1092,6 @@ int EV_POSTFIX_EXPP(char *expp){
 					ad = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[ad]=CONST;
 				}
-				postfix+=3;
 				push(ad,&stack);
 			}
 			else if (isOperand(postfix[0])){
@@ -1252,16 +1221,17 @@ int EV_POSTFIX_EXPP(char *expp){
 				else{
 					//if var name 
 					unsigned char *var_name = (unsigned char*)postfix;
-					while(postfix[0]!='\0' && postfix[0]!=' '&&!isOperator(postfix[0])){
+					while(postfix[0]!='\0' && (isalpha(postfix[0])||postfix[0]=='_')){
 						postfix++;
 					}
+					char temp_c=postfix[0];
 					postfix[0]='\0';
 					printf("");
 					unsigned int hash_value = hash(var_name);
-					postfix[0]=' ';
+					postfix[0]=temp_c;
 					int ad = find_location ('V',hash_value,fucn_name,total_vars);
 					if(ad<0){
-						fprintf(stderr,"Variable (%s) is undefined!\n",var_name);
+						fprintf(stderr,"Variable (%s) is undefined!\nAt line %s",var_name,expp);
 						TABLE_ENTRY_PTR VAR = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++)));
 						int ad = MAX_CODE_SIZE-(created++) -50;
 						abort();
@@ -1285,6 +1255,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				EV_POSTFIX_EXPP(array_sub);
 				//push(temp,&stack); //push adress of temp var
 				int arr_p= pop(&stack);
+				push(UNARY,&operations);
 				push(-1,&stack);
 				push(arr_p,&stack);
 				//so we sum it up with array pointer
@@ -1292,11 +1263,16 @@ int EV_POSTFIX_EXPP(char *expp){
 			}
 			else if (isOperator(postfix[0]))
 			{
-				int x,y;
+				int x=0;
+				int y=0;
 				int pstore=0;
 				int flag=0;
 				if(!isEmpty(stack))x=pop(&stack);
-				if(!isEmpty(stack) && (isEmpty(operations) || pop(&operations)==BINARY)){
+				if(!isEmpty(stack) &&
+
+				 ((isEmpty(operations) || pop(&operations)==BINARY))
+
+				 ){
 					y=pop(&stack);
 					if(y>0)flag=1;
 				}
@@ -1421,7 +1397,8 @@ int EV_POSTFIX_EXPP(char *expp){
 					//todo add cosnt assigment check
 					sprintf(command,"LOAD %ld",symbolTable[x]->location); 
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-
+					{UPDATE_IF_BLOCKS(1)}
+					code_lines++;
 					adress = find_location ('C',1,fucn_name,total_vars);
 					if(adress<0){
 						TABLE_ENTRY_PTR VAR = create_new('C',1,fucn_name,MAX_CODE_SIZE - total_const++);
@@ -1437,6 +1414,8 @@ int EV_POSTFIX_EXPP(char *expp){
 					case ('-'+'-'):
 					sprintf(command,"LOAD %ld",symbolTable[x]->location); 
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					{UPDATE_IF_BLOCKS(1)}
+					code_lines++;
 					int adress = find_location ('C',1,fucn_name,total_vars);
 					if(adress<0){
 						TABLE_ENTRY_PTR VAR = create_new('C',1,fucn_name,MAX_CODE_SIZE - total_const++);
