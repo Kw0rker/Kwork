@@ -1,4 +1,12 @@
 # Kwork project
+## Installation
+```
+make
+```
+run the examples
+```
+./run.sh example/primes_generator.sh
+```
 ## This page is the home for yet unfamous, but promising project **Kwork**
 >So what's all about?
 
