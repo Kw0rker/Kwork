@@ -5,7 +5,7 @@ make
 ```
 run the examples
 ```
-./run.sh example/primes_generator.sh
+./run.sh example/primes_generator.kws
 ```
 ## This page is the home for yet unfamous, but promising project **Kwork**
 >So what's all about?
