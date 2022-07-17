@@ -1,5 +1,6 @@
 # Kwork project
 ## Installation
+works only in POSIX enviroment !
 ```
 make
 ```
