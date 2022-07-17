@@ -325,14 +325,8 @@ void first_compile(FILE *file){
 		//todo do while search for next function in file
 	}
 	else if(!strcmp(operator,"input")){
-		TABLE_ENTRY_PTR table_entry =find_entry('V',operand[0],fucn_name,total_vars);
-		// if not found create new
-		if(table_entry==NULL){
-			table_entry = create_new('V',operand[0],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
-			symbolTable[MAX_CODE_SIZE-(++total_vars)] = table_entry;
-		}
 		char KWAC_COMMAND [50];
-		sprintf(KWAC_COMMAND,"%s %ld",input,table_entry->location);
+		sprintf(KWAC_COMMAND,"%s %d",input,EV_POSTFIX_EXPP(operand));
 		// strncat(KWAC_COMMAND,input,sizeof(KWAC_COMMAND)-1);
 		// char p[] = {table_entry->location + '0','\0'};
 		// strncat(KWAC_COMMAND,p,sizeof(KWAC_COMMAND));
