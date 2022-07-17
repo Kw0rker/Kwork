@@ -1,0 +1,47 @@
+function main
+	let string = "Enter the ammount of primes you wish to get:"
+	let t = CALL printString{string}
+	let p=10
+	input p
+	let t = CALL primesGenerator{p}
+end
+
+//p is a pointer to null terminated string
+function printString(p)
+for a=0;p[a]>'\0';a++
+{
+	putc p[a]
+}
+//return ammount of bytes sent to stdout
+return a
+
+function primesGenerator(p)
+let comma = ','
+let b=2
+for a=2;b<=p;a++
+{
+	let root = CALL sqrt{a}
+	let isPrime=1
+	for x=2;x<=root;x++
+	{
+		if (a%x)==0
+		{
+			let isPrime=0
+		}
+	}
+	if isPrime==1
+	{
+		put a
+		putc comma
+		let b=b+1
+	}
+}
+return a
+
+function sqrt(n)
+for r=1;r*r<=n;r++
+{
+
+}
+return r
+

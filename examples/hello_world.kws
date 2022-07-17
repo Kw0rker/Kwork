@@ -1,0 +1,12 @@
+function main
+let string="Thank you for instaling KWORK programming language!\n\a"
+let t=CALL printString{string}
+end
+
+function printString(p)
+for a=0;p[a]>'\0';a++
+{
+	putc p[a]
+}
+//return ammount of bytes sent to stdout
+return a
