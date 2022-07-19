@@ -150,8 +150,8 @@ int main(int argc, char const *argv[])
 		perror("No file found\n");	
 	    return -1;
 	}
-	//file=precompile(file);
-	compile(file);
+	file=precompile(file);
+	//compile(file);
 	memset(flags,-1,sizeof(flags));
 	return 0;
 }
@@ -164,14 +164,21 @@ FILE *precompile(FILE *file){
 		fprintf(stderr,"ERROR while creating temp file");
 		abort();
 	}
+	char *line[100];
 	while(!feof(file))
 	{
 		fgets(line,100,file);
 		char *rest = line;
-		while(*rest++==' ');
+		while(rest[0]==' ')rest++;
 		if(!strncmp(rest,"#include ",sizeof("#include ")-1)){
 			rest+=(sizeof("#include ")-1);
-			strcpy(libs[lib_point++],rest);
+
+			char temp[100];
+			int x=0;
+			while(isprint(rest[0]))temp[x++]=rest++[0];
+			temp[x]='\0';
+			libs[lib_point]=malloc(sizeof(temp));
+			strcpy(libs[lib_point++],temp);
 			//create a array of included libs so we can search for functions there later on
 		}
 		else{
