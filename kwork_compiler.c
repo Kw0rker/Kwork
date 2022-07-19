@@ -157,7 +157,7 @@ int main(int argc, char const *argv[])
 }
 FILE *precompile(FILE *file){
 	char *libs[MAX_LIBS];
-	char *functions[MAX_LIB_FUNCTIONS];
+	unsigned int functions[MAX_LIB_FUNCTIONS];
 	int lib_point=0;
 	FILE * temp = tmpfile();
 	if(!temp){
@@ -173,35 +173,29 @@ FILE *precompile(FILE *file){
 		if(!strncmp(rest,"#include ",sizeof("#include ")-1)){
 			rest+=(sizeof("#include ")-1);
 
-			char temp[100];
+			char temp_s[100];
 			int x=0;
-			while(isprint(rest[0]))temp[x++]=rest++[0];
-			temp[x]='\0';
-			libs[lib_point]=malloc(sizeof(temp));
-			strcpy(libs[lib_point++],temp);
+			while(isprint(rest[0]))temp_s[x++]=rest++[0];
+			temp_s[x]='\0';
+			libs[lib_point]=malloc(sizeof(temp_s));
+			strcpy(libs[lib_point++],temp_s);
 			//create a array of included libs so we can search for functions there later on
 		}
 		else{
 			fprintf(temp,rest);
 			//else just coppy line from orig file to the temp one
-
-			strtok(rest,"CALL ");
+			while(strstr(rest, "CALL "))
+			{
+			char *function_name = strstr(rest, "CALL ")+(sizeof("CALL ")-1);	
+			rest = function_name;
+			while(rest[0]!='{')rest++;
+			rest++[0]='\0';
 			char *temp_line;
 			int x=-1;
-			while((temp_line=strtok(NULL,"CALL "))){
-				char *func_name = malloc(sizeof(char)*100);
-				while(temp_line[++x]!=' ')func_name[x]=temp_line[x];
-				func_name[x]='\0';
-
-				int key = (hash((unsigned char*)func_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
-
-				if(!functions[key]){
-					functions[key]=func_name;
-				}
-				else{
-					//if key already exsists its coleration(i hope not) or entry is present
-
-				}
+			int key = (hash((unsigned char*)function_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
+			if(!functions[key]){
+				functions[key]=key;
+			}
 			}
 		}
 	}
