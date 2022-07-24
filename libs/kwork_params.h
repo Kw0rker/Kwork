@@ -52,3 +52,11 @@
 #ifndef MAX_LIB_FUNCTIONS
 #define MAX_LIB_FUNCTIONS 424
 #endif
+#if defined (REL_KWH_PH) && !defined (ABS_KWH_PH)
+#define LIB_PATH REL_KWH_PH
+#elif defined(ABS_KWH_PH)
+#define LIB_PATH ABS_KWH_PH
+#else
+#define REL_KWH_PH "./kwh_libs"
+#define LIB_PATH REL_KWH_PH
+#endif

@@ -1,0 +1,7 @@
+function printString(p)
+for a=0;p[a]>'\0';a++
+{
+	putc p[a]
+}
+//return ammount of bytes sent to stdout
+return a

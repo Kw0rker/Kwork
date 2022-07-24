@@ -151,20 +151,21 @@ int main(int argc, char const *argv[])
 	    return -1;
 	}
 	file=precompile(file);
-	//compile(file);
+	compile(file);
 	memset(flags,-1,sizeof(flags));
 	return 0;
 }
 FILE *precompile(FILE *file){
 	char *libs[MAX_LIBS];
 	unsigned int functions[MAX_LIB_FUNCTIONS];
+	memset(functions,0u,sizeof functions);
 	int lib_point=0;
 	FILE * temp = tmpfile();
 	if(!temp){
 		fprintf(stderr,"ERROR while creating temp file");
 		abort();
 	}
-	char *line[100];
+	char line[100];
 	while(!feof(file))
 	{
 		fgets(line,100,file);
@@ -194,11 +195,75 @@ FILE *precompile(FILE *file){
 			int x=-1;
 			int key = (hash((unsigned char*)function_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
 			if(!functions[key]){
-				functions[key]=key;
+				functions[key]=hash((unsigned char*)function_name);
 			}
 			}
 		}
 	}
+	fprintf(temp,"\n");
+	char flag=0;
+	#define JOIN(A,B) A##B
+	#define LOAD_LIB(LIB_FILE,LIB_NAME) char temp_s[100];sprintf(temp_s,"%s/%s",LIB_PATH,LIB_NAME);LIB_FILE=fopen(temp_s,"r")
+	for (int x = 0; x < lib_point; ++x)
+	{
+		LOAD_LIB(FILE *lib_file,libs[x]);
+		if(!lib_file){
+			fprintf(stderr,"Libary %s is not present\n",libs[x]);
+			continue;
+		}
+		//open lib file
+		char line[1000];
+		while(!feof(lib_file))
+		{
+			fgets(line,1000,lib_file);
+			char *rest = line;
+			while(rest[0]==' ')rest++;
+			//remove all white spaceses in the begining of the string
+			if(!strncmp(rest,"function",sizeof("function")-1))
+			{
+				flag=0;
+				rest+=(sizeof("function ")-1);
+				//tok the string
+				while(rest[0]==' ')rest++;
+				//remove whitespaces at the begining
+				char *t = strstr(rest,'(');
+				t[0]='\0';
+				char *function_name = strtok(rest,"(");
+				//get the function name
+
+				for (int i = 0; i < MAX_LIB_FUNCTIONS; ++i)
+				{
+					//if key exists
+					if(functions[i])
+					{	
+						//check for hash match
+						if(functions[i]==(unsigned int)(hash((unsigned char*)function_name)) )
+						{
+							//set flag to true so we coppy current line (function declaration)
+							//and the following lines untill new function declaration
+							flag=1;
+							//set entry to 0 so we dont search for it anymore
+							functions[i]=0;
+
+						}
+					}
+				}
+				t[0]='(';
+
+			}
+			//if flag is set we coppy lines to the source file
+			if(flag)
+			{
+				fprintf(temp,line);
+				fprintf(temp,"\n");
+			}
+		}
+
+			
+	}
+
+
+	rewind(temp);
 	return temp;
 }
 
@@ -226,6 +291,7 @@ void first_compile(FILE *file){
 	while(!feof(file))
 	{
 	fgets(line,100,file);
+	if(line[0]=='\0')continue;
 	char *saved = rest;
 	strcpy(rest,line);
 	//fscanf(file,"%100s\n",line);
