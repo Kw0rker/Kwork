@@ -226,7 +226,7 @@ FILE *precompile(FILE *file){
 				//tok the string
 				while(rest[0]==' ')rest++;
 				//remove whitespaces at the begining
-				char *t = strstr(rest,'(');
+				char *t = strchr(rest,'(');
 				t[0]='\0';
 				char *function_name = strtok(rest,"(");
 				//get the function name
