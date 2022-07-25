@@ -1,4 +1,5 @@
 #include <kwork_params.h>
+#include <precompiler.h>
 #include <assert.h>
 #ifndef MAX_CODE_SIZE
 #define MAX_CODE_SIZE 10000
@@ -159,6 +160,9 @@ FILE *precompile(FILE *file){
 	char *libs[MAX_LIBS];
 	unsigned int functions[MAX_LIB_FUNCTIONS];
 	memset(functions,0u,sizeof functions);
+
+	unsigned int functions_added[MAX_LIB_FUNCTIONS];
+	memset(functions_added,0u,sizeof functions_added);
 	int lib_point=0;
 	FILE * temp = tmpfile();
 	if(!temp){
@@ -192,7 +196,6 @@ FILE *precompile(FILE *file){
 			while(rest[0]!='{')rest++;
 			rest++[0]='\0';
 			char *temp_line;
-			int x=-1;
 			int key = (hash((unsigned char*)function_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
 			if(!functions[key]){
 				functions[key]=hash((unsigned char*)function_name);
@@ -201,66 +204,7 @@ FILE *precompile(FILE *file){
 		}
 	}
 	fprintf(temp,"\n");
-	char flag=0;
-	#define JOIN(A,B) A##B
-	#define LOAD_LIB(LIB_FILE,LIB_NAME) char temp_s[100];sprintf(temp_s,"%s/%s",LIB_PATH,LIB_NAME);LIB_FILE=fopen(temp_s,"r")
-	for (int x = 0; x < lib_point; ++x)
-	{
-		LOAD_LIB(FILE *lib_file,libs[x]);
-		if(!lib_file){
-			fprintf(stderr,"Libary %s is not present\n",libs[x]);
-			continue;
-		}
-		//open lib file
-		char line[1000];
-		while(!feof(lib_file))
-		{
-			fgets(line,1000,lib_file);
-			char *rest = line;
-			while(rest[0]==' ')rest++;
-			//remove all white spaceses in the begining of the string
-			if(!strncmp(rest,"function",sizeof("function")-1))
-			{
-				flag=0;
-				rest+=(sizeof("function ")-1);
-				//tok the string
-				while(rest[0]==' ')rest++;
-				//remove whitespaces at the begining
-				char *t = strchr(rest,'(');
-				t[0]='\0';
-				char *function_name = strtok(rest,"(");
-				//get the function name
-
-				for (int i = 0; i < MAX_LIB_FUNCTIONS; ++i)
-				{
-					//if key exists
-					if(functions[i])
-					{	
-						//check for hash match
-						if(functions[i]==(unsigned int)(hash((unsigned char*)function_name)) )
-						{
-							//set flag to true so we coppy current line (function declaration)
-							//and the following lines untill new function declaration
-							flag=1;
-							//set entry to 0 so we dont search for it anymore
-							functions[i]=0;
-
-						}
-					}
-				}
-				t[0]='(';
-
-			}
-			//if flag is set we coppy lines to the source file
-			if(flag)
-			{
-				fprintf(temp,line);
-				fprintf(temp,"\n");
-			}
-		}
-
-			
-	}
+	addFunctions(temp,functions,functions_added,libs,lib_point);
 
 
 	rewind(temp);
@@ -324,7 +268,6 @@ void first_compile(FILE *file){
 			char *arg  = strtok(function_args,ARG_SEPARATOR);
 			int number_of_args=0;
 			char temp[50];
-			STACKPTR arg_stack = new_stack();
 			unsigned int params[123];
 			int p=0;
 			while(arg!=NULL){
@@ -372,6 +315,8 @@ void first_compile(FILE *file){
 	}
 	else if(!strcmp(operator,"return")){
 		char *r_expression = rest;
+		//temp fix
+		while(r_expression[0]=='\t')r_expression++;
 		while(!isspace((int)r_expression[0]))r_expression++;
 		r_expression++;
 		//this line is causing memory overwrite
@@ -780,7 +725,7 @@ void first_compile(FILE *file){
 		}
 
 
-		else{
+		else if(isprint(line[0])){
 			//dont count number of commands if operation is not defined in compiler
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
@@ -1307,7 +1252,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				char array_sub[40];
 				memset(array_sub,0,sizeof(array_sub));
 				while(postfix[0]!=']'){
-					array_sub[x]=postfix[0];
+					array_sub[x++]=postfix[0];
 					postfix++;
 				}
 				postfix--;//go back to elements so we rewrite them with corespponding operations

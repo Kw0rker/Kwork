@@ -1,7 +1,47 @@
-function printString(p)
-for a=0;p[a]>'\0';a++
+
+function printString(string)
+for a=0;string[a]>'\0';a++
 {
-	putc p[a]
+	putc string[a]
 }
 //return ammount of bytes sent to stdout
 return a
+//prints null terminated char array to stdout
+
+function strlen(string)
+for a=0;string[a]>'\0';a++
+{
+}
+return a
+//returns total string lenght in bytes
+
+function strchr(string,char)
+//null by dflt
+for a=0;string[a]>'\0';a++
+{
+	if string[a]==char
+	{
+		return string+a
+		//return pointer to first occurance of char
+	}
+}
+return 0
+//function returns pointer to first occurance of char in string
+
+function strstr(haystack,needle){
+	let size = CALL strlen{needle}
+	for a=0;haystack[a+size]>'\0';a++
+	{
+		let equal=1
+		//put equal
+		for b=0;needle[b]>'\0';b++
+		{
+			if haystack[a+b]!=needle[b]
+			{
+				let equal=0
+			}
+		}
+		put equal
+	}
+	return 0
+}
