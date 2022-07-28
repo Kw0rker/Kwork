@@ -57,7 +57,7 @@ Emulates hardware.
   - [ ] static type checks
   - [ ] compile time checks
   - [ ] compile time execution
-  - [ ] preprocessor
+  - [X] preprocessor
   - [ ] optimization
   - [x] functions
   - [x] loops
