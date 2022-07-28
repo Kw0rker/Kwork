@@ -30,6 +30,7 @@ return 0
 
 function strstr(haystack,needle){
 	let size = CALL strlen{needle}
+	let offset = 0
 	for a=0;haystack[a+size]>'\0';a++
 	{
 		let equal=1
@@ -39,9 +40,14 @@ function strstr(haystack,needle){
 			if haystack[a+b]!=needle[b]
 			{
 				let equal=0
+				//add break here
 			}
 		}
-		put equal
+		if equal==1
+		{
+			return haystack+a
+			//add break here
+		}
 	}
 	return 0
 }

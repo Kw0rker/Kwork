@@ -234,6 +234,7 @@ void first_compile(FILE *file){
 	strcpy(fucn_name,"main"); //main by defual
 	while(!feof(file))
 	{
+	int save_line=1;
 	fgets(line,100,file);
 	if(line[0]=='\0')continue;
 	char *saved = rest;
@@ -320,8 +321,7 @@ void first_compile(FILE *file){
 		while(!isspace((int)r_expression[0]))r_expression++;
 		r_expression++;
 		//this line is causing memory overwrite
-		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		symbolTable[MAX_CODE_SIZE-(++total_vars)] = ret_;
+		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created+1) ));
 		char command[50];
 		if(!isprint((int)r_expression[0]))continue;
 		sprintf(command,"POP %ld",ret_->location);
@@ -427,7 +427,9 @@ void first_compile(FILE *file){
 
 		}
 		else if(line[0]=='{'){
-			if(!strcmp(last_line,"if") || !strcmp(last_line,"else") || !strcmp(last_line,"else\r\n"))push(IF,&stuck);
+			if(!strcmp(last_line,"if") || !strcmp(last_line,"else") || !strcmp(last_line,"else\r\n")){
+				push(IF,&stuck);
+			}
 			else push(FOR,&stuck);
 			ELSE = 1; //show that we intered if block
 		}
@@ -729,9 +731,13 @@ void first_compile(FILE *file){
 			//dont count number of commands if operation is not defined in compiler
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
+			save_line=0;
+		}
+		else{
+			save_line=0;
 		}
 		rest=saved;
-		strcpy(last_line,operator);
+		if(save_line)strcpy(last_line,operator);
 	}
 	fclose(file);
 	// free(operator);
