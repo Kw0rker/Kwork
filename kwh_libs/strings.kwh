@@ -16,7 +16,6 @@ return a
 //returns total string lenght in bytes
 
 function strchr(string,char)
-//null by dflt
 for a=0;string[a]>'\0';a++
 {
 	if string[a]==char
@@ -28,7 +27,7 @@ for a=0;string[a]>'\0';a++
 return 0
 //function returns pointer to first occurance of char in string
 
-function strstr(haystack,needle){
+function strstr(haystack,needle)
 	let size = CALL strlen{needle}
 	let offset = 0
 	for a=0;haystack[a+size]>'\0';a++
@@ -50,4 +49,39 @@ function strstr(haystack,needle){
 		}
 	}
 	return 0
-}
+//function search for first occurance of needle in haystack and returns pointer to it
+
+function strcpy(dest,source)
+	for a=0;source[a]>'\0';a++
+	{
+		let dest[a]=source[a]
+	}
+	let dest[a++]='\0'
+	return a
+//coppies char array source to the dest
+//returns ammount of bytes coppied
+
+function strtok(string,char,buf)
+	let buffer=@buf
+	let token=0
+	if buffer[0]==0
+	{
+		let t = CALL strcpy{buffer,string}
+	}
+	let ch=CALL strchr{buffer,char}
+	if ch!=0
+	{
+		let token=buffer
+		let @ch='\0'
+		let @buf=ch+1
+	}
+	else if buffer[0]!=-1
+	{
+		let token=buffer
+		let @(buffer-1)=-1
+		let @buf=buffer-1
+	}
+	return token
+//string is immutable, char is imutable
+//pointer to buffer is mutable so best to preserve its state
+//function returns pointer to first token or to original string if char sep not found

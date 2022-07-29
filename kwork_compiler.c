@@ -621,6 +621,7 @@ void first_compile(FILE *file){
 			if(var_n[0]=='@'){
 				var_n++;
 				//get adress where we store
+				//make sure that var_n doesnt have whitespaces in it to prevent undef var error
 				int adress = EV_POSTFIX_EXPP(var_n);
 				//evaluate right side of equation
 				EV_POSTFIX_EXPP(equation);
@@ -786,7 +787,11 @@ void second_compile(){
 					last_adr = symbolTable[a]->location;
 				}
 				if(1) {
+					#ifdef DEBUG
+					fprintf(file,"%d:		%s\n",symbolTable[a]->location,symbolTable[a]->fucn_name);
+					#else
 					fprintf(file,"%s\n",symbolTable[a]->fucn_name);
+					#endif
 					last_adr++;
 				}
 				break;
@@ -1046,6 +1051,7 @@ int EV_POSTFIX_EXPP(char *expp){
 					dig[x++]=postfix[0];
 					postfix++;
 				}
+				dig[x]='\0';
 				int c_value = atoi(dig);
 				int ad = find_location ('C',c_value,fucn_name,total_vars);
 				if(ad<0){
@@ -1102,6 +1108,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				if(ad<0){
 					TABLE_ENTRY_PTR CONST = create_new('C',value,fucn_name,MAX_CODE_SIZE - total_const++);
 					ad = MAX_CODE_SIZE-(++total_vars);
+					created++;
 					symbolTable[ad]=CONST;
 				}
 				push(ad,&stack);
@@ -1164,16 +1171,20 @@ int EV_POSTFIX_EXPP(char *expp){
 					}
 					char command[40];
 					//push return adress of the function calling
-					TABLE_ENTRY_PTR function = find_entry('C',total_comands+1,fucn_name,total_vars);
+					TABLE_ENTRY_PTR function = find_entry('F',total_comands+1,fucn_name,total_vars);
 					if(function==NULL){
 						function = create_new('C',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
+						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)]){
+							fprintf(stderr,"memory overide caused by return adress");
+							abort();
+						}
 						symbolTable[MAX_CODE_SIZE-(++total_vars)] = function;
 					}
 
 					sprintf(command,"PUSH %ld",function->location);
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//push the arguments on the stack
-
+					UPDATE_IF_BLOCKS(1)
 					for(int a=0;a<number_of_args;a++){
 						//evaluate epression
 						int adress = EV_POSTFIX_EXPP(args[a]);
@@ -1292,6 +1303,10 @@ int EV_POSTFIX_EXPP(char *expp){
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
 				int adress = MAX_CODE_SIZE-(created) -50;
+				if (symbolTable[adress] && symbolTable[adress]->symbol!=0){
+					fprintf(stderr,"memory overide caused by temp var allocation!\n");
+					abort();
+				}
 				symbolTable[adress] = temp;
 				char command[50];
 				char command2[50];
