@@ -290,6 +290,7 @@ int main(){
 
 		}
 	}
+	fflush(stdout);
 	//memory dump here
 	printf("\n-------------MEMORY DUMP---------------------\n");
 	printf("value in acc is %d\n",(int)acc);

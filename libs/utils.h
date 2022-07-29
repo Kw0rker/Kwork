@@ -171,3 +171,14 @@ void remove_spaces(char* s) {
         }
     } while ( (*s++ = *d++) );
 }
+char array_is_empty(int a[],int size){
+    int isEmpty=1;
+    for (int i = 0; i < size; ++i)
+    {
+        if(a[i]!=0){
+            isEmpty=0;
+            break;
+        }
+    }
+    return isEmpty;
+}

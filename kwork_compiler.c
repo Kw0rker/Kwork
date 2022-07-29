@@ -1,4 +1,5 @@
 #include <kwork_params.h>
+#include <precompiler.h>
 #include <assert.h>
 #ifndef MAX_CODE_SIZE
 #define MAX_CODE_SIZE 10000
@@ -150,54 +151,63 @@ int main(int argc, char const *argv[])
 		perror("No file found\n");	
 	    return -1;
 	}
-	//file=precompile(file);
+	file=precompile(file);
 	compile(file);
 	memset(flags,-1,sizeof(flags));
 	return 0;
 }
 FILE *precompile(FILE *file){
 	char *libs[MAX_LIBS];
-	char *functions[MAX_LIB_FUNCTIONS];
+	unsigned int functions[MAX_LIB_FUNCTIONS];
+	memset(functions,0u,sizeof functions);
+
+	unsigned int functions_added[MAX_LIB_FUNCTIONS];
+	memset(functions_added,0u,sizeof functions_added);
 	int lib_point=0;
 	FILE * temp = tmpfile();
 	if(!temp){
 		fprintf(stderr,"ERROR while creating temp file");
 		abort();
 	}
+	char line[100];
 	while(!feof(file))
 	{
 		fgets(line,100,file);
 		char *rest = line;
-		while(*rest++==' ');
+		while(rest[0]==' ')rest++;
 		if(!strncmp(rest,"#include ",sizeof("#include ")-1)){
 			rest+=(sizeof("#include ")-1);
-			strcpy(libs[lib_point++],rest);
+
+			char temp_s[100];
+			int x=0;
+			while(isprint(rest[0]))temp_s[x++]=rest++[0];
+			temp_s[x]='\0';
+			libs[lib_point]=malloc(sizeof(temp_s));
+			strcpy(libs[lib_point++],temp_s);
 			//create a array of included libs so we can search for functions there later on
 		}
 		else{
 			fprintf(temp,rest);
 			//else just coppy line from orig file to the temp one
-
-			strtok(rest,"CALL ");
+			while(strstr(rest, "CALL "))
+			{
+			char *function_name = strstr(rest, "CALL ")+(sizeof("CALL ")-1);	
+			rest = function_name;
+			while(rest[0]!='{')rest++;
+			rest++[0]='\0';
 			char *temp_line;
-			int x=-1;
-			while((temp_line=strtok(NULL,"CALL "))){
-				char *func_name = malloc(sizeof(char)*100);
-				while(temp_line[++x]!=' ')func_name[x]=temp_line[x];
-				func_name[x]='\0';
-
-				int key = (hash((unsigned char*)func_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
-
-				if(!functions[key]){
-					functions[key]=func_name;
-				}
-				else{
-					//if key already exsists its coleration(i hope not) or entry is present
-
-				}
+			int key = (hash((unsigned char*)function_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
+			if(!functions[key]){
+				functions[key]=hash((unsigned char*)function_name);
+			}
 			}
 		}
 	}
+	fprintf(temp,"\n");
+	addFunctions(temp,functions,functions_added,libs,lib_point);
+
+
+	rewind(temp);
 	return temp;
 }
 
@@ -224,7 +234,9 @@ void first_compile(FILE *file){
 	strcpy(fucn_name,"main"); //main by defual
 	while(!feof(file))
 	{
+	int save_line=1;
 	fgets(line,100,file);
+	if(line[0]=='\0')continue;
 	char *saved = rest;
 	strcpy(rest,line);
 	//fscanf(file,"%100s\n",line);
@@ -257,7 +269,6 @@ void first_compile(FILE *file){
 			char *arg  = strtok(function_args,ARG_SEPARATOR);
 			int number_of_args=0;
 			char temp[50];
-			STACKPTR arg_stack = new_stack();
 			unsigned int params[123];
 			int p=0;
 			while(arg!=NULL){
@@ -305,11 +316,12 @@ void first_compile(FILE *file){
 	}
 	else if(!strcmp(operator,"return")){
 		char *r_expression = rest;
+		//temp fix
+		while(r_expression[0]=='\t')r_expression++;
 		while(!isspace((int)r_expression[0]))r_expression++;
 		r_expression++;
 		//this line is causing memory overwrite
-		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
-		symbolTable[MAX_CODE_SIZE-(++total_vars)] = ret_;
+		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created+1) ));
 		char command[50];
 		if(!isprint((int)r_expression[0]))continue;
 		sprintf(command,"POP %ld",ret_->location);
@@ -415,7 +427,9 @@ void first_compile(FILE *file){
 
 		}
 		else if(line[0]=='{'){
-			if(!strcmp(last_line,"if") || !strcmp(last_line,"else") || !strcmp(last_line,"else\r\n"))push(IF,&stuck);
+			if(!strcmp(last_line,"if") || !strcmp(last_line,"else") || !strcmp(last_line,"else\r\n")){
+				push(IF,&stuck);
+			}
 			else push(FOR,&stuck);
 			ELSE = 1; //show that we intered if block
 		}
@@ -607,6 +621,7 @@ void first_compile(FILE *file){
 			if(var_n[0]=='@'){
 				var_n++;
 				//get adress where we store
+				//make sure that var_n doesnt have whitespaces in it to prevent undef var error
 				int adress = EV_POSTFIX_EXPP(var_n);
 				//evaluate right side of equation
 				EV_POSTFIX_EXPP(equation);
@@ -713,13 +728,17 @@ void first_compile(FILE *file){
 		}
 
 
-		else{
+		else if(isprint(line[0])){
 			//dont count number of commands if operation is not defined in compiler
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
+			save_line=0;
+		}
+		else{
+			save_line=0;
 		}
 		rest=saved;
-		strcpy(last_line,operator);
+		if(save_line)strcpy(last_line,operator);
 	}
 	fclose(file);
 	// free(operator);
@@ -768,7 +787,11 @@ void second_compile(){
 					last_adr = symbolTable[a]->location;
 				}
 				if(1) {
+					#ifdef DEBUG
+					fprintf(file,"%d:		%s\n",symbolTable[a]->location,symbolTable[a]->fucn_name);
+					#else
 					fprintf(file,"%s\n",symbolTable[a]->fucn_name);
+					#endif
 					last_adr++;
 				}
 				break;
@@ -1028,6 +1051,7 @@ int EV_POSTFIX_EXPP(char *expp){
 					dig[x++]=postfix[0];
 					postfix++;
 				}
+				dig[x]='\0';
 				int c_value = atoi(dig);
 				int ad = find_location ('C',c_value,fucn_name,total_vars);
 				if(ad<0){
@@ -1084,6 +1108,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				if(ad<0){
 					TABLE_ENTRY_PTR CONST = create_new('C',value,fucn_name,MAX_CODE_SIZE - total_const++);
 					ad = MAX_CODE_SIZE-(++total_vars);
+					created++;
 					symbolTable[ad]=CONST;
 				}
 				push(ad,&stack);
@@ -1146,16 +1171,20 @@ int EV_POSTFIX_EXPP(char *expp){
 					}
 					char command[40];
 					//push return adress of the function calling
-					TABLE_ENTRY_PTR function = find_entry('C',total_comands+1,fucn_name,total_vars);
+					TABLE_ENTRY_PTR function = find_entry('F',total_comands+1,fucn_name,total_vars);
 					if(function==NULL){
 						function = create_new('C',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
+						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)]){
+							fprintf(stderr,"memory overide caused by return adress");
+							abort();
+						}
 						symbolTable[MAX_CODE_SIZE-(++total_vars)] = function;
 					}
 
 					sprintf(command,"PUSH %ld",function->location);
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//push the arguments on the stack
-
+					UPDATE_IF_BLOCKS(1)
 					for(int a=0;a<number_of_args;a++){
 						//evaluate epression
 						int adress = EV_POSTFIX_EXPP(args[a]);
@@ -1240,7 +1269,7 @@ int EV_POSTFIX_EXPP(char *expp){
 				char array_sub[40];
 				memset(array_sub,0,sizeof(array_sub));
 				while(postfix[0]!=']'){
-					array_sub[x]=postfix[0];
+					array_sub[x++]=postfix[0];
 					postfix++;
 				}
 				postfix--;//go back to elements so we rewrite them with corespponding operations
@@ -1274,6 +1303,10 @@ int EV_POSTFIX_EXPP(char *expp){
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
 				int adress = MAX_CODE_SIZE-(created) -50;
+				if (symbolTable[adress] && symbolTable[adress]->symbol!=0){
+					fprintf(stderr,"memory overide caused by temp var allocation!\n");
+					abort();
+				}
 				symbolTable[adress] = temp;
 				char command[50];
 				char command2[50];
