@@ -212,7 +212,7 @@ let @(10) = 3010
 
 this line would change the 10th assembly instruction to the instruction of summing acc with the assembly instruction. 
 
-##Preprocessor
+## Preprocessor
 to include a lib use the following line at the header of the file
 ```
 #include strings.kwh
