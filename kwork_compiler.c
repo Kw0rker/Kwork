@@ -1151,7 +1151,7 @@ int EV_POSTFIX_EXPP(char *expp){
 							bracket--;
 							arguments[x++]=postfix[0];
 						}
-						else if (postfix[0]==',' && !bracket){
+						else if (postfix[0]==',' &&postfix[-1]!='\'' && !bracket){
 							arguments[x++]='$';
 						}
 						else
