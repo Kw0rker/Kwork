@@ -102,12 +102,13 @@ rValue can be const/var/array/immutable string/expression
 3.	let a = [20][20]
 4.	let D = b*b-(4*a*c)
 ```
-lValue can be array subscription/memory dereferencing/one char letter
+lValue can be array subscription/memory dereferencing/one char letter/function call and all together
 ```
 1.	let a[2] = 1337
 2.	let a[B]….[Bn] = 69
 3.	let @(lvalue) = 101 
 4.	let D = “This language is trash\a\n”
+5.	let root = CALL sqrt{25,2}
 ```
 
 
@@ -207,8 +208,15 @@ o	unary operations
 	
 // your comment
 Pointer can be any value even the const
-let @(10) = 3010 
+let @(10) = 3010
+
 this line would change the 10th assembly instruction to the instruction of summing acc with the assembly instruction. 
+
+##Preprocessor
+to include a lib use the following line at the header of the file
+```
+#include strings.kwh
+```
 Lets make self-modifying code great again.
 In this language as you can see basically no checks on what you do with memory so quite easy to shoot yourself in the foot 😊
 Best of luck !!
