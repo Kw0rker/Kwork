@@ -1036,6 +1036,7 @@ int EV_POSTFIX_EXPP(char *expp){
 
 
 	char *postfix = convertToPostfix(expp);
+	char *saved_postfix=postfix;
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
 		enum OPERATIONS{UNARY,BINARY};
@@ -1487,6 +1488,8 @@ int EV_POSTFIX_EXPP(char *expp){
 		while(!isEmpty(stack)){
 			result = pop(&stack);
 		}
+		//printf("");
+		free(saved_postfix);
 		if(result>=0){
 			char command[40];
 			sprintf(command,"LOAD %ld",symbolTable[result]->location);

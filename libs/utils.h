@@ -38,6 +38,9 @@ char *convertToPostfix(char *exp){
             }while(bracket);
             //result[++k] = exp[i++];
         }
+        if (exp[i]=='@'||exp[i]=='#'||exp[i]=='!'){
+                push((int)' ',&stack);
+        }
         if(exp[i]=='['){
             while(exp[i]!=']'){
                 result[++k] = exp[i++];
@@ -136,6 +139,10 @@ int Prec(char c){
     case '^':
     case '%':
         return 3;
+    case '@':
+    case '#':
+    case '!':
+        return 4;    
     }
     return -1;
 }
