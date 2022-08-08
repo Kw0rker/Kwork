@@ -68,6 +68,35 @@ enum TYPES{IF,FOR,WHILE};
 										}\
 								}\
 
+#define DIV_FLOAT(X,Y)\
+//x=(-1)^s*2^e*m \
+//y=(-1)^s*2^e*m \	
+//x/y=(-1)^(s1-s2)*2^(e1-e2)*(m1/m2)
+
+#define GET_SIGN_BIT(X)\
+LOAD(x)
+LOG_LES
+#define GET_EXPONENT(X)\
+LOAD(0x7f800000)
+BIT_AND(X)
+#define GET_MANTISA(X)
+LOAD(0x007fffff)
+BIT_AND(X)
+
+#define SET_SIGN_BIT(X)\
+LOAD(0x7fffffff)
+BIT_XOR(X)
+
+#define SET_EXPONENT(X)\
+BIT_OR(X)
+
+#define SET_MANTISA(X)\
+BIT_OR(X)
+
+#define MAKE_IEEE(sig,exp,man)\
+SET_SIGN_BIT(sig)\
+SET_EXPONENT(exp)\
+SET_MANTISA(man)\
 
 /*
 @const value used for constants only

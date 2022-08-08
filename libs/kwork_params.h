@@ -60,3 +60,27 @@
 #define REL_KWH_PH "./kwh_libs"
 #define LIB_PATH REL_KWH_PH
 #endif
+#ifndef FLOAT_SUPPORT
+//#define FLOAT_SUPPORT 1
+#endif
+
+// macros bellow
+///////////////////////
+
+
+#define CREATE_INSTRUCTION(command,adress)\
+char com[100];\
+sprintf(com,"%s %d",#command,adress);\
+symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));\
+
+#define FIND_OR_CREATE(X,type)\
+int ad = find_location (type,X,fucn_name,total_vars);\
+if(ad<0){\
+	TABLE_ENTRY_PTR CONST = create_new(type,X,fucn_name,MAX_CODE_SIZE - total_const++);\
+	ad = MAX_CODE_SIZE-(++total_vars);\
+	symbolTable[ad]=CONST;}\
+
+	
+#define LOAD(X,type)\
+FIND_OR_CREATE(X,type)\
+char temp[100];\
