@@ -11,6 +11,10 @@
 #define DIV 32 //divedes acc with data in mem adress result stored in acc
 #define MUL 33 // multiplies acc with data in mem adress result stored in acc
 #define MOD 34 //takes acc mod mem adress, result stored in acc
+#define ADD_F 35 // sums acc and data in mem adress as floats
+#define SUB_F 36 // subs acc and data in mem adress as floats
+#define MUL_F 37 // multiplies acc and data in mem adress as floats
+#define DIV_F 38 // divides acc and data in mem adress as floats
 #define BRANCH 40 // go to mem adress 
 #define BRANCHNEG 41 // go to mem adress if acc < 0 
 #define BRANCHZERO 42 // go to mem adress if acc==0
@@ -173,6 +177,18 @@ int main(){
 			case MOD:
 				acc=(int)acc%(int)memory[operand];
 				break;
+			case ADD_F:
+				acc=(double)acc+(double)memory[operand];
+				break;
+			case SUB_F:
+				acc=(double)acc-(double)memory[operand];
+				break;
+			case MUL_F:
+				acc=(double)acc*(double)memory[operand];
+				break;
+			case DIV_F:
+				acc=(double)acc/(double)memory[operand];
+				break;						
 			case BRANCH:
 				instruction_counter=operand;
                  break;
