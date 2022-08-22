@@ -2,6 +2,7 @@
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
 #define PRINT 12 // prints a char from memory adress
+#define WRITE_F 13 //prints data from mem adress as float
 #define LOAD 20 //inserts data to acc register from memory
 #define STORE 21 // stores data from acc to memory address
 #define PLOAD 22 //inserts data from pointer to memory to acc
@@ -146,10 +147,14 @@ int main(){
 			case WRITE:
 			  	printf("%d",(int)memory[operand]);
 			       break;
+			case WRITE_F:
+			  	printf("%e",(double)memory[operand]);
+			       break;       
 			case PRINT:
 				//fwrite(&memory[operand],sizeof(char),acc,stdout);
 				putc(memory[operand],stdout);
 				//printf("%c",(char) memory[operand]);  // from pointer to adress and resolving pointer
+			break;	
 			case LOAD:
 				acc=memory[operand];
 		 		break;
