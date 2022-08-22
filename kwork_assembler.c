@@ -16,8 +16,8 @@ int getLine(char*,FILE *);
 #define FUNC "1111"
 enum operators{READ,WRITE,PRINT,LOAD,STORE,ADD,SUB,DIV,MUL,MOD,BRANCH,
 			  BRANCHNEG,BRANCHZERO,HALT,DEBUG,SYSCALL,BIT_S_R,BIT_S_L,
-			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE,LOG_LESS,LOG_LESSEQ,LOG_INV};
-int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23,80,81,82};
+			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE,LOG_LESS,LOG_LESSEQ,LOG_INV,ADD_F,SUB_F,MUL_F,DIV_F};
+int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23,80,81,82,35,36,37,38};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -69,9 +69,13 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"LOAD"))fprintf(out, "%d%d\n",opcodes[LOAD],operand);
 		else if(!strcmp(command,"STORE"))fprintf(out, "%d%d\n",opcodes[STORE],operand);
 		else if(!strcmp(command,"ADD"))fprintf(out, "%d%d\n",opcodes[ADD],operand);
+		else if(!strcmp(command,"ADD_F"))fprintf(out, "%d%d\n",opcodes[ADD_F],operand);
 		else if(!strcmp(command,"SUB"))fprintf(out, "%d%d\n",opcodes[SUB],operand);
+		else if(!strcmp(command,"SUB_F"))fprintf(out, "%d%d\n",opcodes[SUB_F],operand);
 		else if(!strcmp(command,"DIV"))fprintf(out, "%d%d\n",opcodes[DIV],operand);
+		else if(!strcmp(command,"DIV_F"))fprintf(out, "%d%d\n",opcodes[DIV_F],operand);
 		else if(!strcmp(command,"MUL"))fprintf(out, "%d%d\n",opcodes[MUL],operand);
+		else if(!strcmp(command,"MUL_F"))fprintf(out, "%d%d\n",opcodes[MUL_F],operand);
 		else if(!strcmp(command,"MOD"))fprintf(out, "%d%d\n",opcodes[MOD],operand);
 		else if(!strcmp(command,"BRANCH"))fprintf(out, "%d%d\n",opcodes[BRANCH],operand);
 		else if(!strcmp(command,"BRANCHNEG"))fprintf(out, "%d%d\n",opcodes[BRANCHNEG],operand);
