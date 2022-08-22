@@ -602,6 +602,13 @@ void first_compile(FILE *file){
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
+		else if(!strcmp(operator,"put_f")){
+			char temp[40];
+			while(rest[0]!=' ')rest++;
+			sprintf(temp,"WRITE_F %d",EV_POSTFIX_EXPP(rest));
+			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+			UPDATE_IF_BLOCKS(1);
+		}
 		else if(!strcmp(operator,"let"))
 		{
 			strcpy(operand,"");//temp fix
