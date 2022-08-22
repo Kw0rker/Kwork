@@ -80,7 +80,4 @@ if(ad<0){\
 	ad = MAX_CODE_SIZE-(++total_vars);\
 	symbolTable[ad]=CONST;}\
 
-	
-#define LOAD(X,type)\
-FIND_OR_CREATE(X,type)\
-char temp[100];\
+

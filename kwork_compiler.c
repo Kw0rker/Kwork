@@ -68,35 +68,6 @@ enum TYPES{IF,FOR,WHILE};
 										}\
 								}\
 
-#define DIV_FLOAT(X,Y)\
-//x=(-1)^s*2^e*m \
-//y=(-1)^s*2^e*m \	
-//x/y=(-1)^(s1-s2)*2^(e1-e2)*(m1/m2)
-
-#define GET_SIGN_BIT(X)\
-LOAD(x)
-LOG_LES
-#define GET_EXPONENT(X)\
-LOAD(0x7f800000)
-BIT_AND(X)
-#define GET_MANTISA(X)
-LOAD(0x007fffff)
-BIT_AND(X)
-
-#define SET_SIGN_BIT(X)\
-LOAD(0x7fffffff)
-BIT_XOR(X)
-
-#define SET_EXPONENT(X)\
-BIT_OR(X)
-
-#define SET_MANTISA(X)\
-BIT_OR(X)
-
-#define MAKE_IEEE(sig,exp,man)\
-SET_SIGN_BIT(sig)\
-SET_EXPONENT(exp)\
-SET_MANTISA(man)\
 
 /*
 @const value used for constants only
@@ -1068,6 +1039,7 @@ int EV_POSTFIX_EXPP(char *expp){
 	char *saved_postfix=postfix;
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
+		STACKPTR floats = new_stack();
 		enum OPERATIONS{UNARY,BINARY};
 		int created = total_vars;
 		int code_lines=0;
@@ -1143,6 +1115,14 @@ int EV_POSTFIX_EXPP(char *expp){
 				}
 				push(ad,&stack);
 			}
+			else if(!strncmp(postfix,"{f}",sizeof("{f}")-1)){
+					//perform next operation as float operation
+
+					//move pointer forward
+					postfix+=sizeof("{f}")-1;
+					push(1,&floats);
+			}
+
 			else if (isOperand(postfix[0])){
 				if(postfix[0]=='C' && postfix[1]=='A' && postfix[2]=='L' && postfix[3]=='L'){
 					//cut 'CALL'away from the beggining of the string
@@ -1270,6 +1250,7 @@ int EV_POSTFIX_EXPP(char *expp){
 
 					
 				}
+
 				else if(postfix[0]==' ')postfix++;
 				else{
 					//if var name 
@@ -1352,21 +1333,29 @@ int EV_POSTFIX_EXPP(char *expp){
 				int t = postfix[1]==' ';
 				int comp = (int) (postfix[0]) + ((postfix[1+t]=='=' ||  postfix[1+t]=='<' || postfix[1+t]=='>'|| postfix[1+t]=='+'|| postfix[1+t]=='-')*postfix[1+t]);
 				comp+=(postfix[0]=='!')*(postfix[1+t]=='=');
+				char *apend;
+				if(!isEmpty(floats)){
+					apend="_F";
+					pop(&floats);
+				}
+				else{
+					apend = "";
+				}
 				switch ( comp ){
 					case'+':
-					sprintf(command,"ADD %ld",symbolTable[x]->location);
+					sprintf(command,"ADD%s %ld",apend,symbolTable[x]->location);
 					push(BINARY,&operations);
 					break;
 					case'-':
-					sprintf(command,"SUB %ld",symbolTable[x]->location); 
+					sprintf(command,"SUB%s %ld",apend,symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break;
 					case'*':
-					sprintf(command,"MUL %ld",symbolTable[x]->location); 
+					sprintf(command,"MUL%s %ld",apend,symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break;
 					case'/':
-					sprintf(command,"DIV %ld",symbolTable[x]->location); 
+					sprintf(command,"DIV%s %ld",apend,symbolTable[x]->location); 
 					push(BINARY,&operations);
 					break;
 					case'%':
@@ -1462,7 +1451,7 @@ int EV_POSTFIX_EXPP(char *expp){
 						adress = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[adress]=VAR;
 					}
-					sprintf(command,"ADD %ld",symbolTable[adress]->location);
+					sprintf(command,"ADD%s %ld",apend,symbolTable[adress]->location);
 					sprintf(command2,"STORE %ld",symbolTable[x]->location);/*overwrite same var*/ 
 					push(UNARY,&operations);
 					adress=x;
@@ -1479,7 +1468,7 @@ int EV_POSTFIX_EXPP(char *expp){
 						adress = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[adress]=VAR;
 					}
-					sprintf(command,"SUB %ld",symbolTable[adress]->location);
+					sprintf(command,"SUB%s %ld",apend,symbolTable[adress]->location);
 					sprintf(command2,"STORE %ld",symbolTable[x]->location);/*overwrite same var*/ 
 					push(UNARY,&operations);
 					adress=x;
