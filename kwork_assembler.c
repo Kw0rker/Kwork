@@ -16,8 +16,8 @@ int getLine(char*,FILE *);
 #define FUNC "1111"
 enum operators{READ,WRITE,PRINT,LOAD,STORE,ADD,SUB,DIV,MUL,MOD,BRANCH,
 			  BRANCHNEG,BRANCHZERO,HALT,DEBUG,SYSCALL,BIT_S_R,BIT_S_L,
-			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE,LOG_LESS,LOG_LESSEQ,LOG_INV,ADD_F,SUB_F,MUL_F,DIV_F};
-int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23,80,81,82,35,36,37,38};
+			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE,LOG_LESS,LOG_LESSEQ,LOG_INV,ADD_F,SUB_F,MUL_F,DIV_F,WRITE_F};
+int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23,80,81,82,35,36,37,38,13};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -65,6 +65,7 @@ translate_code(FILE *inp,FILE *out){
 
 			 if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
 		else if(!strcmp(command,"WRITE"))fprintf(out, "%d%d\n",opcodes[WRITE],operand);
+		else if(!strcmp(command,"WRITE_F"))fprintf(out, "%d%d\n",opcodes[WRITE_F],operand);
 		else if(!strcmp(command,"PRINT"))fprintf(out,"%d%d\n",opcodes[PRINT],operand);
 		else if(!strcmp(command,"LOAD"))fprintf(out, "%d%d\n",opcodes[LOAD],operand);
 		else if(!strcmp(command,"STORE"))fprintf(out, "%d%d\n",opcodes[STORE],operand);
