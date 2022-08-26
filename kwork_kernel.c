@@ -7,7 +7,7 @@
 #define STORE 21 // stores data from acc to memory address
 #define PLOAD 22 //inserts data from pointer to memory to acc
 #define PSTORE 23 //stores data from acc in memory pointer
-#define LOAD_F //loads data as pointer to doulbe 
+#define LOAD_F 24//loads data as pointer to doulbe 
 #define ADD 30 //sums acc with data in mem address and stores result in acc
 #define SUB 31 //subtracts accc with data in mem adress result stored in acc
 #define DIV 32 //divedes acc with data in mem adress result stored in acc
@@ -35,6 +35,7 @@
 #define PUSH 71 //pushes data from memory on the stack
 #define POP 72 //pops data from the stack to memory adress
 #define DEBUG 60 //dumps memory when reached
+#define CAST_L_D 61// gets IEEE represination of a number in acc
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
@@ -160,6 +161,9 @@ int main(){
 			case LOAD:
 				acc=memory[operand];
 		 		break;
+		 	case LOAD_F:
+		 		result=(double)memory[operand];
+		 		acc=*(long*)&result;	
 			case STORE:
 				memory[operand] = acc;
 				break;
@@ -211,7 +215,13 @@ int main(){
 				break;
 			case DEBUG:
 				dump_memory(memory);
-				break;	
+				break;
+			case CAST_L_D:
+				//cast it to double
+				result=(double)memory[operand];
+				//get IEEE reprisentation of this number
+				acc=*(long*)&result;
+				break;		
 			case HALT:
 				remove_thread(&thread_id,thread_pool,active_threads,&time_since_last_call);
 				break;
