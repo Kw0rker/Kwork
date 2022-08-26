@@ -11,6 +11,15 @@
 #ifndef MAX_STR_SIZE
 #define MAX_STR_SIZE 100
 #endif
+typedef union{
+    double a;
+    struct 
+    {
+        int sign_byte:1;
+        int exponent:11;
+        long mantisa:52;
+    };
+}IEEE;
 char *convertToPostfix(char*);
 int isOperand(char);
 int isOperator(char);
@@ -195,3 +204,11 @@ char array_is_empty(int a[],int size){
     }
     return isEmpty;
 }
+#ifndef D_MAX
+#define D_MAX 1000
+#endif
+#define D_MAP_INIT double dStack[D_MAX];
+#define store_double(adress,value)(dStack[(adress)%D_MAX]=(value),dStack[(adress)%D_MAX]);
+#define load_double(adress)(dStack[(adress)%D_MAX]);
+
+#define perform_float_operation(var,oper,var2)((*(double *)&var)oper(*(double *)&var2) );

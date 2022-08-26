@@ -7,6 +7,7 @@
 #define STORE 21 // stores data from acc to memory address
 #define PLOAD 22 //inserts data from pointer to memory to acc
 #define PSTORE 23 //stores data from acc in memory pointer
+#define LOAD_F //loads data as pointer to doulbe 
 #define ADD 30 //sums acc with data in mem address and stores result in acc
 #define SUB 31 //subtracts accc with data in mem adress result stored in acc
 #define DIV 32 //divedes acc with data in mem adress result stored in acc
@@ -44,7 +45,7 @@ struct thread
 	unsigned savedstate; // 0 <= savestate < 10000
 						 // 0 <= savestate < 2^13
 	unsigned id;
-	int acc_s;
+	long acc_s;
 };
 typedef struct thread THREAD;
 typedef THREAD *THREADPTR;
@@ -59,6 +60,7 @@ int main(){
 	int ESP = ESP_ADR; //esp register
 	int EBP = MEM_SIZE-1; //ebp register points to highest adressable memory
 	int instruction_counter;
+	double result; //temp for evil bits hack
 	long  instruction_register;
 	int operation_code;
 	int operand;
@@ -148,7 +150,7 @@ int main(){
 			  	printf("%d",(int)memory[operand]);
 			       break;
 			case WRITE_F:
-			  	printf("%e",(double)memory[operand]);
+			  	printf("%e",*(double*) &memory[operand]);
 			       break;       
 			case PRINT:
 				//fwrite(&memory[operand],sizeof(char),acc,stdout);
@@ -183,16 +185,20 @@ int main(){
 				acc=(int)acc%(int)memory[operand];
 				break;
 			case ADD_F:
-				acc=(double)acc+(double)memory[operand];
+				result= perform_float_operation(acc,+,memory[operand])
+				acc=*(long *)&result;
 				break;
 			case SUB_F:
-				acc=(double)acc-(double)memory[operand];
+				result= perform_float_operation(acc,-,memory[operand])
+				acc=*(long *)&result;
 				break;
 			case MUL_F:
-				acc=(double)acc*(double)memory[operand];
+				result= perform_float_operation(acc,*,memory[operand])
+				acc=*(long *)&result;
 				break;
 			case DIV_F:
-				acc=(double)acc/(double)memory[operand];
+				result= perform_float_operation(acc,/,memory[operand])
+				acc=*(long *)&result;
 				break;						
 			case BRANCH:
 				instruction_counter=operand;
