@@ -96,6 +96,7 @@ typedef struct table_entry TABLE_ENTRY;
 typedef TABLE_ENTRY *TABLE_ENTRY_PTR;
 
 TABLE_ENTRY_PTR symbolTable[MAX_CODE_SIZE];
+enum DATA_TYPES{Word,Double,Adress,Function};
 /*
 precompiles code
 with defines and includes
@@ -110,7 +111,7 @@ void first_compile(FILE *);
 void second_compile();
 TABLE_ENTRY_PTR find_entry(char ,unsigned int ,char *,int );
 int find_location(char ,unsigned int ,char *,int );
-int EV_POSTFIX_EXPP(char *);
+int EV_POSTFIX_EXPP(char *,TABLE_ENTRY_PTR);
 
 TABLE_ENTRY_PTR create_new(char , unsigned int ,char *,long);
 //global vars
@@ -195,7 +196,6 @@ FILE *precompile(FILE *file){
 			rest = function_name;
 			while(rest[0]!='{')rest++;
 			rest++[0]='\0';
-			char *temp_line;
 			int key = (hash((unsigned char*)function_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
 			if(!functions[key]){
 				functions[key]=hash((unsigned char*)function_name);
@@ -327,8 +327,9 @@ void first_compile(FILE *file){
 		sprintf(command,"POP %ld",ret_->location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 		UPDATE_IF_BLOCKS(1)
-		int r_value_adress = EV_POSTFIX_EXPP(r_expression);
-		sprintf(command,"PUSH %d",r_value_adress);
+		TABLE_ENTRY return_;
+		EV_POSTFIX_EXPP(r_expression,&return_);
+		sprintf(command,"PUSH %ld",return_.location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 		sprintf(command,"CALL %ld",ret_->location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
@@ -338,7 +339,9 @@ void first_compile(FILE *file){
 	}
 	else if(!strcmp(operator,"input")){
 		char KWAC_COMMAND [50];
-		sprintf(KWAC_COMMAND,"%s %d",input,EV_POSTFIX_EXPP(operand));
+		TABLE_ENTRY return_;
+		EV_POSTFIX_EXPP(operand,&return_);
+		sprintf(KWAC_COMMAND,"%s %ld",input,return_.location);
 		// strncat(KWAC_COMMAND,input,sizeof(KWAC_COMMAND)-1);
 		// char p[] = {table_entry->location + '0','\0'};
 		// strncat(KWAC_COMMAND,p,sizeof(KWAC_COMMAND));
@@ -396,8 +399,8 @@ void first_compile(FILE *file){
 			while(isprint((int)rest[0]))comparingExpp[x++]=*rest++;
 			comparingExpp[x]=')';
 			comparingExpp[x+1]='\0';
-
-			EV_POSTFIX_EXPP(comparingExpp);
+			TABLE_ENTRY decoy;
+			EV_POSTFIX_EXPP(comparingExpp,&decoy);
 			//result is 0/1 in acc
 			char command[30];
 			sprintf(command,"BRANCHZERO "); //cond jump to the end of if block
@@ -454,7 +457,8 @@ void first_compile(FILE *file){
 				int adress2 = pop(&return_stack) -1; //begining of loop
 				char command[30];
 				if(loop_inc_pointer>0){
-					EV_POSTFIX_EXPP(loop_increments[--loop_inc_pointer]);
+					TABLE_ENTRY decoy;
+					EV_POSTFIX_EXPP(loop_increments[--loop_inc_pointer],&decoy);
 					free(loop_increments[loop_inc_pointer]);
 				}
 				sprintf(command,"BRANCH %ld",symbolTable[adress2]->location);
@@ -549,7 +553,8 @@ void first_compile(FILE *file){
 
 			//this line is under investigation !
 			//why did i code it this way
-			int adress = EV_POSTFIX_EXPP(left_side);
+			TABLE_ENTRY decoy;
+			int adress = EV_POSTFIX_EXPP(left_side,&decoy);
 			if(adress==-1){
 				//some shit happend i duno lol
 			}
@@ -561,7 +566,8 @@ void first_compile(FILE *file){
 
 			
 			//evaluate RHS//
-			EV_POSTFIX_EXPP(right_side);
+
+			EV_POSTFIX_EXPP(right_side,&decoy);
 			loop_increments[loop_inc_pointer] = malloc(50);
 			strcpy(loop_increments[loop_inc_pointer++],incrementExpp);
 			//result in acc store to var
@@ -573,7 +579,7 @@ void first_compile(FILE *file){
 				push(total_comands+1,&for_stack);
 				push(total_comands+1,&return_stack);
 				push(FOR,&stuck);
-			EV_POSTFIX_EXPP(comparingExpp);
+			EV_POSTFIX_EXPP(comparingExpp,&decoy);
 			//result in acc 0/1
 			//jump to end if false
 			sprintf(command,"BRANCHZERO ");
@@ -591,21 +597,27 @@ void first_compile(FILE *file){
 			
 			char temp[40];
 			while(rest[0]!=' ')rest++;
-			sprintf(temp,"PRINT %d",EV_POSTFIX_EXPP(rest));
+			TABLE_ENTRY argument;
+			EV_POSTFIX_EXPP(rest,&argument);
+			sprintf(temp,"PRINT %ld",argument.location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
 		else if(!strcmp(operator,"put")){
 			char temp[40];
 			while(rest[0]!=' ')rest++;
-			sprintf(temp,"WRITE %d",EV_POSTFIX_EXPP(rest));
+			TABLE_ENTRY argument;
+			EV_POSTFIX_EXPP(rest,&argument);
+			sprintf(temp,"WRITE %ld",argument.location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
 		else if(!strcmp(operator,"put_f")){
 			char temp[40];
 			while(rest[0]!=' ')rest++;
-			sprintf(temp,"WRITE_F %d",EV_POSTFIX_EXPP(rest));
+			TABLE_ENTRY argument;
+			EV_POSTFIX_EXPP(rest,&argument);
+			sprintf(temp,"WRITE_F %ld",argument.location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			UPDATE_IF_BLOCKS(1);
 		}
@@ -629,12 +641,14 @@ void first_compile(FILE *file){
 				var_n++;
 				//get adress where we store
 				//make sure that var_n doesnt have whitespaces in it to prevent undef var error
-				int adress = EV_POSTFIX_EXPP(var_n);
+				TABLE_ENTRY argument;
+				EV_POSTFIX_EXPP(var_n,&argument);
 				//evaluate right side of equation
-				EV_POSTFIX_EXPP(equation);
+				TABLE_ENTRY decoy;
+				EV_POSTFIX_EXPP(equation,&decoy);
 				//result in acc
 				char temp[40];
-				sprintf(temp,"PSTORE %d",adress);
+				sprintf(temp,"PSTORE %ld",argument.location);
 				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 
 			}
@@ -660,6 +674,7 @@ void first_compile(FILE *file){
 			// var_n = array_sub;
 			// array_sub = strtok(NULL,"[");
 			char temp[40];
+			TABLE_ENTRY decoy;
 			//if we find bracket that means that we have array subscriptoion assigment here
 			if (array_sub)
 			{
@@ -683,7 +698,7 @@ void first_compile(FILE *file){
 				    if(!array_sub){
 					//if save was last array_subsriction
 					//we evaluate array subsription and add it with an adress of last element
-				    EV_POSTFIX_EXPP(strtok(save,"]"));	
+				    EV_POSTFIX_EXPP(strtok(save,"]"),&decoy);	
 					sprintf(temp,"ADD %ld",var->location);
 					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 					sprintf(temp,"STORE %ld",temp_v->location);
@@ -694,7 +709,7 @@ void first_compile(FILE *file){
 				    {
 					// if there're more array subs
 					// add adress with substicption (offset)
-				    EV_POSTFIX_EXPP(strtok(save,"]"));	
+				    EV_POSTFIX_EXPP(strtok(save,"]"),&decoy);	
 					sprintf(temp,"ADD %ld",var->location);
 					symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 					sprintf(temp,"STORE %ld",temp_v->location);
@@ -711,7 +726,7 @@ void first_compile(FILE *file){
 				//asume its present in acc
 
 				//todo store it in temp var
-				EV_POSTFIX_EXPP(equation);
+				EV_POSTFIX_EXPP(equation,&decoy);
 				sprintf(temp,"PSTORE %ld",temp_v->location);
 				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			}
@@ -722,9 +737,12 @@ void first_compile(FILE *file){
 				{
 				var = create_new('V',hash_value,fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
-				}	
-			EV_POSTFIX_EXPP(equation);
+				}
+			TABLE_ENTRY decoy;		
+			EV_POSTFIX_EXPP(equation,&decoy);
 			//UPDATE_IF_BLOCKS(total_comands - save);
+			//store the data type of var
+			var->const_value=decoy.type;
 			sprintf(temp,"STORE %ld",var->location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			}	
@@ -938,8 +956,9 @@ int find_location(char type,unsigned int data,char *fucn_name,int total_vars){
 	return -1;
 
 }
-int EV_POSTFIX_EXPP(char *expp){
+int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 	//todo after func call doesnt evalueate the rest of the expression
+	int data_type=Word;
 	if(expp[0]=='"'){
 		STACKPTR array = new_stack();
 		expp++;
@@ -1056,7 +1075,7 @@ int EV_POSTFIX_EXPP(char *expp){
 			if(isdigit((int)postfix[0]) || (postfix[0]=='-' && negative_number)){
 				char *dig = malloc(50);
 				int x=0;
-				while(postfix[0]!='\0' && !isspace((int)postfix[0]) && (!isOperator(postfix[0]) || negative_number ) ){
+				while(postfix[0]!='\0' && postfix[0]!='{'&&!isspace((int)postfix[0]) && (!isOperator(postfix[0]) || negative_number ) ){
 					dig[x++]=postfix[0];
 					postfix++;
 				}
@@ -1127,6 +1146,7 @@ int EV_POSTFIX_EXPP(char *expp){
 
 					//move pointer forward
 					postfix+=sizeof("{f}")-1;
+					data_type=Double;
 					floats=1;
 			}
 
@@ -1204,10 +1224,11 @@ int EV_POSTFIX_EXPP(char *expp){
 					UPDATE_IF_BLOCKS(1)
 					for(int a=0;a<number_of_args;a++){
 						//evaluate epression
-						int adress = EV_POSTFIX_EXPP(args[a]);
+						TABLE_ENTRY argument;
+						EV_POSTFIX_EXPP(args[a],&argument);
 						char command[40];
 						//and push it on the stack
-						sprintf(command,"PUSH %d",adress);
+						sprintf(command,"PUSH %ld",argument.location);
 						symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 						
 					}
@@ -1267,7 +1288,6 @@ int EV_POSTFIX_EXPP(char *expp){
 					}
 					char temp_c=postfix[0];
 					postfix[0]='\0';
-					printf("");
 					unsigned int hash_value = hash(var_name);
 					postfix[0]=temp_c;
 					int ad = find_location ('V',hash_value,fucn_name,total_vars);
@@ -1293,7 +1313,8 @@ int EV_POSTFIX_EXPP(char *expp){
 				postfix--;//go back to elements so we rewrite them with corespponding operations
 				postfix[0]='+';
 				postfix[1]='@';
-				EV_POSTFIX_EXPP(array_sub);
+				TABLE_ENTRY decoy;
+				EV_POSTFIX_EXPP(array_sub,&decoy);
 				//push(temp,&stack); //push adress of temp var
 				int arr_p= pop(&stack);
 				push(UNARY,&operations);
@@ -1351,7 +1372,7 @@ int EV_POSTFIX_EXPP(char *expp){
 					//store it in temp
 					sprintf(double_t,"STORE %d",adress);
 					//so we use IEEE from temp var for the operations bellow
-					if(symbolTable[y]->type!='T')sprintf(load,"LOAD_F %ld",symbolTable[y]->location);
+					if(symbolTable[y]->type!='T'&&symbolTable[y]->const_value!=Double)sprintf(load,"LOAD_F %ld",symbolTable[y]->location);
 					else sprintf(load,"LOAD %ld",symbolTable[y]->location);
 					x=adress;
 				}
@@ -1552,11 +1573,13 @@ int EV_POSTFIX_EXPP(char *expp){
 			if(code_lines==0){UPDATE_IF_BLOCKS(1)}
 			/*todo: clear all temp vars */ 
 			free(stack);
+			return_->location=symbolTable[result]->location;
+			return_->type=data_type;
 			return symbolTable[result]->location;
 		}\
 		else{
 			fprintf(stderr,"Stack is empty\n");
-			return -1;
+			return  -1;
 		}
 	}
 
