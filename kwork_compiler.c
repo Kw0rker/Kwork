@@ -96,7 +96,7 @@ typedef struct table_entry TABLE_ENTRY;
 typedef TABLE_ENTRY *TABLE_ENTRY_PTR;
 
 TABLE_ENTRY_PTR symbolTable[MAX_CODE_SIZE];
-enum DATA_TYPES{Word,Double,Adress,Function};
+enum DATA_TYPES{Word=RANDOM_V-1,Double=RANDOM_V-2,Adress=RANDOM_V-3,Function=RANDOM_V-4};
 /*
 precompiles code
 with defines and includes

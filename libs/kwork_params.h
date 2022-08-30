@@ -63,6 +63,7 @@
 #ifndef FLOAT_SUPPORT
 //#define FLOAT_SUPPORT 1
 #endif
+#define RANDOM_V 1941287553
 
 // macros bellow
 ///////////////////////
