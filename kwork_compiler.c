@@ -270,10 +270,13 @@ void first_compile(FILE *file){
 			int number_of_args=0;
 			char temp[50];
 			unsigned int params[123];
+			unsigned int data_types[123];
 			int p=0;
 			while(arg!=NULL){
-				params[p++]=hash((unsigned char*)arg);
+				//todo: add data_types stack by parsing args and creating vars with coresponding data type
 				arg  = strtok(NULL,ARG_SEPARATOR);
+				char *data_t = strtok(arg," ");
+				params[p++]=hash((unsigned char*)strtok(NULL," "));
 			}
 			while(p>0){
 				TABLE_ENTRY_PTR var = create_new('V',params[--p],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
