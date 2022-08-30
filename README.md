@@ -73,7 +73,7 @@ Emulates hardware.
   - [x] All operations  supported
 ## Virtual cpu
  - [x] threading and locks
- - [ ] floating point numbers support
+ - [x] floating point numbers support
  - [x] basic math and jump instuctions
  - [x] bitwise instructions
  - [x] pointers
