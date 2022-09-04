@@ -270,16 +270,34 @@ void first_compile(FILE *file){
 			int number_of_args=0;
 			char temp[50];
 			unsigned int params[123];
-			unsigned int data_types[123];
+			unsigned int data_[123];
+			unsigned int *data_types=data_;
 			int p=0;
 			while(arg!=NULL){
 				//todo: add data_types stack by parsing args and creating vars with coresponding data type
 				arg  = strtok(NULL,ARG_SEPARATOR);
 				char *data_t = strtok(arg," ");
 				params[p++]=hash((unsigned char*)strtok(NULL," "));
+				if (!strcmp(data_t,"double")){
+					*(data_types++)=Double;
+				}
+				else if(!strcmp(data_t,"function")){
+					*(data_types++)=Function;
+				}
+				else if(!strcmp(data_t,"adress")){
+					*(data_types++)=Adress;
+				}
+				else if(!strcmp(data_t,"word")){
+					*(data_types++)=Word;
+				}
+				else{
+					fprintf(stderr,"%s is not supported data type\n",data_t);
+				}
+
 			}
 			while(p>0){
 				TABLE_ENTRY_PTR var = create_new('V',params[--p],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
+				var->type=*(--data_types);
 				sprintf(temp,"POP %ld",var->location);//pop value from stack to the mem adress
 				symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
@@ -1230,6 +1248,8 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						TABLE_ENTRY argument;
 						EV_POSTFIX_EXPP(args[a],&argument);
 						char command[40];
+						//todo check the function prototype for type checks
+						//and cast to double if required
 						//and push it on the stack
 						sprintf(command,"PUSH %ld",argument.location);
 						symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
