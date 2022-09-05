@@ -310,7 +310,7 @@ void first_compile(FILE *file){
 			}
 			while(p>0){
 				TABLE_ENTRY_PTR var = create_new('V',params[--p],fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
-				var->type=*(--data_types);
+				var->const_value=*(--data_types);
 				sprintf(temp,"POP %ld",var->location);//pop value from stack to the mem adress
 				symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
@@ -776,7 +776,7 @@ void first_compile(FILE *file){
 			EV_POSTFIX_EXPP(equation,&decoy);
 			//UPDATE_IF_BLOCKS(total_comands - save);
 			//store the data type of var
-			var->const_value=decoy.type;
+			var->const_value=decoy.const_value;
 			sprintf(temp,"STORE %ld",var->location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			}	
@@ -790,6 +790,18 @@ void first_compile(FILE *file){
 			char *return_type = strtok(rest," ");
 			char *function_name = strtok(NULL," ");
 			char *arguments = strtok(NULL," ");
+			//go over '(' asume there is!
+			if (arguments!=NULL){	
+			arguments++;
+			}
+			else{
+				char *t = strchr(function_name,'(');
+				*(t)='\0';
+				arguments=t+1;
+			}
+			//remove the closing
+			*(strchr(arguments,')'))='\0';
+
 			FPROTOTYPE func_prot = malloc(sizeof(function_prototype));
 			memset(func_prot->arguments,-1,sizeof(int));
 			function_prototypes[(int)hash((unsigned char*)function_name)%AB_FUNC_MAX]=func_prot;
@@ -809,17 +821,6 @@ void first_compile(FILE *file){
 				else{
 					fprintf(stderr,"%s is not supported data type\n",return_type);
 				}
-			//go over '(' asume there is!
-			if (arguments!=NULL){	
-			arguments++;
-			}
-			else{
-				char *t = strchr(function_name,'(');
-				*(t)='\0';
-				arguments=t+1;
-			}
-			//remove the closing
-			*(strchr(arguments,')'))='\0';
 
 			char *argument = strtok(arguments,ARG_SEPARATOR);
 			int x=0;
@@ -1302,7 +1303,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					//push return adress of the function calling
 					TABLE_ENTRY_PTR function = find_entry('F',total_comands+1,fucn_name,total_vars);
 					if(function==NULL){
-						function = create_new('C',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
+						function = create_new('T',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
 						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)]){
 							fprintf(stderr,"memory overide caused by return adress");
 							abort();
@@ -1314,14 +1315,114 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//push the arguments on the stack
 					UPDATE_IF_BLOCKS(1)
+
+					FPROTOTYPE func_p = function_prototypes[(int)hash((unsigned char*)fucntion_name)%AB_FUNC_MAX];
+					if (func_p==NULL){
+						fprintf(stderr,"function %s is missing its prototype, all arguments types are assumed as words!",fucntion_name);
+					}
+					int *types = &func_p->arguments;
 					for(int a=0;a<number_of_args;a++){
 						//evaluate epression
 						TABLE_ENTRY argument;
 						EV_POSTFIX_EXPP(args[a],&argument);
 						char command[40];
+						int data_type=0;
+						if (func_p!=NULL){
+							data_type=*types;
+							types++;
+						}
 						//todo check the function prototype for type checks
 						//and cast to double if required
 						//and push it on the stack
+						switch (data_type%127){
+							case 0:
+							case Word%127:
+							//Word by default if no function prototype
+							//or wrong signature
+							//or argument is actuall word
+
+							switch(argument.const_value%127){
+								case Word%127:
+
+								break;
+
+								case Double%127:
+
+								break;
+
+								case Adress%127:
+
+								break;
+
+								case Function%127:
+
+								break;	
+							}
+							break;
+							case Double%127:
+							switch(argument.const_value%127){
+								case Word%127:
+									//do the cast from int to it's IEEE representation
+									sprintf(command,"CAST_L_D %ld",argument.location);
+									symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+									sprintf(command,"STORE %ld",argument.location);
+									symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+
+								break;
+
+								case Double%127:
+
+								break;
+
+								case Adress%127:
+
+								break;
+
+								case Function%127:
+
+								break;	
+							}
+							break;
+							case Adress%127:
+							switch(argument.const_value%127){
+								case Word%127:
+
+								break;
+
+								case Double%127:
+
+								break;
+
+								case Adress%127:
+
+								break;
+
+								case Function%127:
+
+								break;	
+							}
+							break;
+							case Function:
+							switch(argument.const_value%127){
+								case Word%127:
+
+								break;
+
+								case Double%127:
+
+								break;
+
+								case Adress%127:
+
+								break;
+
+								case Function%127:
+
+								break;	
+							}
+							break;
+
+						}
 						sprintf(command,"PUSH %ld",argument.location);
 						symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 						
@@ -1363,12 +1464,13 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
 					int adress = MAX_CODE_SIZE-(created) -50;
 					symbolTable[adress] = temp;
+					temp->type=func_p?func_p->return_type:Word;
 					sprintf(command,"POP %d",adress);
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					push(adress,&stack);
 					// todo pop return value from stack and store in temp var
 					function->const_value = function_pointer+ local_comands-1; 
-
+					function->type='C';
 
 					
 				}
@@ -1462,13 +1564,15 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				if(floats){
 					apend="_F";
 					//perfrom cast to get IEEE representation
+					if(symbolTable[x]->type!='T'&&symbolTable[x]->const_value!=Double){
 					sprintf(temp_s,"CAST_L_D %ld",symbolTable[x]->location);
 					//store it in temp
 					sprintf(double_t,"STORE %d",adress);
 					//so we use IEEE from temp var for the operations bellow
+					x=adress;
+					}
 					if(symbolTable[y]->type!='T'&&symbolTable[y]->const_value!=Double)sprintf(load,"LOAD_F %ld",symbolTable[y]->location);
 					else sprintf(load,"LOAD %ld",symbolTable[y]->location);
-					x=adress;
 				}
 				else{
 					apend = "";
@@ -1633,12 +1737,15 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				//if double
 				else{
 					//perfrom cast
+					if(temp_s[0]!=0){
 					symbolTable[total_comands++] = create_new('L',0,temp_s,function_pointer+(local_comands++));
 					if(code_lines==1){UPDATE_IF_BLOCKS(1)}
 					//store
-					symbolTable[total_comands++] = create_new('L',0,double_t,function_pointer+(local_comands++));	
+					symbolTable[total_comands++] = create_new('L',0,double_t,function_pointer+(local_comands++));
+					}	
 					//load
 					symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++));
+					if(code_lines==1){UPDATE_IF_BLOCKS(1)}
 					//perform
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//store
@@ -1668,7 +1775,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			/*todo: clear all temp vars */ 
 			free(stack);
 			return_->location=symbolTable[result]->location;
-			return_->type=data_type;
+			return_->const_value=data_type;
 			return symbolTable[result]->location;
 		}\
 		else{

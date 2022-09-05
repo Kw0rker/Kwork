@@ -163,7 +163,8 @@ int main(){
 		 		break;
 		 	case LOAD_F:
 		 		result=(double)memory[operand];
-		 		acc=*(long*)&result;	
+		 		acc=*(long*)&result;
+		 		break;	
 			case STORE:
 				memory[operand] = acc;
 				break;
