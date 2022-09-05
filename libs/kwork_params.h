@@ -64,6 +64,10 @@
 //#define FLOAT_SUPPORT 1
 #endif
 #define RANDOM_V 1941287553
+#ifndef MAX_F_ARGUMENTS
+#define MAX_F_ARGUMENTS 123
+#endif
+#define AB_FUNC_MAX MAX_LIB_FUNCTIONS*2
 
 // macros bellow
 ///////////////////////

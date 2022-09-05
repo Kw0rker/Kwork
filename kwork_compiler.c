@@ -97,6 +97,17 @@ typedef TABLE_ENTRY *TABLE_ENTRY_PTR;
 
 TABLE_ENTRY_PTR symbolTable[MAX_CODE_SIZE];
 enum DATA_TYPES{Word=RANDOM_V-1,Double=RANDOM_V-2,Adress=RANDOM_V-3,Function=RANDOM_V-4};
+
+typedef struct{
+	unsigned int function_name;
+	int return_type;
+	int arguments[MAX_F_ARGUMENTS];
+
+}function_prototype;
+typedef function_prototype *FPROTOTYPE;
+//has map storing function_prototypes
+FPROTOTYPE function_prototypes[AB_FUNC_MAX]={NULL};
+
 /*
 precompiles code
 with defines and includes
@@ -269,15 +280,16 @@ void first_compile(FILE *file){
 			char *arg  = strtok(function_args,ARG_SEPARATOR);
 			int number_of_args=0;
 			char temp[50];
-			unsigned int params[123];
-			unsigned int data_[123];
+			unsigned int params[MAX_F_ARGUMENTS];
+			unsigned int data_[MAX_F_ARGUMENTS];
 			unsigned int *data_types=data_;
 			int p=0;
 			while(arg!=NULL){
 				//todo: add data_types stack by parsing args and creating vars with coresponding data type
-				arg  = strtok(NULL,ARG_SEPARATOR);
-				char *data_t = strtok(arg," ");
-				params[p++]=hash((unsigned char*)strtok(NULL," "));
+				char *t = strchr(arg,' ');
+				*(t)='\0';
+				char *data_t = arg;
+				params[p++]=hash((unsigned char*)t+1);
 				if (!strcmp(data_t,"double")){
 					*(data_types++)=Double;
 				}
@@ -293,6 +305,7 @@ void first_compile(FILE *file){
 				else{
 					fprintf(stderr,"%s is not supported data type\n",data_t);
 				}
+				arg  = strtok(NULL,ARG_SEPARATOR);
 
 			}
 			while(p>0){
@@ -770,6 +783,64 @@ void first_compile(FILE *file){
 		}
 		}
 		else if(!strcmp(operator,"NEW_THREAD")){
+
+		}
+		else if(!strcmp(operator,"prototype")){
+			rest+=sizeof("prototype");
+			char *return_type = strtok(rest," ");
+			char *function_name = strtok(NULL," ");
+			char *arguments = strtok(NULL," ");
+			FPROTOTYPE func_prot = malloc(sizeof(function_prototype));
+			memset(func_prot->arguments,-1,sizeof(int));
+			function_prototypes[(int)hash((unsigned char*)function_name)%AB_FUNC_MAX]=func_prot;
+			func_prot->function_name = (int)hash((unsigned char*)function_name);
+				if (!strcmp(return_type,"double")){
+					func_prot->return_type=Double;
+				}
+				else if(!strcmp(return_type,"function")){
+					func_prot->return_type=Function;
+				}
+				else if(!strcmp(return_type,"adress")){
+					func_prot->return_type=Adress;
+				}
+				else if(!strcmp(return_type,"word")){
+					func_prot->return_type=Word;
+				}
+				else{
+					fprintf(stderr,"%s is not supported data type\n",return_type);
+				}
+			//go over '(' asume there is!
+			if (arguments!=NULL){	
+			arguments++;
+			}
+			else{
+				char *t = strchr(function_name,'(');
+				*(t)='\0';
+				arguments=t+1;
+			}
+			//remove the closing
+			*(strchr(arguments,')'))='\0';
+
+			char *argument = strtok(arguments,ARG_SEPARATOR);
+			int x=0;
+			while(argument!=NULL){
+				if (!strcmp(argument,"double")){
+					func_prot->arguments[x++]=Double;
+				}
+				else if(!strcmp(argument,"function")){
+					func_prot->arguments[x++]=Function;
+				}
+				else if(!strcmp(argument,"adress")){
+					func_prot->arguments[x++]=Adress;
+				}
+				else if(!strcmp(argument,"word")){
+					func_prot->arguments[x++]=Word;
+				}
+				else{
+					fprintf(stderr,"%s is not supported data type\n",argument);
+				}
+				argument=strtok(NULL,ARG_SEPARATOR);
+			}	
 
 		}
 
