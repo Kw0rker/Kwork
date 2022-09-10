@@ -671,6 +671,11 @@ void first_compile(FILE *file){
 			*(equation-1)='\0';
 			while(equation[0]!='\0' && equation[0]==' ')equation++;
 			while(var_n[0]!='\0' && var_n[0]==' ')var_n++;
+			int data_type=Word;
+			if (!strncmp(var_n,"double",sizeof("double")-1)){
+				data_type=Double;
+				var_n+=sizeof("double");
+			}
 			if(var_n[0]=='@'){
 				var_n++;
 				//get adress where we store
@@ -686,7 +691,7 @@ void first_compile(FILE *file){
 				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 
 			}
-
+			//else its word
 			else
 			{
 			//load adress of array first element
@@ -767,16 +772,35 @@ void first_compile(FILE *file){
 			else
 			{
 			// if not found create new
+			int initlized=0;	
 				if(var==NULL)
 				{
 				var = create_new('V',hash_value,fucn_name,(function_pointer+MAX_STATIC_SIZE-(local_created++)));
 				symbolTable[MAX_CODE_SIZE-(++total_vars)] = var;
+				initlized=1;
 				}
+			//if var has just beein 	
+			if(initlized){
+				var->const_value=data_type;
+			}
+			else if (var->const_value==data_type &&!initlized)
+			{
+				//just ignore
+			}
+			else if (var->const_value!=data_type &&!initlized){
+				//fprintf(stderr,"var %s has alread been initlized and has diferent data type\n",var_name);
+			}
+
 			TABLE_ENTRY decoy;		
 			EV_POSTFIX_EXPP(equation,&decoy);
 			//UPDATE_IF_BLOCKS(total_comands - save);
 			//store the data type of var
-			var->const_value=decoy.const_value;
+			if(var->const_value!=decoy.const_value){
+				fprintf(stderr,"the rvalue %s does not yeld desired data type\n",equation);
+			}
+			else{
+				var->const_value=decoy.const_value;
+			}
 			sprintf(temp,"STORE %ld",var->location);
 			symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
 			}	
@@ -1471,6 +1495,12 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					// todo pop return value from stack and store in temp var
 					function->const_value = function_pointer+ local_comands-1; 
 					function->type='C';
+					//set the return value it's coresponidng type
+					temp->const_value=func_p->return_type;
+					if(func_p->return_type==Double){
+						data_type=Double;
+						floats=1;
+					}
 
 					
 				}
@@ -1533,6 +1563,10 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				 ){
 					y=pop(&stack);
 					if(y>0)flag=1;
+				}
+				if (symbolTable[x]->const_value==Double ||(flag&&symbolTable[y]->const_value==Double) ){
+					data_type=Double;
+					floats=1;
 				}
 				/*we pop adress of vars in table here*/ 
 				created++;
@@ -1774,6 +1808,10 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			if(code_lines==0){UPDATE_IF_BLOCKS(1)}
 			/*todo: clear all temp vars */ 
 			free(stack);
+			if (symbolTable[result]->const_value==Double && data_type==Word){
+				data_type==Double;
+			}
+
 			return_->location=symbolTable[result]->location;
 			return_->const_value=data_type;
 			return symbolTable[result]->location;
