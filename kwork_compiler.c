@@ -293,7 +293,12 @@ void first_compile(FILE *file){
 		else {
 			function_pointer = function_pointer + MAX_STATIC_SIZE + 1;
 			local_comands=0;
-			strcpy(fucn_name,operand);
+			while(rest[0]!=' ')rest++;
+			while(rest[0]==' ')rest++;
+			while(rest[0]!=' ')rest++;
+			while(rest[0]==' ')rest++;
+			// cut away function {data_type} from the string leaving only name and args
+			strcpy(fucn_name,rest);
 			char *fucntion_name = strtok(fucn_name,"(");
 			char *function_args  = rest;
 			while(function_args[0]!='\0' && function_args[0]!='(') function_args++;
@@ -307,7 +312,6 @@ void first_compile(FILE *file){
 			unsigned int *data_types=data_;
 			int p=0;
 			while(arg!=NULL){
-				//todo: add data_types stack by parsing args and creating vars with coresponding data type
 				char *t = strchr(arg,' ');
 				*(t)='\0';
 				char *data_t = arg;
