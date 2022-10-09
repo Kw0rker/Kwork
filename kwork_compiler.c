@@ -1544,6 +1544,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						data_type=Double;
 						floats=1;
 					}
+					data_type=func_p->return_type;
 
 					
 				}
