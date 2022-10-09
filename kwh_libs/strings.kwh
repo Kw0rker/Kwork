@@ -1,5 +1,5 @@
 
-function printString(string)
+function word printString(adress string)
 for a=0;string[a]>'\0';a++
 {
 	putc string[a]
@@ -8,14 +8,14 @@ for a=0;string[a]>'\0';a++
 return a
 //prints null terminated char array to stdout
 
-function strlen(string)
+function word strlen(adress string)
 for a=0;string[a]>'\0';a++
 {
 }
 return a
 //returns total string lenght in bytes
 
-function strchr(string,char)
+function adress strchr(adress string,word char)
 for a=0;string[a]>'\0';a++
 {
 	if string[a]==char
@@ -27,7 +27,7 @@ for a=0;string[a]>'\0';a++
 return 0
 //function returns pointer to first occurance of char in string
 
-function strstr(haystack,needle)
+function adress strstr(adress haystack,adress needle)
 	let size = CALL strlen{needle}
 	let offset = 0
 	for a=0;haystack[a+size]>'\0';a++
@@ -51,7 +51,7 @@ function strstr(haystack,needle)
 	return 0
 //function search for first occurance of needle in haystack and returns pointer to it
 
-function strcpy(dest,source)
+function word strcpy(adress dest,adress source)
 	for a=0;source[a]>'\0';a++
 	{
 		let dest[a]=source[a]
@@ -61,7 +61,7 @@ function strcpy(dest,source)
 //coppies char array source to the dest
 //returns ammount of bytes coppied
 
-function strtok(string,char,buf)
+function adress strtok(adress string,word char,adress buf)
 	let buffer=@buf
 	let token=0
 	if buffer[0]==0

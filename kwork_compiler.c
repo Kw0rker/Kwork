@@ -164,6 +164,16 @@ int main(int argc, char const *argv[])
 	    return -1;
 	}
 	file=precompile(file);
+	if(argc>2 && argv[2][0]=='E')//very bad flag practice change in future!
+	{
+		char buffer[100];
+		while(!feof(file))
+		{
+			fgets(buffer,100,file);
+			printf("%s",buffer);
+		}
+		return 0;
+	}		
 	compile(file);
 	memset(flags,-1,sizeof(flags));
 	return 0;
@@ -172,7 +182,8 @@ FILE *precompile(FILE *file){
 	char *libs[MAX_LIBS];
 	unsigned int functions[MAX_LIB_FUNCTIONS];
 	memset(functions,0u,sizeof functions);
-
+	char *prototypes[MAX_LIB_FUNCTIONS];
+	memset(prototypes,0,sizeof prototypes);
 	unsigned int functions_added[MAX_LIB_FUNCTIONS];
 	memset(functions_added,0u,sizeof functions_added);
 	int lib_point=0;
@@ -215,11 +226,22 @@ FILE *precompile(FILE *file){
 		}
 	}
 	fprintf(temp,"\n");
-	addFunctions(temp,functions,functions_added,libs,lib_point);
-
-
+	addFunctions(temp,functions,functions_added,libs,lib_point,prototypes);
 	rewind(temp);
-	return temp;
+	FILE * temp1 = tmpfile();
+	int x=0;
+	while(prototypes[x]!=0){
+		*(strchr(prototypes[x],')')+1)='\0';
+		fprintf(temp1,"prototype %s\n",prototypes[x++]);
+	}
+	while(!feof(temp))
+	{
+		fgets(line,100,temp);
+		fprintf(temp1,"%s",line);
+	}
+
+	rewind(temp1);
+	return temp1;
 }
 
 
@@ -676,6 +698,10 @@ void first_compile(FILE *file){
 				data_type=Double;
 				var_n+=sizeof("double");
 			}
+			else if (!strncmp(var_n,"adress",sizeof("adress")-1)){
+				data_type=Adress;
+				var_n+=sizeof("adress");
+			}
 			if(var_n[0]=='@'){
 				var_n++;
 				//get adress where we store
@@ -811,18 +837,19 @@ void first_compile(FILE *file){
 		}
 		else if(!strcmp(operator,"prototype")){
 			rest+=sizeof("prototype");
-			char *return_type = strtok(rest," ");
-			char *function_name = strtok(NULL," ");
-			char *arguments = strtok(NULL," ");
+
+			while(rest[0]==' ')rest++;
+			char *return_type = rest;
+			while(rest[0]!=' ')rest++;
+			rest[0]='\0';
+			do {rest++;}while(rest[0]==' ');
+			char *function_name = rest;
+			while(rest[0]!=' '&&rest[0]!='(')rest++;
+			rest[0]='\0';
+			rest++;
+			if(rest[0]==' ')while(rest[0]!='(')rest++;
+			char *arguments = rest;
 			//go over '(' asume there is!
-			if (arguments!=NULL){	
-			arguments++;
-			}
-			else{
-				char *t = strchr(function_name,'(');
-				*(t)='\0';
-				arguments=t+1;
-			}
 			//remove the closing
 			*(strchr(arguments,')'))='\0';
 
@@ -849,6 +876,7 @@ void first_compile(FILE *file){
 			char *argument = strtok(arguments,ARG_SEPARATOR);
 			int x=0;
 			while(argument!=NULL){
+				strchr(argument,' ')[0]='\0';
 				if (!strcmp(argument,"double")){
 					func_prot->arguments[x++]=Double;
 				}
@@ -1077,6 +1105,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 	//todo after func call doesnt evalueate the rest of the expression
 	int data_type=Word;
 	if(expp[0]=='"'){
+		data_type=Adress;
 		STACKPTR array = new_stack();
 		expp++;
 		while(expp[0]!='\0' && expp[0]!='"'){
@@ -1141,6 +1170,8 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				sprintf(command,"LOAD %ld", symbolTable[string_pointer]->location);
 				symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 				{UPDATE_IF_BLOCKS(1)}
+				return_->location=symbolTable[string_pointer]->location;
+				return_->const_value=data_type;
 				return  symbolTable[string_pointer]->location;	
 			}
 
