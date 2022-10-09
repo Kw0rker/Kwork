@@ -702,6 +702,14 @@ void first_compile(FILE *file){
 				data_type=Adress;
 				var_n+=sizeof("adress");
 			}
+			else if (!strncmp(var_n,"function",sizeof("function")-1)){
+				data_type=Function;
+				var_n+=sizeof("function");
+			}
+			else if (!strncmp(var_n,"word",sizeof("word")-1)){
+				data_type=Word;
+				var_n+=sizeof("word");
+			}
 			if(var_n[0]=='@'){
 				var_n++;
 				//get adress where we store
