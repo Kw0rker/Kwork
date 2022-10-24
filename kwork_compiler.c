@@ -1314,6 +1314,16 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					data_type=Double;
 					floats=1;
 			}
+			//data casts for returns
+			else if(!strncmp(postfix,"{a}",sizeof("{a}")-1)){
+					postfix+=sizeof("{a}")-1;
+					data_type=Adress;
+			}
+			else if(!strncmp(postfix,"{w}",sizeof("{w}")-1)){
+					postfix+=sizeof("{w}")-1;
+					data_type=Word;
+			}
+
 
 			else if (isOperand(postfix[0])){
 				if(postfix[0]=='C' && postfix[1]=='A' && postfix[2]=='L' && postfix[3]=='L'){
