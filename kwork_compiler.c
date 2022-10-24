@@ -380,7 +380,6 @@ void first_compile(FILE *file){
 		while(r_expression[0]=='\t')r_expression++;
 		while(!isspace((int)r_expression[0]))r_expression++;
 		r_expression++;
-		//this line is causing memory overwrite
 		TABLE_ENTRY_PTR ret_ = create_new('V',0,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created+1) ));
 		char command[50];
 		if(!isprint((int)r_expression[0]))continue;
@@ -389,6 +388,12 @@ void first_compile(FILE *file){
 		UPDATE_IF_BLOCKS(1)
 		TABLE_ENTRY return_;
 		EV_POSTFIX_EXPP(r_expression,&return_);
+
+		//check if function returns its type
+		FPROTOTYPE func_p = function_prototypes[(int)hash((unsigned char*)fucn_name)%AB_FUNC_MAX];
+		if(return_.const_value !=func_p->return_type){
+			fprintf(stderr,"Function %s does not return its desired data type\n",fucn_name);
+		}
 		sprintf(command,"PUSH %ld",return_.location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 		sprintf(command,"CALL %ld",ret_->location);
@@ -1612,6 +1617,9 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					data_type=Double;
 					floats=1;
 				}
+				else if (symbolTable[x]->const_value==Adress ||(flag&&symbolTable[y]->const_value==Adress) ){
+					data_type=Adress;
+				}
 				/*we pop adress of vars in table here*/ 
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,MAX_CODE_SIZE - created - 50);
@@ -1736,6 +1744,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					break; 
 					case'#': 
 					/*get pointer*/ 
+					data_type=Adress;
 					adress = find_location ('C',(int)symbolTable[x]->location,fucn_name,total_vars);
 					if(adress<0){
 						TABLE_ENTRY_PTR VAR = create_new('C',(int)symbolTable[x]->location,fucn_name,MAX_CODE_SIZE - total_const++);
@@ -1747,7 +1756,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					break; 
 					case'@': 
 					/*dereference pointer*/ 
-					
+					data_type=Word;
 					sprintf(command,"PLOAD %ld",symbolTable[x]->location);
 					push(UNARY,&operations);
 				
