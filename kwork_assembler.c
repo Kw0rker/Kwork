@@ -55,12 +55,12 @@ int main(int argc, char const *argv[])
 translate_code(FILE *inp,FILE *out){
 	//char *command[50];
 	//char *save =command;
-	int operand;
+	long operand;
 	while(!feof(inp)){
 		char command[50];
 		fscanf(inp,"%s",command);
 		//printf("%s\n",command);
-		fscanf(inp,"%d",&operand);
+		fscanf(inp,"%ld",&operand);
 		//fscanf(inp,"%s\n",command);//vuln to bufferoverflow fix later
 
 			 if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
@@ -108,8 +108,8 @@ translate_code(FILE *inp,FILE *out){
 		//sets up addres datta at address
 		else if(command[0]=='#'){
 			fprintf(out, "-%s\n",command+1);
-			fscanf(inp,"%d",&operand);
-			fprintf(out, "%d\n",operand);
+			fscanf(inp,"%ld",&operand);
+			fprintf(out, "%ld\n",operand);
 		}
 		//sets up adress for folowing command
 		else if (command[0]=='&')

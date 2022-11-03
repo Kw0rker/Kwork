@@ -24,7 +24,7 @@ for a=0;string[a]>'\0';a++
 		//return pointer to first occurance of char
 	}
 }
-return 0
+return 0{a}
 //function returns pointer to first occurance of char in string
 
 function adress strstr(adress haystack,adress needle)
@@ -48,7 +48,7 @@ function adress strstr(adress haystack,adress needle)
 			//add break here
 		}
 	}
-	return 0
+	return 0{a}
 //function search for first occurance of needle in haystack and returns pointer to it
 
 function word strcpy(adress dest,adress source)
@@ -63,7 +63,7 @@ function word strcpy(adress dest,adress source)
 
 function adress strtok(adress string,word char,adress buf)
 	let buffer=@buf
-	let token=0
+	let adress token=0
 	if buffer[0]==0
 	{
 		let t = CALL strcpy{buffer,string}

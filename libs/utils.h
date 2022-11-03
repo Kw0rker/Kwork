@@ -37,6 +37,10 @@ char *convertToPostfix(char *exp){
  
     for (i = 0, k = -1; exp[i]; ++i)
     {
+        if(exp[i]=='.'){
+            result[++k]='.';
+            continue;
+        }
         if(!strncmp(&exp[i],"{f}",sizeof("{f}")-1)){
             result[++k]='{';
             result[++k]='f';

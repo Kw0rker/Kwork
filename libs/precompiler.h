@@ -2,7 +2,6 @@
 #define LOAD_LIB(LIB_FILE,LIB_NAME) char temp_s[100];sprintf(temp_s,"%s/%s",LIB_PATH,LIB_NAME);LIB_FILE=fopen(temp_s,"r")
 
 
-
 void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],char**libs, int libs_ttl,char **prototypes)
 {
 	int lib_point=libs_ttl;
@@ -34,7 +33,7 @@ void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],cha
 				t[0]='\0';
 				char *function_name = strtok(rest,"(");
 				//get the function name
-				if(strchrnul(function_name,' '))while(function_name[0]!=' ')function_name++;
+				if(((char *)strchrnul(function_name,' '))[0])while(function_name[0]!=' ')function_name++;
 				while(function_name[0]==' ')function_name++;
 				for (int i = 0; i < MAX_LIB_FUNCTIONS; ++i)
 				{
@@ -65,7 +64,7 @@ void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],cha
 				rest+=(sizeof("#include ")-1);
 				char temp_s[100];
 				int x=0;
-				while(isprint(rest[0]))temp_s[x++]=rest++[0];
+				while(isprint((int)rest[0]))temp_s[x++]=rest++[0];
 				temp_s[x]='\0';
 				char lib_included=0;
 				//check if specific lib is already included
@@ -91,7 +90,6 @@ void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],cha
 				rest = function_name;
 				while(rest[0]!='{')rest++;
 				rest[0]='\0';
-				char *temp_line;
 				int key = (hash((unsigned char*)function_name)%MAX_LIB_FUNCTIONS)|(1u<<32);
 				//if function hasnt been added yet
 				if(!functions[key] &&!added[key]){

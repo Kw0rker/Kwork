@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <kwork_params.h>
 #include <precompiler.h>
 #include <assert.h>
@@ -85,7 +86,7 @@ enum TYPES{IF,FOR,WHILE};
 
 struct table_entry
 {
-	int const_value;
+	long const_value;
 	unsigned int symbol;
 	char type;
 	long location;
@@ -120,11 +121,11 @@ compiles code to KWAC (kworker assembly code)
 void compile(FILE *);
 void first_compile(FILE *);
 void second_compile();
-TABLE_ENTRY_PTR find_entry(char ,unsigned int ,char *,int );
-int find_location(char ,unsigned int ,char *,int );
+TABLE_ENTRY_PTR find_entry(char ,long ,char *,int );
+int find_location(char ,long ,char *,int );
 int EV_POSTFIX_EXPP(char *,TABLE_ENTRY_PTR);
 
-TABLE_ENTRY_PTR create_new(char , unsigned int ,char *,long);
+TABLE_ENTRY_PTR create_new(char , long ,char *,long);
 //global vars
 	static STACKPTR stack = NULL;
 	static STACKPTR for_stack = NULL;
@@ -203,7 +204,7 @@ FILE *precompile(FILE *file){
 
 			char temp_s[100];
 			int x=0;
-			while(isprint(rest[0]))temp_s[x++]=rest++[0];
+			while(isprint((int)rest[0]))temp_s[x++]=rest++[0];
 			temp_s[x]='\0';
 			libs[lib_point]=malloc(sizeof(temp_s));
 			strcpy(libs[lib_point++],temp_s);
@@ -869,6 +870,7 @@ void first_compile(FILE *file){
 			//go over '(' asume there is!
 			//remove the closing
 			*(strchr(arguments,')'))='\0';
+			//todo fix segfault when argumnet is just a type without name!
 
 			FPROTOTYPE func_prot = malloc(sizeof(function_prototype));
 			memset(func_prot->arguments,-1,sizeof(int));
@@ -915,7 +917,7 @@ void first_compile(FILE *file){
 		}
 
 
-		else if(isprint(line[0])){
+		else if(isprint((int)line[0])){
 			//dont count number of commands if operation is not defined in compiler
 			printf("command -> %s is not defined\n" ,line);
 			//line_n--;
@@ -961,7 +963,7 @@ void second_compile(){
 				case'C':
 				//#location
 				//number
-				fprintf(file,"#%ld\n%d\n",symbolTable[a]->location,(symbolTable[a]->const_value) );
+				fprintf(file,"#%ld\n%ld\n",symbolTable[a]->location,(symbolTable[a]->const_value) );
 				break;
 				//case 'V':
 				//do nothing as we dont need to alloc memory in kernel
@@ -1044,7 +1046,7 @@ int reserveMemory(int size){
 	//return adress in table
 	return MAX_CODE_SIZE-(total_vars);
 }
-TABLE_ENTRY_PTR find_entry(char type,unsigned data,char *fucn_name,int total_vars){
+TABLE_ENTRY_PTR find_entry(char type,long data,char *fucn_name,int total_vars){
 	switch(type){
 		case'C':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
@@ -1075,7 +1077,7 @@ TABLE_ENTRY_PTR find_entry(char type,unsigned data,char *fucn_name,int total_var
 	return NULL;
 
 }
-TABLE_ENTRY_PTR create_new(char type,unsigned int data,char *fucn_name,long location){
+TABLE_ENTRY_PTR create_new(char type,long data,char *fucn_name,long location){
 	TABLE_ENTRY_PTR new = malloc(sizeof (TABLE_ENTRY));
 	new->location=location;
 	new->type=type;
@@ -1084,7 +1086,7 @@ TABLE_ENTRY_PTR create_new(char type,unsigned int data,char *fucn_name,long loca
 	strcpy(new->fucn_name,fucn_name);
 	return new;
 }
-int find_location(char type,unsigned int data,char *fucn_name,int total_vars){
+int find_location(char type,long data,char *fucn_name,int total_vars){
 	switch(type){
 		case'F':
 		for(int x=1;x<=total_vars;x++){ //todo search from the top of array as there vars are stored
@@ -1244,13 +1246,27 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					dig[x++]=postfix[0];
 					postfix++;
 				}
-				dig[x]='\0';
-				int c_value = atoi(dig);
+				int tem=0;
+				long c_value=0;
+				if(((char *)strchrnul(dig,'.'))[0]){
+					data_type=Double;
+					double result = atof(dig);
+					c_value=*(long*)&result;
+					floats=1;
+					tem=1;
+				}
+				else{
+					dig[x]='\0';
+					c_value = atoi(dig);
+				}
 				int ad = find_location ('C',c_value,fucn_name,total_vars);
 				if(ad<0){
 					TABLE_ENTRY_PTR CONST = create_new('C',c_value,fucn_name,MAX_CODE_SIZE - total_const++);
 					ad = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[ad]=CONST;
+				}
+				if(tem){
+					symbolTable[ad]->symbol=Double;
 				}
 				push(ad,&stack);
 			}
@@ -1402,7 +1418,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					if (func_p==NULL){
 						fprintf(stderr,"function %s is missing its prototype, all arguments types are assumed as words!",fucntion_name);
 					}
-					int *types = &func_p->arguments;
+					int *types = &(func_p->arguments[0]);
 					for(int a=0;a<number_of_args;a++){
 						//evaluate epression
 						TABLE_ENTRY argument;
@@ -1447,6 +1463,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 									//do the cast from int to it's IEEE representation
 									sprintf(command,"CAST_L_D %ld",argument.location);
 									symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+									//todo dont store at the same adress!!!
 									sprintf(command,"STORE %ld",argument.location);
 									symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 
@@ -1568,7 +1585,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				else{
 					//if var name 
 					unsigned char *var_name = (unsigned char*)postfix;
-					while(postfix[0]!='\0' && (isalpha(postfix[0])||postfix[0]=='_')){
+					while(postfix[0]!='\0' && (isalpha((int)postfix[0])||postfix[0]=='_')){
 						postfix++;
 					}
 					char temp_c=postfix[0];
@@ -1652,7 +1669,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				}
 				code_lines++;
 				int t = postfix[1]==' ';
-				int comp = (int) (postfix[0]) + ((postfix[1+t]=='=' ||  postfix[1+t]=='<' || postfix[1+t]=='>'|| postfix[1+t]=='+'|| postfix[1+t]=='-')*postfix[1+t]);
+				int comp = (int) (postfix[0]) + ((postfix[1+t]=='=' ||  postfix[1+t]=='<' || postfix[1+t]=='>'|| postfix[1+t]=='+'|| postfix[1+t]=='-')*(t?postfix[1+t]:0));
 				comp+=(postfix[0]=='!')*(postfix[1+t]=='=');
 				char *apend;
 				//if theres at least one float operation all other operations are done with floats
@@ -1660,14 +1677,22 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				if(floats){
 					apend="_F";
 					//perfrom cast to get IEEE representation
-					if(symbolTable[x]->type!='T'&&symbolTable[x]->const_value!=Double){
+					if( (symbolTable[x]->type!='T'&&symbolTable[x]->const_value!=Double)&&
+						(symbolTable[x]->type=='C'&&symbolTable[x]->symbol!=Double)
+						){
 					sprintf(temp_s,"CAST_L_D %ld",symbolTable[x]->location);
 					//store it in temp
 					sprintf(double_t,"STORE %d",adress);
 					//so we use IEEE from temp var for the operations bellow
 					x=adress;
 					}
-					if(symbolTable[y]->type!='T'&&symbolTable[y]->const_value!=Double)sprintf(load,"LOAD_F %ld",symbolTable[y]->location);
+					if(
+						(symbolTable[y]->type!='T'&&symbolTable[y]->const_value!=Double&&floats) &&
+						(symbolTable[y]->type!='C'&&symbolTable[y]->symbol!=Double)&&
+						(symbolTable[y]->type!='V'&&symbolTable[y]->symbol!=Double)
+					){
+						sprintf(load,"LOAD_F %ld",symbolTable[y]->location);
+					}
 					else sprintf(load,"LOAD %ld",symbolTable[y]->location);
 				}
 				else{
@@ -1871,12 +1896,14 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			if(code_lines==0){UPDATE_IF_BLOCKS(1)}
 			/*todo: clear all temp vars */ 
 			free(stack);
-			if (symbolTable[result]->const_value==Double && data_type==Word){
-				data_type==Double;
-			}
 
 			return_->location=symbolTable[result]->location;
 			return_->const_value=data_type;
+			if(symbolTable[result]->type!='T'){
+
+				if(symbolTable[result]->type!='C')return_->const_value=symbolTable[result]->const_value;
+				else return_->const_value=symbolTable[result]->symbol;
+			}
 			return symbolTable[result]->location;
 		}\
 		else{
