@@ -2,15 +2,21 @@
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
 #define PRINT 12 // prints a char from memory adress
+#define WRITE_F 13 //prints data from mem adress as float
 #define LOAD 20 //inserts data to acc register from memory
 #define STORE 21 // stores data from acc to memory address
 #define PLOAD 22 //inserts data from pointer to memory to acc
 #define PSTORE 23 //stores data from acc in memory pointer
+#define LOAD_F 24//loads data as pointer to doulbe 
 #define ADD 30 //sums acc with data in mem address and stores result in acc
 #define SUB 31 //subtracts accc with data in mem adress result stored in acc
 #define DIV 32 //divedes acc with data in mem adress result stored in acc
 #define MUL 33 // multiplies acc with data in mem adress result stored in acc
 #define MOD 34 //takes acc mod mem adress, result stored in acc
+#define ADD_F 35 // sums acc and data in mem adress as floats
+#define SUB_F 36 // subs acc and data in mem adress as floats
+#define MUL_F 37 // multiplies acc and data in mem adress as floats
+#define DIV_F 38 // divides acc and data in mem adress as floats
 #define BRANCH 40 // go to mem adress 
 #define BRANCHNEG 41 // go to mem adress if acc < 0 
 #define BRANCHZERO 42 // go to mem adress if acc==0
@@ -29,6 +35,7 @@
 #define PUSH 71 //pushes data from memory on the stack
 #define POP 72 //pops data from the stack to memory adress
 #define DEBUG 60 //dumps memory when reached
+#define CAST_L_D 61// gets IEEE represination of a number in acc
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
@@ -39,7 +46,7 @@ struct thread
 	unsigned savedstate; // 0 <= savestate < 10000
 						 // 0 <= savestate < 2^13
 	unsigned id;
-	int acc_s;
+	long acc_s;
 };
 typedef struct thread THREAD;
 typedef THREAD *THREADPTR;
@@ -54,6 +61,7 @@ int main(){
 	int ESP = ESP_ADR; //esp register
 	int EBP = MEM_SIZE-1; //ebp register points to highest adressable memory
 	int instruction_counter;
+	double result; //temp for evil bits hack
 	long  instruction_register;
 	int operation_code;
 	int operand;
@@ -142,13 +150,21 @@ int main(){
 			case WRITE:
 			  	printf("%d",(int)memory[operand]);
 			       break;
+			case WRITE_F:
+			  	printf("%e",*(double*) &memory[operand]);
+			       break;       
 			case PRINT:
 				//fwrite(&memory[operand],sizeof(char),acc,stdout);
 				putc(memory[operand],stdout);
 				//printf("%c",(char) memory[operand]);  // from pointer to adress and resolving pointer
+			break;	
 			case LOAD:
 				acc=memory[operand];
 		 		break;
+		 	case LOAD_F:
+		 		result=(double)memory[operand];
+		 		acc=*(long*)&result;
+		 		break;	
 			case STORE:
 				memory[operand] = acc;
 				break;
@@ -173,6 +189,22 @@ int main(){
 			case MOD:
 				acc=(int)acc%(int)memory[operand];
 				break;
+			case ADD_F:
+				result= perform_float_operation(acc,+,memory[operand])
+				acc=*(long *)&result;
+				break;
+			case SUB_F:
+				result= perform_float_operation(acc,-,memory[operand])
+				acc=*(long *)&result;
+				break;
+			case MUL_F:
+				result= perform_float_operation(acc,*,memory[operand])
+				acc=*(long *)&result;
+				break;
+			case DIV_F:
+				result= perform_float_operation(acc,/,memory[operand])
+				acc=*(long *)&result;
+				break;						
 			case BRANCH:
 				instruction_counter=operand;
                  break;
@@ -184,7 +216,13 @@ int main(){
 				break;
 			case DEBUG:
 				dump_memory(memory);
-				break;	
+				break;
+			case CAST_L_D:
+				//cast it to double
+				result=(double)memory[operand];
+				//get IEEE reprisentation of this number
+				acc=*(long*)&result;
+				break;		
 			case HALT:
 				remove_thread(&thread_id,thread_pool,active_threads,&time_since_last_call);
 				break;
