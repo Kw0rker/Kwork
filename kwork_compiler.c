@@ -1704,10 +1704,10 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					memset(load,0,sizeof load);
 				}
 				code_lines++;
-				int t = 0;
+				int t = 1;
 				while(postfix[t]){
 					if(postfix[t]==' ')t++;
-					else if (isOperator(postfix[t])){
+					if (isOperator(postfix[t])){
 						break;
 					}
 					else{
@@ -1715,8 +1715,8 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						break;
 					}
 				}
-				int comp = (int) (postfix[0]) + ((postfix[1+t]=='=' ||  postfix[1+t]=='<' || postfix[1+t]=='>'|| postfix[1+t]=='+'|| postfix[1+t]=='-')*(t?postfix[1+t]:0));
-				comp+=(postfix[0]=='!')*(postfix[1+t]=='=');
+				int comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-')*(t!=1?postfix[t]:0));
+				comp+=(postfix[0]=='!')*(postfix[t]=='=');
 				char apend[12];
 				//if theres at least one float operation all other operations are done with floats
 				//in order to prevent undefined behaviour
@@ -1894,7 +1894,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					adress=x;
 					break;
 				}
-				postfix+= 1 + (comp>'@')*2;
+				postfix+=t+1;
 
 
 
