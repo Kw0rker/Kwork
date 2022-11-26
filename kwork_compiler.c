@@ -1705,7 +1705,21 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				}
 				code_lines++;
 				int t = 1;
+				int any_operands =0;
 				while(postfix[t]){
+					if(isOperand(postfix[t++])){
+						any_operands=1;
+						//set flag that there are other operands
+						t=1;
+						break;
+					}
+				}
+				int comp;
+
+				//the code bellow is a complete mess and i have no clue wtf im doing :)
+				if(any_operands){
+					while(postfix[t])
+					{
 					if(postfix[t]==' ')t++;
 					if (isOperator(postfix[t])){
 						break;
@@ -1715,8 +1729,22 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						break;
 					}
 				}
-				int comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-')*(t!=1?postfix[t]:0));
+				comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-')*(t!=1?postfix[t]:0));
 				comp+=(postfix[0]=='!')*(postfix[t]=='=');
+				}
+				else  {
+					t=0;
+					comp = (int) postfix[0];
+
+					//this shit is needed to catch expressions like x++
+					if( postfix[1] && postfix[2] &&postfix[0]!='@'&&isOperator(postfix[2])){
+						comp+=(int)postfix[2];
+						t=3;
+					}
+				}
+				//shit code ends here but more to come!
+
+
 				char apend[12];
 				//if theres at least one float operation all other operations are done with floats
 				//in order to prevent undefined behaviour
@@ -1894,7 +1922,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					adress=x;
 					break;
 				}
-				postfix+=t+1;
+				postfix+=t?t:1;
 
 
 
