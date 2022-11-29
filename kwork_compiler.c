@@ -1996,6 +1996,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 
 				if(symbolTable[result]->type!='C')return_->const_value=symbolTable[result]->const_value;
 				else return_->const_value=symbolTable[result]->symbol;
+				if(symbolTable[result]->type=='C')return_->const_value=data_type;
 			}
 			return symbolTable[result]->location;
 		}\
