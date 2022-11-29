@@ -1401,7 +1401,9 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					int number_of_args =0;
 					char *args [MAX_ARGS];
 					while(arg!=NULL){
-						args[number_of_args++]=arg;
+						args[number_of_args]=malloc(100);
+						strcpy(args[number_of_args++],arg);
+						//args[number_of_args++]=arg;
 						arg=strtok(NULL,"$");
 					}
 					char command[40];
@@ -1430,6 +1432,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						//evaluate epression
 						TABLE_ENTRY argument;
 						EV_POSTFIX_EXPP(args[a],&argument);
+						free(args[a]);
 						char command[40];
 						int data_type=0;
 						if (func_p!=NULL){
