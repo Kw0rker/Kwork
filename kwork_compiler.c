@@ -616,6 +616,7 @@ void first_compile(FILE *file){
 				TABLE_ENTRY_PTR temp;
 					temp = create_new('V',hash_value,fucn_name,(function_pointer+MAX_STATIC_SIZE - (local_created++) ));
 					var_adress=MAX_CODE_SIZE-(++total_vars);
+					temp->const_value=Word;
 					symbolTable[var_adress] = temp;
 			}
 			var_adress = symbolTable[var_adress]->location;
