@@ -214,7 +214,7 @@ FILE *precompile(FILE *file){
 			//create a array of included libs so we can search for functions there later on
 		}
 		else{
-			fprintf(temp,rest);
+			fprintf(temp,"%s",rest);
 			//else just coppy line from orig file to the temp one
 			while(strstr(rest, "CALL "))
 			{

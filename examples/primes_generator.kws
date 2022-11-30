@@ -6,7 +6,7 @@ function main
 	let t = CALL printString{string}
 	let p=10
 	input p
-	let t = CALL primesGenerator{p}
+	put CALL primesGenerator{p}
 end
 
 //p is a pointer to null terminated string
@@ -42,7 +42,7 @@ for a=2;b<=p;a++
 return a
 
 function word sqrt(word n)
-for r=1;r*r<=n;r++
+for r=1;r*r<n;r++
 {
 
 }
