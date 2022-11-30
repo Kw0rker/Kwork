@@ -1,9 +1,10 @@
+prototype word printString(adress p)
 function main
-let string="Thank you for instaling KWORK programming language!\n\a"
+let adress string="Thank you for instaling KWORK programming language!\n\a"
 let t=CALL printString{string}
 end
 
-function printString(p)
+function word printString(adress p)
 for a=0;p[a]>'\0';a++
 {
 	putc p[a]

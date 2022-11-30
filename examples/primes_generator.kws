@@ -1,5 +1,8 @@
+prototype word primesGenerator(word p)
+prototype word sqrt(word n)
+prototype word printString(word p)
 function main
-	let string = "Enter the ammount of primes you wish to get:"
+	let adress string = "Enter the ammount of primes you wish to get:"
 	let t = CALL printString{string}
 	let p=10
 	input p
@@ -7,7 +10,7 @@ function main
 end
 
 //p is a pointer to null terminated string
-function printString(p)
+function word printString(word p)
 for a=0;p[a]>'\0';a++
 {
 	putc p[a]
@@ -15,7 +18,7 @@ for a=0;p[a]>'\0';a++
 //return ammount of bytes sent to stdout
 return a
 
-function primesGenerator(p)
+function word primesGenerator(word p)
 let comma = ','
 let b=2
 for a=2;b<=p;a++
@@ -38,7 +41,7 @@ for a=2;b<=p;a++
 }
 return a
 
-function sqrt(n)
+function word sqrt(word n)
 for r=1;r*r<=n;r++
 {
 
