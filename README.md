@@ -52,9 +52,9 @@ Emulates hardware.
 ## Kwork Lang
 - [ ] Compiler 
   - [x] basic expressions support
-  - [ ] floating numbers math and support
+  - [x] floating numbers math and support
   - [x] string literals support
-  - [ ] static type checks
+  - [x] static type checks
   - [ ] compile time checks
   - [ ] compile time execution
   - [X] preprocessor
@@ -82,7 +82,7 @@ Emulates hardware.
   
 ## Kwork Lang Documentation
 Kwork lang is multiplatform static JET compiled programming language with dynamic data types and every variable is static and global in the specific frame. There is NO semicolons so only one command can be in the line (does not include nested calls ex function calls params).
-Every program must start with main function declaration following by end keyword at the end of the frame
+Every program must start with ```main``` function declaration following by ```end``` keyword at the end of the frame
 ```
 function main
 
@@ -94,13 +94,14 @@ every key word is caps sensitive
 
 Existing features:
 •	Variable declaration
-let lvalue = rvalue 
+let value_type lvalue = rvalue
+if value_type is not present used default type, word. 
 rValue can be const/var/array/immutable string/expression
 ```
-1.	let a = “Hello world\n"
+1.	let adress String = “Hello world\n"
 2.	let a = b
-3.	let a = [20][20]
-4.	let D = b*b-(4*a*c)
+3.	let word a = [20][20]
+4.	let double D = b*b-(4*a*c)
 ```
 lValue can be array subscription/memory dereferencing/one char letter/function call and all together
 ```
@@ -165,10 +166,21 @@ else
 reads from stdin to variable
 •	functions declaration
 ```
-function “Name_of_you function” (arg1,arg2,…,argN)
+function return_type “Name_of_you function” (var_type_1 arg1,var_type_2 arg2,…,var_type_n argN)
 …your code
 return rvalue
 ```
+functions are required to have a prototype at the begining of the file 
+```prototype return_type “Name_of_you function” (var_type_1 arg1,var_type_2 arg2,…,var_type_n argN)```
+
+•	data types
+
+{andress(for anything that points to memory), word (just int or long), doulbe(for floating point numbers) }
+
+•	data casts 
+
+```{a}``` to cast expression to adress ```{w}``` to cast expression to word type ```{f}``` to cast expression to double data type
+
 •	rvalue expression
 CALL “your function name” {rvalue1,rvalue2,…,rvalueN}
 Will call a function with parameters
