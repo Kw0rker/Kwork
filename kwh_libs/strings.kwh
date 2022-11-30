@@ -87,3 +87,4 @@ function adress strtok(adress string,word char,adress buf)
 //function returns pointer to first token or to original string if char sep not found
 //@string is a pointer to null terminated string @char is char delim, 
 //@buf is a double pointer to allocated memory
+//when no more substrings found -1 returned as first element

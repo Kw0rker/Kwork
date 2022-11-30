@@ -1245,6 +1245,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		int code_lines=0;
 		int negative_number=1;
 		while(postfix!=NULL &&  postfix[0]!='\0'){
+			if(postfix[0]<0 || !isprint((int)postfix[0])){postfix++;continue;}
 			while(isspace((int)postfix[0]))postfix++;
 			if(isdigit((int)postfix[0]) || (postfix[0]=='-' && negative_number)){
 				char *dig = malloc(50);
@@ -1348,7 +1349,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			}
 
 
-			else if (isOperand(postfix[0])){
+			else if (postfix[0]>0 && isOperand(postfix[0])){
 				if(postfix[0]=='C' && postfix[1]=='A' && postfix[2]=='L' && postfix[3]=='L'){
 					//cut 'CALL'away from the beggining of the string
 					postfix+=4;
@@ -1597,7 +1598,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					
 				}
 
-				else if(postfix[0]==' ')postfix++;
+				else if(postfix[0]==' ' || postfix[0]<0)postfix++;
 				else{
 					//if var name 
 					unsigned char *var_name = (unsigned char*)postfix;
@@ -1665,7 +1666,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 
 
 			}
-			else if (isOperator(postfix[0]))
+			else if (postfix[0]>0 &&isOperator(postfix[0]))
 			{
 				int x=0;
 				int y=0;
