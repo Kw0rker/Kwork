@@ -62,13 +62,13 @@ function word strcpy(adress dest,adress source)
 //returns ammount of bytes coppied
 
 function adress strtok(adress string,word char,adress buf)
-	let buffer=@buf
-	let adress token=0
+	let adress buffer=(@buf){a}
+	let adress token=0{a}
 	if buffer[0]==0
 	{
 		let t = CALL strcpy{buffer,string}
 	}
-	let ch=CALL strchr{buffer,char}
+	let adress ch=CALL strchr{buffer,char}
 	if ch!=0
 	{
 		let token=buffer
@@ -85,3 +85,5 @@ function adress strtok(adress string,word char,adress buf)
 //string is immutable, char is imutable
 //pointer to buffer is mutable so best to preserve its state
 //function returns pointer to first token or to original string if char sep not found
+//@string is a pointer to null terminated string @char is char delim, 
+//@buf is a double pointer to allocated memory

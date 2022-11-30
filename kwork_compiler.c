@@ -1377,6 +1377,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					int y=0;
 					//while last closing bracket is found
 					int last_bracket = strrchr(postfix,'}') - postfix;
+					int apostrix=0;
 					while(y<last_bracket){
 						if (postfix[0]=='{'){
 							bracket++;
@@ -1386,12 +1387,15 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 							bracket--;
 							arguments[x++]=postfix[0];
 						}
-						else if (postfix[0]==',' &&postfix[-1]!='\'' && !bracket){
+						else if (postfix[0]==',' &&!apostrix && !bracket){
 							arguments[x++]='$';
 						}
 						else
 						{
 						arguments[x++]=postfix[0];
+						if(postfix[0]=='\''){
+							apostrix=!apostrix?1:0;
+						}
 						}
 						postfix++;
 						y++;
