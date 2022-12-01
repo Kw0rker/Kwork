@@ -154,6 +154,7 @@ TABLE_ENTRY_PTR create_new(char , long ,char *,long);
 	static char *fucn_name  =NULL;
 	static char last_line[100];
 	static char *rest =NULL;
+	static int array_t=0;
 //	
 int main(int argc, char const *argv[])
 {	
@@ -958,17 +959,25 @@ void second_compile(){
 	}
 	int last_adr = 0;
 	fprintf(file,"&0\nMAIN\n");
+	int const_numb=0;
+	int array_al_size=0;
+	//number of consts
 	for(int a=0;a<MAX_CODE_SIZE;a++){
 		if(symbolTable[a]!=NULL){
 			#ifdef _DEBUG
 			Table_EntryToString(symbolTable[a]);
 			#endif
 			switch (symbolTable[a]->type){
+				case'T':
+				case'R':
+				array_al_size++;
+				break; 
 				case'A':
 				case'C':
 				//#location
 				//number
 				fprintf(file,"#%ld\n%ld\n",symbolTable[a]->location,(symbolTable[a]->const_value) );
+				const_numb++;
 				break;
 				//case 'V':
 				//do nothing as we dont need to alloc memory in kernel
@@ -994,6 +1003,11 @@ void second_compile(){
 		}
 	}
 	fclose(file);
+
+	//chech if we allocated more consts then max const
+	if(const_numb>=MAX_CONST_POOL){
+		fprintf(stderr,"Attention size of constantant allocated memory(const ): %d has exceeded the max const pool:%d\nThis can cause undefined behavior and seg faults\nSuggested to define MAX_CONST_POOL to %d ",const_numb,MAX_CONST_POOL,const_numb);
+	}
 
 }
 int AllocateArray(STACKPTR *stack,int data_type){
@@ -1045,7 +1059,7 @@ int AllocateArray(STACKPTR *stack,int data_type){
 
 int reserveMemory(int size,int data_type){
 	for(int a=0;a<size;a++){
-		TABLE_ENTRY_PTR array_element = create_new('R',data_type,fucn_name,MAX_CODE_SIZE - total_const++);
+		TABLE_ENTRY_PTR array_element = create_new('R',data_type,fucn_name,(ESP_ADR-MAX_STACK_SIZE)- array_t++ );
 		symbolTable[MAX_CODE_SIZE-(++total_vars)] = array_element;
 	}
 	//return adress in table
@@ -1416,9 +1430,12 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					TABLE_ENTRY_PTR function = find_entry('F',total_comands+1,fucn_name,total_vars);
 					if(function==NULL){
 						function = create_new('T',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
-						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)]){
+						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)] && symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type!='T'){
 							fprintf(stderr,"memory overide caused by return adress");
 							abort();
+						}
+						else if(symbolTable[MAX_CODE_SIZE-(1+total_vars)] && symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type=='T'){
+							free(symbolTable[MAX_CODE_SIZE-(1+total_vars)]);
 						}
 						symbolTable[MAX_CODE_SIZE-(++total_vars)] = function;
 					}
@@ -1691,7 +1708,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				}
 				/*we pop adress of vars in table here*/ 
 				created++;
-				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,MAX_CODE_SIZE - created - 50);
+				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,(ESP_ADR-MAX_STACK_SIZE)- created );
 				int adress = MAX_CODE_SIZE-(created) -50;
 				if (symbolTable[adress] && symbolTable[adress]->symbol!=0){
 					fprintf(stderr,"memory overide caused by temp var allocation!\n");
