@@ -11,6 +11,7 @@ return a
 function word strlen(adress string)
 for a=0;string[a]>'\0';a++
 {
+
 }
 return a
 //returns total string lenght in bytes
@@ -88,3 +89,13 @@ function adress strtok(adress string,word char,adress buf)
 //@string is a pointer to null terminated string @char is char delim, 
 //@buf is a double pointer to allocated memory
 //when no more substrings found -1 returned as first element
+
+function adress concat(adress original,adress append)
+	let size = CALL strlen{original}
+	let adress origEnd = original+size
+	for x=0;append[x]>'\0';x++
+	{
+		let origEnd[x]=append[x]
+	}
+	let origEnd[x]=append[x]
+	return origEnd
