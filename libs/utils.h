@@ -208,6 +208,38 @@ char array_is_empty(int a[],int size){
     }
     return isEmpty;
 }
+
+//removes whitespaces suraunding the operands
+char remove_ws_fr_exp(char *orig,char *new){
+    //todo add chech for strings. 
+    char *copy = orig;
+    while(orig[0]!='\0'){
+        if(!strncmp(orig,"CALL ",sizeof("CALL ")-1)){
+            new++[0]='C';
+            new++[0]='A';
+            new++[0]='L';
+            new++[0]='L';
+            new++[0]=' '; 
+
+            orig+=sizeof("CALL ")-1;
+        }
+        else if(isOperand(orig[0])||isOperator(orig[0]) || orig[0]=='{'|| orig[0]=='}'
+                || orig[0]=='('|| orig[0]==')'
+            ){
+            (new++)[0]=orig[0];
+            orig++;
+        }
+        else if(!isspace(orig[0])){
+            fprintf(stderr, "WTF is (%c) in Expression %s\n",orig[0],copy);
+            orig++;
+        }
+        while(orig[0]!='\0' && isspace((int)orig[0])){
+            orig++;
+        }
+
+    }
+}
+
 #ifndef D_MAX
 #define D_MAX 1000
 #endif

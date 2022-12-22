@@ -1247,8 +1247,12 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		return array_pointer;
 	}
 
-
-	char *postfix = convertToPostfix(expp);
+	char expp_san[254];
+	//i have no fucking clue why the expp_san is not freed after the slope exist and it has old info.'
+	memset(expp_san,0,sizeof expp_san);
+	remove_ws_fr_exp(expp,expp_san);
+	char *postfix = convertToPostfix(expp_san);
+	
 	char *saved_postfix=postfix;
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
