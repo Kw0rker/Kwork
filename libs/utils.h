@@ -34,12 +34,34 @@ char *convertToPostfix(char *exp){
 	 char *result = malloc(MAX_STR_SIZE);
     if(!stack) // See if stack was created successfully
         return NULL ;
- 
+    
+    char bracket = 0; //used to see if we are inside function arguemnt 
     for (i = 0, k = -1; exp[i]; ++i)
     {
         if(exp[i]=='.'){
             result[++k]='.';
             continue;
+        }
+        if (!strncmp(&exp[i],"CALL ",sizeof("CALL ")-1)){
+            result[++k] = 'C';
+            result[++k] = 'A';
+            result[++k] = 'L';
+            result[++k] = 'L';
+            result[++k] = ' ';
+            i+=sizeof("CALL ")-1;
+            //next char must be begining of the function name
+            while(exp[i]!='{'){
+                //copy function name 
+                result[++k]=exp[i++];
+            }
+            result[++k]=exp[i++];//copy bracket
+            bracket++; //set bracket to 1
+            while(bracket){ //loop while bracket is not 0
+                if(exp[i]=='{')bracket++;
+                else if(exp[i]=='}')bracket--;
+                result[++k]=exp[i];
+                i++;
+            }
         }
         if(!strncmp(&exp[i],"{f}",sizeof("{f}")-1)){
             result[++k]='{';
@@ -233,7 +255,7 @@ char remove_ws_fr_exp(char *orig,char *new){
             }
         }
         else if(flag_inside_char_or_string || isOperand(orig[0])||isOperator(orig[0]) || orig[0]=='{'|| orig[0]=='}'
-                || orig[0]=='('|| orig[0]==')'  || orig[0]=='['|| orig[0]==']'
+                || orig[0]=='('|| orig[0]==')'  || orig[0]=='['|| orig[0]==']'|| orig[0]==','
             ){
             (new++)[0]=orig[0];
             orig++;
