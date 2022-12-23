@@ -213,6 +213,7 @@ char array_is_empty(int a[],int size){
 char remove_ws_fr_exp(char *orig,char *new){
     //todo add chech for strings. 
     char *copy = orig;
+    char flag_inside_char_or_string = 0;
     while(orig[0]!='\0'){
         if(!strncmp(orig,"CALL ",sizeof("CALL ")-1)){
             new++[0]='C';
@@ -223,8 +224,16 @@ char remove_ws_fr_exp(char *orig,char *new){
 
             orig+=sizeof("CALL ")-1;
         }
-        else if(isOperand(orig[0])||isOperator(orig[0]) || orig[0]=='{'|| orig[0]=='}'
-                || orig[0]=='('|| orig[0]==')'
+        else if(orig[0]=='\'' || orig[0]=='"'){
+            (new++)[0]=orig[0];
+            orig++;
+            if (!flag_inside_char_or_string)flag_inside_char_or_string=1;
+            else{
+                flag_inside_char_or_string=0;
+            }
+        }
+        else if(flag_inside_char_or_string || isOperand(orig[0])||isOperator(orig[0]) || orig[0]=='{'|| orig[0]=='}'
+                || orig[0]=='('|| orig[0]==')'  || orig[0]=='['|| orig[0]==']'
             ){
             (new++)[0]=orig[0];
             orig++;
