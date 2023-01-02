@@ -11,6 +11,7 @@
 #ifndef MAX_STR_SIZE
 #define MAX_STR_SIZE 100
 #endif
+#define DOUBLE_STACK_CHAR -1337
 typedef union{
     double a;
     struct 
@@ -112,26 +113,82 @@ char *convertToPostfix(char *exp){
         // until an ‘(‘ is encountered.
         else if (exp[i] == ')')
         {
-            while (!isEmpty(stack) && peek(&stack) != '(')
-                result[++k] = pop(&stack);
+            while (!isEmpty(stack) && peek(&stack) != '('){
+
+                int stack_val=pop(&stack);
+                if(stack_val==DOUBLE_STACK_CHAR){
+                   result[++k] = pop(&stack);
+                   result[++k] = pop(&stack); 
+                }
+                else{result[++k] = stack_val;}
+
+            }
             if (!isEmpty(stack) && peek(&stack) != '(')
                 return NULL; // invalid expression            
             else
-                pop(&stack);
+            {
+                int stack_val=pop(&stack);
+                if(stack_val==DOUBLE_STACK_CHAR)
+                {
+                result[++k] = pop(&stack);
+                result[++k] = pop(&stack); 
+                }
+            }
         }
         else // an operator is encountered
         {
         	result[++k] = ' ';
-            while (!isEmpty(stack) &&
-                 Prec(exp[i]) <= Prec(peek(&stack)))
-                result[++k] = pop(&stack);
-            int t=0;
+            char comp = exp[i];
+            char flag=0;
             if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'){
-                push((int)exp[i+1],&stack);
-                t=1;
+                comp+=exp[i+1];
+                flag=1;
             }
+            //todo when pop chech for DOUBLE_STACK_CHAR
+            int stack_val;
+            char val1=-1;
+            char val2=-1;
+            char flag1=1;
+            while (!isEmpty(stack)&&flag1){
+
+                    stack_val=pop(&stack);
+                    if(stack_val==DOUBLE_STACK_CHAR)
+                    {
+                        val1=pop(&stack);
+                        val2=pop(&stack);
+                        stack_val=val1+val2;
+                        if(Prec(comp)<=Prec(val1+val2)){
+                            result[++k] = (val1+val2);
+                        }
+                        else
+                        {
+                            //if prec comp > prec of stack push values back
+                            flag1=0;
+                            push((int)val2,&stack);
+                            push((int)val1,&stack);
+                            push(stack_val,&stack);
+                        }
+                    }
+                    else
+                    {
+                        if (Prec(comp)<=Prec(stack_val)){
+                            result[++k] = stack_val;
+                        }
+                        else{
+                            flag1=0;
+                            push(stack_val,&stack);
+                        }
+                    }
+                    
+            }
+                
+           
+            if(flag)push((int)exp[i+1],&stack);
             push((int)exp[i],&stack);
-            i+=t;
+            if(flag){
+            push(DOUBLE_STACK_CHAR,&stack); //indicate that next two stack entries to be treated as one
+            i++;
+            }
         }
  
     }
@@ -139,7 +196,14 @@ char *convertToPostfix(char *exp){
     // pop all the operators from the stack
     while (!isEmpty(stack)){
         result[++k]=' ';
-        result[++k] = pop(&stack );
+         int stack_val=pop(&stack);
+         if(stack_val==DOUBLE_STACK_CHAR){
+            result[++k] = pop(&stack);
+            result[++k] = pop(&stack); 
+        }
+        else{
+            result[++k] = stack_val;
+        }
     }
  
     result[++k] = '\0';
@@ -171,19 +235,27 @@ int Prec(char c){
     {
     case '+':
     case '-':
-        return 1;
+        return 2;
  
     case '*':
     case '/':
-        return 2;
- 
-    case '^':
     case '%':
-        return 3;
+    case '!':    
+        return 1;
+ 
+    // case '^': colides with != should i fix it ???
+    //     return 6;
     case '@':
     case '#':
-    case '!':
-        return 4;    
+        return 3;
+    case '<':
+    case '>':
+    case '<'+'=':
+    case '>'+'=':    
+        return 4;
+    case '='+'=':
+    case '!'+'=':    
+        return 5;            
     }
     return -1;
 }

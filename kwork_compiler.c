@@ -453,24 +453,58 @@ void first_compile(FILE *file){
 			char comparingExpp[MAX_IF_EXPP_LEN];
 			int x=1;
 			comparingExpp[0]='(';
-			while(rest[0]!='!'&&
-				  rest[0]!='='&&
-				  rest[0]!='<'&&
-				  rest[0]!='>'
-			)comparingExpp[x++] = *rest++;
-			comparingExpp[x++]=')';
-			while(
+
+
+			//find a mid point of the expp
+			//if '==' is not encloused by '(' ')' assume its as mid point
+			char flag = 0 ; //shows ammount of braces
+			int mid_point=0;
+			for (int i = 0; rest[i]!='\0'; ++i)
+			{
+				if(rest[i]=='(')flag++;
+				else if(rest[i]==')')flag--;
+				else if(!flag){
+					//if comparising is not enclosed
+					#define STR_CMP(STR,CMP) !strncmp(STR,CMP,sizeof CMP-1)
+					if(STR_CMP(&rest[i],"==")||STR_CMP(&rest[i],"!=")||
+						STR_CMP(&rest[i],"<=")||STR_CMP(&rest[i],">=")||
+						STR_CMP(&rest[i],"<")||STR_CMP(&rest[i],">")){
+						mid_point=i;
+					}
+				}
+			}
+			if(mid_point){
+				int counter=0;
+				while(counter<mid_point){
+					comparingExpp[x++] = *rest++;
+					counter++;
+				}
+				comparingExpp[x++]=')';
+				//copy compararator
+				while(
 				  rest[0]=='='||
 				  rest[0]=='<'||
 				  rest[0]=='>'||
 				  rest[0]=='!'
-			)comparingExpp[x++] = *rest++;
-			comparingExpp[x++]='(';
-			while(isprint((int)rest[0]))comparingExpp[x++]=*rest++;
-			comparingExpp[x]=')';
-			comparingExpp[x+1]='\0';
+				)comparingExpp[x++] = *rest++;
+				comparingExpp[x++]='(';
+				//copy the rest of the expression
+				while(isprint((int)rest[0]))comparingExpp[x++]=*rest++;
+				comparingExpp[x]=')';
+				comparingExpp[x+1]='\0';
+
+
+			}
+			else{
+				// if no mid point means we assume that usser knows whats hes doing
+				while(isprint((int)rest[0]))comparingExpp[x++]=*rest++;
+				comparingExpp[x]=')';
+				comparingExpp[x+1]='\0';
+
+			}
 			TABLE_ENTRY decoy;
 			EV_POSTFIX_EXPP(comparingExpp,&decoy);
+
 			//result is 0/1 in acc
 			char command[30];
 			sprintf(command,"BRANCHZERO "); //cond jump to the end of if block
@@ -1759,17 +1793,19 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						break;
 					}
 				}
-				comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-')*(t!=1?postfix[t]:0));
-				comp+=(postfix[0]=='!')*(postfix[t]=='=');
+				comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-')*(t?postfix[t]:0));
+				if(comp==76 || comp==94 || comp>=120){
+					postfix++;
+				}
 				}
 				else  {
 					t=0;
 					comp = (int) postfix[0];
 
 					//this shit is needed to catch expressions like x++
-					if( postfix[1] && postfix[2] &&postfix[0]!='@'&&isOperator(postfix[2])){
-						comp+=(int)postfix[2];
-						t=3;
+					if( postfix[1]&&postfix[0]!='@'&&isOperator(postfix[1])){
+						comp+=(int)postfix[1];
+						t=2;
 					}
 				}
 				//shit code ends here but more to come!
