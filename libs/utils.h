@@ -127,11 +127,15 @@ char *convertToPostfix(char *exp){
                 return NULL; // invalid expression            
             else
             {
+                if(isEmpty(stack)){
+                    fprintf(stderr, "WTF happened with expression debug!!!");
+                    continue;
+                }
                 int stack_val=pop(&stack);
                 if(stack_val==DOUBLE_STACK_CHAR)
                 {
-                result[++k] = pop(&stack);
-                result[++k] = pop(&stack); 
+                pop(&stack);
+                pop(&stack); 
                 }
             }
         }
@@ -140,7 +144,8 @@ char *convertToPostfix(char *exp){
         	result[++k] = ' ';
             char comp = exp[i];
             char flag=0;
-            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'){
+            //check for double operator such as <= , == , <= , >= , && , || 
+            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'||exp[i+1]=='&'||exp[i+1]=='&'){
                 comp+=exp[i+1];
                 flag=1;
             }
@@ -228,6 +233,8 @@ int isOperator(char ch){
            ch=='>' ||
            ch=='!' ||
            ch=='=' ||
+           ch=='&' ||
+           ch=='|' ||
            ch=='#';
 }
 int Prec(char c){
@@ -255,7 +262,12 @@ int Prec(char c){
         return 4;
     case '='+'=':
     case '!'+'=':    
-        return 5;            
+        return 5;
+    case '&'+'&':
+    case '|'+'|':
+    case '<'+'<':
+    case '>'+'>':     
+        return 6;                 
     }
     return -1;
 }
