@@ -1739,13 +1739,13 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					if(y>0)flag=1;
 				}
 
-				else if (!isEmpty(stack) &&
-				 ((isEmpty(operations) || pop(&operations)==UNARY))
-				 ){
-					//asume stack has -1 and we dont need it any more
-					pop(&stack);
-					flag=0;
-				}
+				// else if (!isEmpty(stack) &&
+				//  ((isEmpty(operations) || pop(&operations)==UNARY))
+				//  ){
+				// 	//asume stack has -1 and we dont need it any more
+				// 	pop(&stack);
+				// 	flag=0;
+				// }
 				if (symbolTable[x]->const_value==Double ||(flag&&symbolTable[y]->const_value==Double) ){
 					data_type=Double;
 					floats=1;
