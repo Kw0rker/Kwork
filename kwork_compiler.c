@@ -1793,7 +1793,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						break;
 					}
 				}
-				comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-')*(t?postfix[t]:0));
+				comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-'|| postfix[t]=='&'|| postfix[t]=='|')*(t?postfix[t]:0));
 				if(comp==76 || comp==94 || comp>=120){
 					postfix++;
 				}
