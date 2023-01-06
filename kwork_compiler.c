@@ -1738,6 +1738,14 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					y=pop(&stack);
 					if(y>0)flag=1;
 				}
+
+				else if (!isEmpty(stack) &&
+				 ((isEmpty(operations) || pop(&operations)==UNARY))
+				 ){
+					//asume stack has -1 and we dont need it any more
+					pop(&stack);
+					flag=0;
+				}
 				if (symbolTable[x]->const_value==Double ||(flag&&symbolTable[y]->const_value==Double) ){
 					data_type=Double;
 					floats=1;
@@ -2039,6 +2047,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					//store
 					symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
 				}
+				//used for array dereferencing
 				if(y==-1){
 					pop(&operations);
 					push(BINARY,&operations);
