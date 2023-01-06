@@ -18,6 +18,7 @@
 #ifndef MAX_FUNC_L
 #define MAX_FUNC_L 80
 #endif
+#define NOT_EQAL -30
 
 int flags[MAX_CODE_SIZE]={0};
 char *loop_increments[MAX_NESTED_LOOPS_VALUE];
@@ -1793,17 +1794,24 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						break;
 					}
 				}
-				comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-'|| postfix[t]=='&'|| postfix[t]=='|')*(t?postfix[t]:0));
-				if(comp==76 || comp==94 || comp>=120){
+				if(postfix[0]=='!' && postfix[t]=='='){
+					//special case ! since sum of ! and = is same as ^ char
+					comp=NOT_EQAL;
+				}
+				else comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-'|| postfix[t]=='&'|| postfix[t]=='|')*(t?postfix[t]:0));
+				if(comp==76 || comp>=120){
 					postfix++;
 				}
 				}
 				else  {
 					t=0;
 					comp = (int) postfix[0];
-
+					//special case
+					if(postfix[0]=='!'&&postfix[1]=='='){
+						comp=NOT_EQAL;
+					}
 					//this shit is needed to catch expressions like x++
-					if( postfix[1]&&postfix[0]!='@'&&isOperator(postfix[1])){
+					else if( postfix[1]&&postfix[0]!='@'&&isOperator(postfix[1])){
 						comp+=(int)postfix[1];
 						t=2;
 					}
@@ -1909,7 +1917,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					sprintf(command,"LOG_INV %d",0); 
 					push(BINARY,&operations);
 					break;
-					case '!'+'='+1:
+					case NOT_EQAL:
 					sprintf(load,"LOAD %ld",symbolTable[x]->location);
 					sprintf(command,"SUB %ld",symbolTable[y]->location); 
 					push(BINARY,&operations);
