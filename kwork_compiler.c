@@ -1817,6 +1817,11 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					//special case
 					if(postfix[0]=='!'&&postfix[1]=='='){
 						comp=NOT_EQAL;
+						t=2;
+					}
+					else if(postfix[0]=='+'&&postfix[1]=='@'){
+						//special case
+						//do nothing
 					}
 					//this shit is needed to catch expressions like x++
 					else if( postfix[1]&&postfix[0]!='@'&&isOperator(postfix[1])){
