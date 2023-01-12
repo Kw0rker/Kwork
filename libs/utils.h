@@ -144,8 +144,8 @@ char *convertToPostfix(char *exp){
         	result[++k] = ' ';
             char comp = exp[i];
             char flag=0;
-            //check for double operator such as <= , == , <= , >= , && , || 
-            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'||exp[i+1]=='&'||exp[i+1]=='&'){
+            //check for double operator such as <= , == , <= , >= , && , ||, ++, --
+            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'||exp[i+1]=='&'||exp[i+1]=='&'||exp[i+1]=='+'||exp[i+1]=='-'){
                 comp+=exp[i+1];
                 flag=1;
             }
@@ -241,6 +241,10 @@ int isOperator(char ch){
 int Prec(char c){
 	 switch (c)
     {
+    case '+'+'+':
+    case '-'+'-':
+        return 0;    
+        
     case '+':
     case '-':
         return 2;
