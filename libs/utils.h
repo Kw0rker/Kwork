@@ -276,6 +276,11 @@ int Prec(char c){
     }
     return -1;
 }
+int isDoubleOperator(char c){
+    //only returns if c is potential part of the double operator like ++ or <= or || etc
+    return c=='='||c=='!'||c=='<'||c=='>'||c=='&'||c=='&'||c=='+'||c=='-';
+}
+
 char *getToken(char **str){
 	char *temp = (*str);
 	int toWrtie = 0;

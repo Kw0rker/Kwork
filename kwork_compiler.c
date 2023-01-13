@@ -1807,7 +1807,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					comp=NOT_EQAL;
 				}
 				else comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-'|| postfix[t]=='&'|| postfix[t]=='|')*(t?postfix[t]:0));
-				if(comp==76 || comp>=120){
+				if(comp==NOT_EQAL||comp==76 || comp>=120){
 					postfix++;
 				}
 				}
@@ -1824,9 +1824,12 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						//do nothing
 					}
 					//this shit is needed to catch expressions like x++
-					else if( postfix[1]&&postfix[0]!='@'&&isOperator(postfix[1])){
+					else if( postfix[1]&&postfix[0]!='@'&&isDoubleOperator(postfix[1])){
 						comp+=(int)postfix[1];
 						t=2;
+					}
+					else {
+						t=1;
 					}
 				}
 				//shit code ends here but more to come!
