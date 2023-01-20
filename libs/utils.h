@@ -98,6 +98,30 @@ char *convertToPostfix(char *exp){
             result[++k] = exp[i++];
             // while(exp[i]==' ' && exp[i]!='\0')i++;
         }
+
+
+        if(exp[i]=='-'){
+            int x=i;
+            //go back for any whitespaces before the minus sign
+            while(--x && exp[x]==' ');
+            if(isOperator(exp[x])){
+                //means that we have smth like 5*-1
+                if(isdigit((int)exp[++i])){
+                    result[++k]='-';
+                    while(isdigit((int)exp[i])){
+                        result[++k]=exp[i++];
+                    }
+                }
+                else{
+                    //some real shit happened
+                    printf("incorrect expression %s\n",exp );
+                    exit(EXIT_FAILURE);
+                }
+
+            //if true
+            continue;
+            }
+        }        
          // If the scanned character is
         // an operand, add it to output.
         if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) )
@@ -106,7 +130,28 @@ char *convertToPostfix(char *exp){
         // If the scanned character is an
         // ‘(‘, push it to the stack.
         else if (exp[i] == '(')
-            push((int)exp[i],&stack);
+        {
+            //check if someone put negative number 
+            int x=i+1;
+            while(exp[x]&&exp[x]==' ')x++;
+            if(exp[x]=='-'){
+                i=x;
+                if(isdigit((int)exp[++i])){
+                    result[++k]='-';
+                    while(isdigit((int)exp[i])){
+                        result[++k]=exp[i++];
+                    }
+                    if(exp[i]==')')i++;
+                }
+                else{
+                    //some real shit happened
+                    printf("incorrect expression %s\n",exp );
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            else push((int)exp[i],&stack);
+        }
          
         // If the scanned character is an ‘)’,
         // pop and output from the stack
@@ -148,7 +193,13 @@ char *convertToPostfix(char *exp){
             if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'||exp[i+1]=='&'||exp[i+1]=='&'||exp[i+1]=='+'||exp[i+1]=='-'){
                 comp+=exp[i+1];
                 flag=1;
+                //if not ++ or -- reverse all steps made
+                if(!((exp[i]=='+'||exp[i]=='-')&&exp[i+1]==exp[i])){
+                    comp=exp[i];
+                    flag=0;
+                }
             }
+
             //todo when pop chech for DOUBLE_STACK_CHAR
             int stack_val;
             char val1=-1;
