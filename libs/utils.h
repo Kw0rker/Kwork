@@ -194,7 +194,7 @@ char *convertToPostfix(char *exp){
                 comp+=exp[i+1];
                 flag=1;
                 //if not ++ or -- reverse all steps made
-                if(!((exp[i]=='+'||exp[i]=='-')&&exp[i+1]==exp[i])){
+                if((exp[i+1]=='+'&&exp[i]!='+')||(exp[i+1]=='-'&&exp[i]!='-')){
                     comp=exp[i];
                     flag=0;
                 }
