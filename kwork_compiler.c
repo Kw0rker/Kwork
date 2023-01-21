@@ -1300,9 +1300,13 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		while(postfix!=NULL &&  postfix[0]!='\0'){
 			if(postfix[0]<0 || !isprint((int)postfix[0])){postfix++;continue;}
 			while(isspace((int)postfix[0]))postfix++;
-			if(isdigit((int)postfix[0]) || (postfix[0]=='-' && negative_number)){
+			if(isdigit((int)postfix[0]) || (postfix[0]==NEGNUMBER )){
 				char *dig = malloc(50);
 				int x=0;
+				if(postfix[0]==NEGNUMBER){
+				postfix++;
+				dig[x++]='-';
+				}
 				while(postfix[0]!='\0' && postfix[0]!='{'&&!isspace((int)postfix[0]) && (!isOperator(postfix[0]) || negative_number ) ){
 					dig[x++]=postfix[0];
 					postfix++;

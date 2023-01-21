@@ -6,6 +6,8 @@
 #ifndef DATA_STR_H
 #include <data_str.h>
 #define DATA_STR_H
+//used to show the begining of the negative number
+#define NEGNUMBER ';'
 #endif
 #define KWORK_PARAMS_H
 #ifndef MAX_STR_SIZE
@@ -107,7 +109,7 @@ char *convertToPostfix(char *exp){
             if(isOperator(exp[x])){
                 //means that we have smth like 5*-1
                 if(isdigit((int)exp[++i])){
-                    result[++k]='-';
+                    result[++k]=NEGNUMBER;
                     while(isdigit((int)exp[i])){
                         result[++k]=exp[i++];
                     }
@@ -137,7 +139,7 @@ char *convertToPostfix(char *exp){
             if(exp[x]=='-'){
                 i=x;
                 if(isdigit((int)exp[++i])){
-                    result[++k]='-';
+                    result[++k]=NEGNUMBER;
                     while(isdigit((int)exp[i])){
                         result[++k]=exp[i++];
                     }
