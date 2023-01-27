@@ -1412,6 +1412,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					postfix+=4;
 					int x=0;
 					char *fucntion_name = malloc(MAX_FUNC_L);
+					memset(fucntion_name,0,MAX_FUNC_L);
 					//move string to the begging of arguments
 					if(!*postfix){
 						fprintf(stderr,"SOME SHIT HAPPENED\n");
@@ -1431,6 +1432,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					postfix++;
 
 					char *arguments = malloc(MAX_ARG_L);
+					memset(arguments,0,MAX_ARG_L);
 					x=0;
 					int y=0;
 					//while last closing bracket is found
