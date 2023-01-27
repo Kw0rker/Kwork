@@ -5,6 +5,7 @@
 void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],char**libs, int libs_ttl,char **prototypes)
 {
 	int lib_point=libs_ttl;
+	char ASM_FLAG=0;
 	int new_to_resolve=0;
 	for(int a=0;a<libs_ttl;a++)
 	{	
@@ -22,6 +23,7 @@ void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],cha
 			char *rest = line;
 			while(rest[0]==' ')rest++;
 			//remove all white spaceses in the begining of the string
+
 			if(!strncmp(rest,"function",sizeof("function")-1))
 			{
 				flag=0;
@@ -83,6 +85,21 @@ void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],cha
 			//if flag is set we coppy lines to the source file
 			if(flag)
 			{
+				while(!isprint((int)rest[0]))rest++;//remove all special symbols at the beginign
+				if(!strncmp(rest,"KASM",sizeof("KASM")-1)){
+				fprintf(source,"%s",rest);	
+				ASM_FLAG=1;
+				//set asm flag so the following lines are translated directly to asm
+				continue;
+				}
+				if(ASM_FLAG){
+					//close asm block
+					if(rest[0]=='}'){ASM_FLAG=0;fprintf(source,"%s",rest);continue;}
+					fprintf(source,"%s",rest);
+					continue;
+				}
+				//special case cos SYSCALL hapens to trigger the block for function calls
+
 				//check if there is any inner function calls
 				while(strstr(rest, "CALL "))
 				{

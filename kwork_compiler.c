@@ -156,6 +156,7 @@ TABLE_ENTRY_PTR create_new(char , long ,char *,long);
 	static char last_line[100];
 	static char *rest =NULL;
 	static int array_t=0;
+	static char ASM_FLAG=0;
 //	
 int main(int argc, char const *argv[])
 {	
@@ -204,6 +205,16 @@ FILE *precompile(FILE *file){
 		fgets(line,100,file);
 		char *rest = line;
 		while(rest[0]==' ')rest++;
+		if(!strncmp(rest,"KASM",sizeof("KASM")-1)){
+		ASM_FLAG=1;
+		//set asm flag so the following lines are translated directly to asm
+		}
+		if(ASM_FLAG){
+			//close asm block
+			if(rest[0]=='}')ASM_FLAG=0;
+			fprintf(temp,"%s",rest);
+			continue;
+		}
 		if(!strncmp(rest,"#include ",sizeof("#include ")-1)){
 			rest+=(sizeof("#include ")-1);
 
@@ -286,8 +297,49 @@ void first_compile(FILE *file){
 	operand = strtok(NULL," ");
 	//if(operand == NULL)continue;
 	line_n++;
+	//shows that were in asm block
+	if(ASM_FLAG){
+		if(operator[0]=='}'){ASM_FLAG=0;//close the asm block
+		continue;
+		}
+		else if(operator[0]=='{')continue;
+		int ASM_NUMBER=0;
+		while(operand[0]==' ')operand++;//remove any whitspaces at the begining
+		if(operand[0]=='%'){
+			//get adress of the var referenced
+			operand++;
+			char temp[100];
+			int x=0;
+			while(isprint((int)operand[0])){
+				temp[x++]=operand[0];
+				operand++;
+			}
+			temp[x]='\0';
+			unsigned int hash_value = hash((unsigned char*)temp);		
+			TABLE_ENTRY_PTR var =find_entry('V',hash_value,fucn_name,total_vars);
+			if(var==NULL){
+				fprintf(stderr,"Variable %s is undefined!",operand);
+				continue;
+			}
+			ASM_NUMBER=var->location;
+
+		}
+		else {
+			ASM_NUMBER=atoi(operand);
+		}
+		char temp [100];
+		sprintf(temp,"%s %d",operator,ASM_NUMBER);
+		symbolTable[total_comands++] = create_new('L',0,temp,function_pointer+(local_comands++));
+
+		continue;
+	}
+
 	if(operator[0]=='/' && operator[1] == '/'){
 		line_n--;
+	}
+	else if(!strncmp(operator,"KASM",sizeof("KASM")-1)){
+		ASM_FLAG=1;
+		//set asm flag so the following lines are translated directly to asm
 	}
 	else if(!strcmp(operator,"function")){
 		strcpy(fucn_name,operand);
