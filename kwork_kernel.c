@@ -145,8 +145,13 @@ int main(){
 			case READ:
 				//printf("Enter value\n");
 				
-				scanf("%ld",&memory[operand]);
-                           break;
+				char c;
+				if(inputAvailable())
+					c = _getchar_unlocked();
+				else
+					c=-1;
+				memory[operand]=c;
+                break;
 			case WRITE:
 			  	printf("%d",(int)memory[operand]);
 			       break;
@@ -228,6 +233,10 @@ int main(){
 				break;
 			case SYSCALL:
 				switch (operand){
+					case BUFFER_PRINT:
+					fputs((const char*)&memory[acc],stdout);
+					break; 
+
 					case GETIC:
 					acc=instruction_counter;
 					break;
