@@ -28,7 +28,7 @@ typedef union{
 char *convertToPostfix(char*);
 int isOperand(char);
 int isOperator(char);
-int Prec(char);
+int Prec(int);
 char *getToken(char **);
 char *convertToPostfix(char *exp){
 	STACKPTR stack = new_stack();
@@ -194,7 +194,7 @@ char *convertToPostfix(char *exp){
             char comp = exp[i];
             char flag=0;
             //check for double operator such as <= , == , <= , >= , && , ||, ++, --
-            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'||exp[i+1]=='&'||exp[i+1]=='&'||exp[i+1]=='+'||exp[i+1]=='-'){
+            if(exp[i+1]=='='||exp[i+1]=='!'||exp[i+1]=='<'||exp[i+1]=='>'||exp[i+1]=='&'||exp[i+1]=='|'||exp[i+1]=='+'||exp[i+1]=='-'){
                 comp+=exp[i+1];
                 flag=1;
                 //if not ++ or -- reverse all steps made
@@ -293,7 +293,7 @@ int isOperator(char ch){
            ch=='|' ||
            ch=='#';
 }
-int Prec(char c){
+int Prec(int c){
 	 switch (c)
     {
     case '+'+'+':
@@ -333,7 +333,7 @@ int Prec(char c){
 }
 int isDoubleOperator(char c){
     //only returns if c is potential part of the double operator like ++ or <= or || etc
-    return c=='='||c=='!'||c=='<'||c=='>'||c=='&'||c=='&'||c=='+'||c=='-';
+    return c=='='||c=='!'||c=='<'||c=='>'||c=='&'||c=='|'||c=='+'||c=='-';
 }
 
 char *getToken(char **str){
