@@ -1847,7 +1847,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				}
 				int comp;
 
-				//the code bellow is a complete mess and i have no clue wtf im doing :)
+				//the code below is a complete mess and i have no clue wtf im doing :)
 				if(any_operands){
 					while(postfix[t])
 					{
@@ -1864,7 +1864,8 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					//special case ! since sum of ! and = is same as ^ char
 					comp=NOT_EQAL;
 				}
-				else comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-'|| postfix[t]=='&'|| postfix[t]=='|')*(t?postfix[t]:0));
+
+				else comp = (int) (postfix[0]) + ((postfix[t]=='=' ||  postfix[t]=='<' || postfix[t]=='>'|| postfix[t]=='+'|| postfix[t]=='-'|| postfix[t]=='&'|| postfix[t]=='|')*(t&&postfix[0]!='@'?postfix[t]:0));
 				if(comp==NOT_EQAL||comp==76 || comp>=120){
 					postfix++;
 				}
@@ -2030,6 +2031,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						//chech if there are no more deref
 					}
 					else data_type=Word;
+					if(any_operands)y=-1;
 					sprintf(command,"PLOAD %ld",symbolTable[x]->location);
 					push(UNARY,&operations);
 				
