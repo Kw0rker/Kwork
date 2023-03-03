@@ -99,3 +99,59 @@ function adress concat(adress original,adress append)
 	}
 	let origEnd[x]=append[x]
 	return origEnd
+	
+function word strcmp(adress left,adress right)
+	let word flag = 0
+	for i=0;(left[i]>'\0')*(right[i]>'\0');i++
+	{
+		if left[i]!=right[i]
+		{
+			//flag shows amount of bits diff
+			let flag=flag+1
+		}
+	}
+
+	//check if one string is trimmed version of second
+	// 1337228 is special flag for trimmed strings
+	if (flag==0)*(right[i]!='\0'+left[i]!='\0')
+	{
+		let flag = 1337228
+	}
+
+	//means that size (left) < size(right)
+
+	if right[i]!='\0'
+	{
+		let flag = flag *-1
+	}
+
+	return flag
+
+function word memset(adress string,word size,word s)
+for a=0;a<size;a++
+{
+	let string[a]=s
+}
+//return ammount of bytes sent to stdout
+return a
+
+function word FlushBuffer(adress buf)
+	KASM{
+		LOAD %buf
+		SYSCALL 101
+	}
+	return 0
+//@param buf adress of buffer to be printed
+//WARNING function DOES NOT accept string litterals !!!!
+
+function word AppendBuffer(adress buffer,adress counter,adress values)
+	let buffer[@counter] = (values[7]<<56) || (values[6]<<48) || (values[5]<<40) || (values[4]<<32) || (values[3]<<24) || (values[2]<<16) || (values[1]<<8) || values[0]
+	let @counter=@counter+1
+	return 0
+
+function word Flush()
+KASM{
+		SYSCALL 102
+	}
+return 0	
+

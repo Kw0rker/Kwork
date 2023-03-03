@@ -1,0 +1,3 @@
+function word rand(word seed)
+let seed = (8121*seed+28411)%(134456)
+return seed
