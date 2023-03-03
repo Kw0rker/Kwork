@@ -126,7 +126,7 @@ void addFunctions(FILE *source,unsigned int functions[],unsigned int added[],cha
 					
 
 				}
-				fprintf(source,line);
+				fprintf(source,"%s",line);
 				fprintf(source,"\n");
 			}
 		}

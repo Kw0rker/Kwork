@@ -9,3 +9,5 @@
 #define INVOKE 61 //invokes thread from pointer in acc register
 #define INVOKE_ALL 62 //ivokes all threads 
 #define BUFFER_PRINT 101//prints null terminated buffer with adress in acc to stdout 
+#define FLUSH 102
+#define CLEAR 103

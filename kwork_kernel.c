@@ -1,4 +1,6 @@
 #include <kwork_params.h>
+#include <async_read.h>
+#include <signal.h>
 #define READ 10 // inserts data from terminal to memory address
 #define WRITE 11 // prints data frm memory adress
 #define PRINT 12 // prints a char from memory adress
@@ -40,6 +42,7 @@
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
 
+#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
 struct thread
 {
 
@@ -55,8 +58,28 @@ void switch_threads(THREADPTR [],int *,int *,long *,long*,int *,struct timespec 
 void remove_thread(int *,THREADPTR [],int *,long *);
 void select_new_thread(int *,long *,THREADPTR[],int *,int *);
 void dump_memory(long*);
-
+char buffer[50000];
+void intHandler(int dummy) {
+	perror("Exit!");
+    resetTermios();
+    exit(-1);
+}
 int main(){
+	//change buffering of stdout
+	if(setvbuf(stdout,buffer,_IOFBF,sizeof buffer)){
+		perror("Error setting buffered stdout\n");
+	}
+	if(setvbuf(stdout, NULL, _IONBF, 0)){
+		perror("Error setting unbuffered stdin\n");
+	}
+	// clean stdin
+	fflush(stdin);
+	//catch signal
+	signal(SIGINT, intHandler);
+
+	//set the terminal
+	initTermios(0);
+
 	long acc ;
 	int ESP = ESP_ADR; //esp register
 	int EBP = MEM_SIZE-1; //ebp register points to highest adressable memory
@@ -132,7 +155,6 @@ int main(){
 		switch_threads(thread_pool,active_threads,&instruction_counter,&acc,&time_since_last_call,&thread_id,tp);
 
 
-
 		operation_code=memory[instruction_counter];
 		operand=(int)memory[instruction_counter++];
 		int x=1;
@@ -144,13 +166,10 @@ int main(){
 		switch(operation_code){
 			case READ:
 				//printf("Enter value\n");
-				
-				char c;
 				if(inputAvailable())
-					c = _getchar_unlocked();
+				memory[operand]=getch();
 				else
-					c=-1;
-				memory[operand]=c;
+				memory[operand]=0;	
                 break;
 			case WRITE:
 			  	printf("%d",(int)memory[operand]);
@@ -234,9 +253,13 @@ int main(){
 			case SYSCALL:
 				switch (operand){
 					case BUFFER_PRINT:
-					fputs((const char*)&memory[acc],stdout);
-					break; 
-
+					puts((const char*)&memory[acc]);
+					break;
+					case CLEAR:
+					printf("\x1b[H");
+					case FLUSH:
+					fflush(stdout); 
+					break;
 					case GETIC:
 					acc=instruction_counter;
 					break;
@@ -323,6 +346,7 @@ int main(){
 				break;
 				case CALL:
 				instruction_counter = memory[operand];
+	
 				break;
 				case LOG_LESS:
 				acc=acc<0;
@@ -337,6 +361,7 @@ int main(){
 
 		}
 	}
+	resetTermios();
 	fflush(stdout);
 	//memory dump here
 	printf("\n-------------MEMORY DUMP---------------------\n");

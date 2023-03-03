@@ -46,9 +46,11 @@ enum TYPES{IF,FOR,WHILE};
 								}\
 								if(  strcmp(operator,"else")!=0 && strcmp(operator,"else\r\n")!=0 && !ELSE ){\
 									if(!isEmpty(if_stack)){\
+										if (peek(&if_stack)==-1){pop(&if_stack);\
 										int adress = pop(&if_stack)-1;\
+										if (adress<0){perror("WTF if happedn with if stack\n");}\
 										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
-										strcpy(symbolTable[adress]->fucn_name,update);\
+										strcpy(symbolTable[adress]->fucn_name,update);}\
 									}\
 									if(if_or_for==IF){\
 										if(!isEmpty(if_out_stack)){\
@@ -199,10 +201,10 @@ FILE *precompile(FILE *file){
 		fprintf(stderr,"ERROR while creating temp file");
 		abort();
 	}
-	char line[100];
+	char line[512];
 	while(!feof(file))
 	{
-		fgets(line,100,file);
+		fgets(line,512,file);
 		char *rest = line;
 		while(rest[0]==' ')rest++;
 		if(!strncmp(rest,"KASM",sizeof("KASM")-1)){
@@ -274,21 +276,22 @@ void first_compile(FILE *file){
 	if_out_stack = new_stack();
 	stuck = new_stack();
 	elif = new_stack();
-	line = malloc(100);
+	line = malloc(512);
 	operator = malloc(20);
 	operand = malloc(20);
 	//fucn_name = malloc(50);
-	rest= malloc(100);
+	rest= malloc(512);
 	fucn_name = malloc(100);
 
 	strcpy(fucn_name,"main"); //main by defual
 	while(!feof(file))
 	{
 	int save_line=1;
-	fgets(line,100,file);
-	if(line[0]=='\0')continue;
+	char *r=fgets(line,512,file);
+	if(r==NULL||line[0]=='\0'||!strcmp(line," "))continue;
+
 	char *saved = rest;
-	strcpy(rest,line);
+	strncpy(rest,line,512);
 	//fscanf(file,"%100s\n",line);
 	//printf("%s\n",line );
 
@@ -371,6 +374,7 @@ void first_compile(FILE *file){
 			int p=0;
 			while(arg!=NULL){
 				char *t = strchr(arg,' ');
+				if(!t){break;}
 				*(t)='\0';
 				char *data_t = arg;
 				params[p++]=hash((unsigned char*)t+1);
@@ -488,6 +492,7 @@ void first_compile(FILE *file){
 					fprintf(stderr,"else statment not followed by previus if block on line %d\n",line_n+1);
 					abort();
 				}
+				if(peek(&if_stack)==-1){pop(&if_stack);} //we dont need -1 here
 				int adress = pop(&if_stack) -1;
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 					push(adress,&(returns[total_comands]));
@@ -604,6 +609,7 @@ void first_compile(FILE *file){
 				if(!isEmpty(if_stack) && flags[peek(&if_stack)]==IF && if_or_for==IF){
 						symbolTable[total_comands++] = create_new('L',0,"BRANCH ",function_pointer+(local_comands++));
 						push(total_comands,&if_out_stack);
+						push(-1,&if_stack);
 						UPDATE_IF_BLOCKS(1)
 						R=1;
 				}
@@ -861,8 +867,10 @@ void first_compile(FILE *file){
 					continue;
 				}
 				TABLE_ENTRY_PTR temp_v = create_new('V',0,fucn_name,MAX_CODE_SIZE - total_const - 50);
-				int adress = MAX_CODE_SIZE-(total_const) -50;
-				symbolTable[adress] = temp_v;
+
+				//IMPORTANT !!! here 258 is offset memory overide !
+				int adress = MAX_CODE_SIZE-(total_const) -258;
+				//symbolTable[adress] = temp_v;
 
 				 // sprintf(temp,"LOAD %ld",var->location);
 				 // symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
@@ -904,6 +912,7 @@ void first_compile(FILE *file){
 				EV_POSTFIX_EXPP(equation,&decoy);
 				sprintf(temp,"PSTORE %ld",temp_v->location);
 				symbolTable[total_comands++]=create_new('L',0,temp,function_pointer+(local_comands++));
+				free(temp_v);
 			}
 			else
 			{
@@ -1334,7 +1343,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		return array_pointer;
 	}
 
-	char expp_san[254];
+	char expp_san[512];
 	//i have no fucking clue why the expp_san is not freed after the slope exist and it has old info.'
 	memset(expp_san,0,sizeof expp_san);
 	remove_ws_fr_exp(expp,expp_san);
@@ -1352,10 +1361,10 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		while(postfix!=NULL &&  postfix[0]!='\0'){
 			if(postfix[0]<0 || !isprint((int)postfix[0])){postfix++;continue;}
 			while(isspace((int)postfix[0]))postfix++;
-			if(isdigit((int)postfix[0]) || (postfix[0]==NEGNUMBER )){
+			if(isdigit((int)postfix[0]) || (postfix[0]==NEGNUMBER || postfix[0]=='-' )){
 				char *dig = malloc(50);
 				int x=0;
-				if(postfix[0]==NEGNUMBER){
+				if(postfix[0]==NEGNUMBER||postfix[0]=='-'){
 				postfix++;
 				dig[x++]='-';
 				}
@@ -1527,7 +1536,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					TABLE_ENTRY_PTR function = find_entry('F',total_comands+1,fucn_name,total_vars);
 					if(function==NULL){
 						function = create_new('T',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
-						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)] && symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type!='T'){
+						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)] && symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type!='T'&& symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type>0){
 							fprintf(stderr,"memory overide caused by return adress");
 							abort();
 						}
@@ -1691,7 +1700,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						symbolTable[call_address] = create_new('L',0,command,function_pointer+(local_comands++));
 					}
 					created++;
-					TABLE_ENTRY_PTR temp = create_new('V',0,fucn_name,MAX_CODE_SIZE - created - 50);
+					TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,MAX_CODE_SIZE - created - 50);
 					int adress = MAX_CODE_SIZE-(created) -50;
 					symbolTable[adress] = temp;
 					temp->type=func_p?func_p->return_type:Word;

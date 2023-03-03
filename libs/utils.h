@@ -13,7 +13,7 @@
 #endif
 #define KWORK_PARAMS_H
 #ifndef MAX_STR_SIZE
-#define MAX_STR_SIZE 100
+#define MAX_STR_SIZE 512
 #endif
 #define DOUBLE_STACK_CHAR -1337
 typedef union{
