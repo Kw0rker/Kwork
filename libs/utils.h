@@ -404,7 +404,7 @@ char remove_ws_fr_exp(char *orig,char *new){
             }
         }
         else if(flag_inside_char_or_string || isOperand(orig[0])||isOperator(orig[0]) || orig[0]=='{'|| orig[0]=='}'
-                || orig[0]=='('|| orig[0]==')'  || orig[0]=='['|| orig[0]==']'|| orig[0]==','
+                || orig[0]=='('|| orig[0]==')'  || orig[0]=='['|| orig[0]==']'|| orig[0]==','|| orig[0]=='.'
             ){
             (new++)[0]=orig[0];
             orig++;
