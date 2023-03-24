@@ -1914,7 +1914,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						){
 					sprintf(temp_s,"CAST_L_D %ld",symbolTable[x]->location);
 					//store it in temp
-					sprintf(double_t,"STORE %d",adress);
+					sprintf(double_t,"STORE %d",temp->location);
 					//so we use IEEE from temp var for the operations bellow
 					x=adress;
 					}
