@@ -159,6 +159,8 @@ TABLE_ENTRY_PTR create_new(char , long ,char *,long);
 	static char *rest =NULL;
 	static int array_t=0;
 	static char ASM_FLAG=0;
+	static char goto_flag=0;
+	static FILE *file = NULL;
 //	
 int main(int argc, char const *argv[])
 {	
@@ -166,7 +168,7 @@ int main(int argc, char const *argv[])
 	  perror("No source file provided\n");	
 	  return -1;
 	}
-	FILE *file = NULL;
+	file = NULL;
 	file = fopen(argv[1],"r");
 	if(file==NULL){
 		perror("No file found\n");	
@@ -1236,6 +1238,7 @@ int find_location(char type,long data,char *fucn_name,int total_vars){
 
 }
 int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
+	if(goto_flag==1&&expp==NULL&&return_==NULL)goto array_goto;
 	//todo after func call doesnt evalueate the rest of the expression
 	int data_type=Word;
 	if(expp[0]=='"'){
@@ -1342,6 +1345,87 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		return_->const_value=Array;
 		return array_pointer;
 	}
+	//if array literal declaration
+	else if (expp[0]=='{'){
+		long values[512];
+		int elemets_n=-1;
+		int data_type=Word;
+		while(rest[-1]!='{')rest++;
+		array_goto:
+		char coppy[50]={0};
+		strncpy(coppy,rest,sizeof coppy);
+		char *number=strtok(rest,",");
+		while(number!=NULL){
+			char *dig = malloc(50);
+			int x=0;
+			if(number[0]==NEGNUMBER||number[0]=='-')
+			{
+			number++;
+			dig[x++]='-';
+			}
+			while(number[0]!='\0' && number[0]!='{'&&!isspace((int)number[0]) && (!isOperator(number[0]) ) )
+			{
+				dig[x++]=number[0];
+				number++;
+			}
+			long c_value=0;
+			if(((char *)strchrnul(dig,'.'))[0]){
+				double result = atof(dig);
+				c_value=*(long*)&result;
+				data_type=Double;
+			}
+			else{
+				dig[x]='\0';
+				c_value = atoi(dig);
+			}
+			values[++elemets_n]=c_value;
+			free(dig);
+			number=strtok(NULL,",");
+			if(number==NULL){
+			// if there is no closing bracket continue reading lines till there;s
+			if(!strchr(coppy,'}'))
+			{
+				//read strings while not found
+				fgets(line,512,file);
+				strncpy(coppy,line,sizeof coppy);
+			char *rest = line;
+			while(rest[0]==' ')rest++;
+			//suposse rest is a good string
+			number=strtok(rest,",");
+			}
+			else {
+				//set the flag to zero
+				goto_flag=0;
+				break;
+			}
+			}
+
+		}
+		fprintf(stderr,"number of array elements:%d\n",elemets_n+1);
+		int zero_element = reserveMemory(elemets_n+1,data_type);
+		TABLE_ENTRY_PTR pointer;
+		TABLE_ENTRY_PTR first_el;
+		for(int a=0;a<=elemets_n;a++){
+			//fill created array with pointers to coresponding pointers to subarrays
+			pointer = create_new('A',values[a],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));
+			symbolTable[MAX_CODE_SIZE-(++total_vars)]=pointer;
+			if (a==0)first_el=pointer;
+			// symbolTable[zero_element+a]->const_value=values[a];
+			// symbolTable[zero_element+a]->type='A';
+
+		}
+		//return location of first element
+		char command[100];
+		int array_p = first_el->location;
+		TABLE_ENTRY_PTR CONST = create_new('C',array_p,fucn_name,MAX_CODE_SIZE - total_const++);
+		symbolTable[ MAX_CODE_SIZE-(++total_vars)]= CONST;
+		sprintf(command,"LOAD %ld",CONST->location);
+		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+
+		return CONST->location;
+
+
+	}
 
 	char expp_san[512];
 	//i have no fucking clue why the expp_san is not freed after the slope exist and it has old info.'
@@ -1394,6 +1478,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				if(tem){
 					symbolTable[ad]->symbol=Double;
 				}
+				free(dig);
 				push(ad,&stack);
 			}
 			else if(postfix[0]=='\'')
