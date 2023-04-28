@@ -1357,28 +1357,51 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		char *number=strtok(rest,",");
 		while(number!=NULL){
 			char *dig = malloc(50);
-			int x=0;
-			if(number[0]==NEGNUMBER||number[0]=='-')
-			{
-			number++;
-			dig[x++]='-';
-			}
-			while(number[0]!='\0' && number[0]!='{'&&!isspace((int)number[0]) && (!isOperator(number[0]) ) )
-			{
-				dig[x++]=number[0];
-				number++;
-			}
 			long c_value=0;
-			if(((char *)strchrnul(dig,'.'))[0]){
-				double result = atof(dig);
-				c_value=*(long*)&result;
-				data_type=Double;
-			}
-			else{
-				dig[x]='\0';
-				c_value = atoi(dig);
-			}
-			values[++elemets_n]=c_value;
+			int x=0;
+
+			if (isprint((int)number[0])&&number[0]!='}')
+			{
+
+				if(number[0]==NEGNUMBER||number[0]=='-')
+				{
+				number++;
+				dig[x++]='-';
+				}
+
+				//if a char
+				if(number[0]=='\''){
+					//skip the opening apostrafy charecter
+					number++;
+					c_value=number[0];
+					if (number[1]!='\''){
+						//rise warning message
+						fprintf(stderr,"Warning string enclosed in charecter apostrafy\n");
+					}
+					number+=2;
+
+				}
+				//if a number
+				else
+				{
+
+					while(number[0]!='\0' && number[0]!='{'&&!isspace((int)number[0]) && (!isOperator(number[0]) ) )
+					{
+						dig[x++]=number[0];
+						number++;
+					}
+					if(((char *)strchrnul(dig,'.'))[0]){
+						double result = atof(dig);
+						c_value=*(long*)&result;
+						data_type=Double;
+					}
+					else{
+						dig[x]='\0';
+						c_value = atoi(dig);
+					}
+				}
+				values[++elemets_n]=c_value;
+		}
 			free(dig);
 			number=strtok(NULL,",");
 			if(number==NULL){
