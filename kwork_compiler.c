@@ -1352,11 +1352,11 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		int data_type=Word;
 		while(rest[-1]!='{')rest++;
 		array_goto:
-		char coppy[50]={0};
+		char coppy[512]={0};
 		strncpy(coppy,rest,sizeof coppy);
 		char *number=strtok(rest,",");
 		while(number!=NULL){
-			char *dig = malloc(50);
+			char dig[512];
 			long c_value=0;
 			int x=0;
 
@@ -1402,7 +1402,6 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				}
 				values[++elemets_n]=c_value;
 		}
-			free(dig);
 			number=strtok(NULL,",");
 			if(number==NULL){
 			// if there is no closing bracket continue reading lines till there;s
