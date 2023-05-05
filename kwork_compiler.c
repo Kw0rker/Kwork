@@ -1356,7 +1356,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		strncpy(coppy,rest,sizeof coppy);
 		char *number=strtok(rest,",");
 		while(number!=NULL){
-			char dig[512];
+			char dig[512]={0};
 			long c_value=0;
 			int x=0;
 
@@ -1384,6 +1384,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				//if a number
 				else
 				{
+					while(isspace((int)number[0]))number++;
 
 					while(number[0]!='\0' && number[0]!='{'&&!isspace((int)number[0]) && (!isOperator(number[0]) ) )
 					{
@@ -1427,7 +1428,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		int zero_element = reserveMemory(elemets_n+1,data_type);
 		TABLE_ENTRY_PTR pointer;
 		TABLE_ENTRY_PTR first_el;
-		for(int a=0;a<=elemets_n;a++){
+		for(int a=elemets_n;a>=0;a--){
 			//fill created array with pointers to coresponding pointers to subarrays
 			pointer = create_new('A',values[a],fucn_name,(function_pointer+MAX_STATIC_SIZE- (local_created++)));
 			symbolTable[MAX_CODE_SIZE-(++total_vars)]=pointer;

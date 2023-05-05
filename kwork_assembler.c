@@ -62,7 +62,7 @@ translate_code(FILE *inp,FILE *out){
 		//printf("%s\n",command);
 		fscanf(inp,"%ld",&operand);
 		//fscanf(inp,"%s\n",command);//vuln to bufferoverflow fix later
-
+		//todo change this ugly code
 			 if(!strcmp(command,"READ"))fprintf(out, "%d%d\n",opcodes[READ],operand);
 		else if(!strcmp(command,"WRITE"))fprintf(out, "%d%d\n",opcodes[WRITE],operand);
 		else if(!strcmp(command,"WRITE_F"))fprintf(out, "%d%d\n",opcodes[WRITE_F],operand);
