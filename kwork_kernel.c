@@ -33,6 +33,8 @@
 #define LOG_LESS 80 //compares if acc less than zero
 #define LOG_LESSEQ 81 // compares if acc less or equal zero
 #define LOG_INV 82 //inverts value of acc
+#define LOG_LESS_F 83 //compares float representation of bits in acc with zero
+#define LOG_LESSEQ_F 84 //compares float representation of bits in acc with zero
 #define SYSCALL 70 //calls kwork system call, by operand as syscall id
 #define PUSH 71 //pushes data from memory on the stack
 #define POP 72 //pops data from the stack to memory adress
@@ -351,8 +353,16 @@ int main(){
 				case LOG_LESS:
 				acc=acc<0;
 				break;
+				case LOG_LESS_F:
+				result = *(double*) &acc;
+				acc=result<0;
+				break;
 				case LOG_LESSEQ:
 				acc=acc<=0;
+				break;
+				case LOG_LESSEQ_F:
+				result = *(double*) &acc;
+				acc=result<=0;
 				break;
 				case LOG_INV:
 				acc=!acc;

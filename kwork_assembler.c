@@ -16,8 +16,8 @@ int getLine(char*,FILE *);
 #define FUNC "1111"
 enum operators{READ,WRITE,PRINT,LOAD,STORE,ADD,SUB,DIV,MUL,MOD,BRANCH,
 			  BRANCHNEG,BRANCHZERO,HALT,DEBUG,SYSCALL,BIT_S_R,BIT_S_L,
-			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE,LOG_LESS,LOG_LESSEQ,LOG_INV,ADD_F,SUB_F,MUL_F,DIV_F,WRITE_F,CAST_L_D,LOAD_F};
-int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23,80,81,82,35,36,37,38,13,61,24};
+			  BIT_OR,BIT_AND,BIT_XOR,BIT_INV,PUSH,POP,CALL,PLOAD,PSTORE,LOG_LESS,LOG_LESSEQ,LOG_INV,ADD_F,SUB_F,MUL_F,DIV_F,WRITE_F,CAST_L_D,LOAD_F,LOG_LESS_F,LOG_LESSEQ_F};
+int opcodes[] = {10,11,12,20,21,30,31,32,33,34,40,41,42,43,60,70,50,51,52,53,54,55,71,72,44,22,23,80,81,82,35,36,37,38,13,61,24,83,84};
 // @argv[0] file_name.kwac
 // @argv[1] output_name.kw
 int main(int argc, char const *argv[])
@@ -100,7 +100,9 @@ translate_code(FILE *inp,FILE *out){
 		else if(!strcmp(command,"POP"))fprintf(out, "%d%d\n",opcodes[POP],operand);
 		else if(!strcmp(command,"CALL"))fprintf(out, "%d%d\n",opcodes[CALL],operand);
 		else if(!strcmp(command,"LOG_LESS"))fprintf(out, "%d%d\n",opcodes[LOG_LESS],operand);
+		else if(!strcmp(command,"LOG_LESS_F"))fprintf(out, "%d%d\n",opcodes[LOG_LESS_F],operand);
 		else if(!strcmp(command,"LOG_LESSEQ"))fprintf(out, "%d%d\n",opcodes[LOG_LESSEQ],operand);
+		else if(!strcmp(command,"LOG_LESSEQ_F"))fprintf(out, "%d%d\n",opcodes[LOG_LESSEQ_F],operand);
 		else if(!strcmp(command,"LOG_INV"))fprintf(out, "%d%d\n",opcodes[LOG_INV],operand);
 		else if(!strcmp(command,"CAST_L_D"))fprintf(out, "%d%d\n",opcodes[CAST_L_D],operand);
 		else if(!strcmp(command,"MAIN"))fprintf(out, "%s\n",MAIN);

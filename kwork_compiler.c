@@ -588,7 +588,9 @@ void first_compile(FILE *file){
 					fprintf(stderr,"else statment not followed by previus if block on line %d\n",line_n+1);
 					abort();
 			}
+			if(peek(&if_stack)==-1){pop(&if_stack);} //we dont need -1 here
 			int adress = pop(&if_stack) -1;
+			assert(adress>0);
 			if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 			push(adress,&(returns[total_comands]));
 
@@ -1359,7 +1361,8 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			char dig[512]={0};
 			long c_value=0;
 			int x=0;
-
+			//clean all the unprintable chars at the begining of substring
+			while(!isprint(*number)&&*number)number++;
 			if (isprint((int)number[0])&&number[0]!='}')
 			{
 
@@ -1424,7 +1427,6 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			}
 
 		}
-		fprintf(stderr,"number of array elements:%d\n",elemets_n+1);
 		int zero_element = reserveMemory(elemets_n+1,data_type);
 		TABLE_ENTRY_PTR pointer;
 		TABLE_ENTRY_PTR first_el;
@@ -1444,7 +1446,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		symbolTable[ MAX_CODE_SIZE-(++total_vars)]= CONST;
 		sprintf(command,"LOAD %ld",CONST->location);
 		symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
-
+		return_->const_value=Array;
 		return CONST->location;
 
 
@@ -1468,7 +1470,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 		while(postfix!=NULL &&  postfix[0]!='\0'){
 			if(postfix[0]<0 || !isprint((int)postfix[0])){postfix++;continue;}
 			while(isspace((int)postfix[0]))postfix++;
-			if(isdigit((int)postfix[0]) || (postfix[0]==NEGNUMBER || postfix[0]=='-' )){
+			if(isdigit((int)postfix[0]) || (postfix[0]==NEGNUMBER || postfix[0]=='-' &&isdigit((int)postfix[1] ))){
 				char *dig = malloc(50);
 				int x=0;
 				if(postfix[0]==NEGNUMBER||postfix[0]=='-'){
@@ -1498,9 +1500,10 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					ad = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[ad]=CONST;
 				}
-				if(tem){
-					symbolTable[ad]->symbol=Double;
-				}
+				//05.22.23
+				// if(tem){
+				// 	symbolTable[ad]->symbol=Double;
+				// }
 				free(dig);
 				push(ad,&stack);
 			}
@@ -1870,6 +1873,9 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 							break;
 						}	
 					}
+					else if(symbolTable[ad]->const_value==Double){
+						floats=1;
+					} 
 					push(ad,&stack);
 				}
 			}
@@ -2014,6 +2020,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				char apend[12];
 				//if theres at least one float operation all other operations are done with floats
 				//in order to prevent undefined behaviour
+				char cast_ = 0;
 				if(floats &&y>0){
 					strcpy(apend,"_F");
 					//perfrom cast to get IEEE representation
@@ -2023,6 +2030,19 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					sprintf(temp_s,"CAST_L_D %ld",symbolTable[x]->location);
 					//store it in temp
 					sprintf(double_t,"STORE %d",temp->location);
+					//perfrom cast
+						if(temp_s[0]!=0){
+						symbolTable[total_comands++] = create_new('L',0,temp_s,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+						//store
+						symbolTable[total_comands++] = create_new('L',0,double_t,function_pointer+(local_comands++));
+						}	
+						//load
+						if(load[0]!=0){
+						symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+						}
+					//set cast flag
 					//so we use IEEE from temp var for the operations bellow
 					x=adress;
 					}
@@ -2083,24 +2103,24 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					break; 
 					case'<':
 					sprintf(temp_s,"SUB %ld",symbolTable[x]->location);
-					sprintf(command,"LOG_LESS %d",0); 
+					sprintf(command,"LOG_LESS%s %d",apend,0); 
 					push(BINARY,&operations);
 					break; 
 					case'>':
 					sprintf(load,"LOAD %ld",symbolTable[x]->location);
 					sprintf(temp_s,"SUB %ld",symbolTable[y]->location);
-					sprintf(command,"LOG_LESS %d",0); 
+					sprintf(command,"LOG_LESS%s %d",apend,0); 
 					push(BINARY,&operations);
 					break;
 					case'<'+'=':
 					sprintf(temp_s,"SUB %ld",symbolTable[x]->location);
-					sprintf(command,"LOG_LESSEQ %d",0); 
+					sprintf(command,"LOG_LESSEQ%s %d",apend,0); 
 					push(BINARY,&operations);
 					break; 
 					case'>'+'=':
 					sprintf(load,"LOAD %ld",symbolTable[x]->location);
 					sprintf(temp_s,"SUB %ld",symbolTable[y]->location);
-					sprintf(command,"LOG_LESSEQ %d",0); 
+					sprintf(command,"LOG_LESSEQ%s %d",apend,0); 
 					push(BINARY,&operations);
 					break;
 					case '='+'=':
@@ -2214,23 +2234,40 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					}
 				}
 				//if double
-				else{
-					//perfrom cast
-					if(temp_s[0]!=0){
-					symbolTable[total_comands++] = create_new('L',0,temp_s,function_pointer+(local_comands++));
-					if(code_lines==1){UPDATE_IF_BLOCKS(1)}
-					//store
-					symbolTable[total_comands++] = create_new('L',0,double_t,function_pointer+(local_comands++));
-					}	
-					//load
-					if(load[0]!=0){
-					symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++));
-					if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+				else
+				{
+
+					if(cast_)
+					{
+						//perfrom cast
+						if(temp_s[0]!=0){
+						symbolTable[total_comands++] = create_new('L',0,temp_s,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+						//store
+						symbolTable[total_comands++] = create_new('L',0,double_t,function_pointer+(local_comands++));
+						}	
+						//load
+						if(load[0]!=0){
+						symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+						}
+					}
+					else
+					{
+						if(load[0]!=0){
+						symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
+						}
+						//perfrom 1st operation
+						if(temp_s[0]!=0){
+						symbolTable[total_comands++] = create_new('L',0,temp_s,function_pointer+(local_comands++));
+						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
 					}
 					//perform
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
 					//store
 					symbolTable[total_comands++] = create_new('L',0,command2,function_pointer+(local_comands++));
+					}
 				}
 				//used for array dereferencing
 				if(y==-1){
