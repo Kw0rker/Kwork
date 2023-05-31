@@ -646,30 +646,24 @@ void first_compile(FILE *file){
 	
 		}
 		else if(!strcmp(operator,"while")){
-			char *left_eq = malloc(50);
-			char *right_eq = malloc(50);
-			char *comparator = malloc(3);
-			int x=0;
-			int y=0;
-			while(operand[x]!='!' ||
-				 operand[x]!='='  ||
-				 operand[x]!='<'  ||
-				 operand[x]!='>')
-			{
-			left_eq[x]=operand[x];
-			x++;
-			}
-			comparator[0]=operand[x++];
-			if(operand[x]=='=' || operand[x]=='<' || operand[x]=='>'){
-				comparator[1]=operand[x++];
-			}
-			while(operand[x]!='\0'){
-				right_eq[y++] = operand[x++];
-			}
-
-			free(left_eq);
-			free(right_eq);
-			free(comparator);
+			char *comparingExpp;
+			while (*rest && *rest!=' ')rest++;
+			while (*rest && *rest==' ')rest++;
+			comparingExpp=rest;
+				//push next_asm_instruction to stack so we jump to it in order to iterate thru loop
+			push(total_comands+1,&for_stack);
+			push(total_comands+1,&return_stack);
+			push(FOR,&stuck);
+			TABLE_ENTRY decoy;
+			char command[100];
+			EV_POSTFIX_EXPP(comparingExpp,&decoy);
+			//result in acc 0/1
+			//jump to end if false
+			sprintf(command,"BRANCHZERO ");
+			symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+			memset(command,0,sizeof(command));
+			flags[total_comands]=FOR;
+			push(total_comands,&stack); 
 		}
 
 		else if(!strcmp(operator,"for")){
