@@ -36,21 +36,33 @@ enum TYPES{IF,FOR,WHILE};
 #define UPDATE_IF_BLOCKS(offset)TABLE_ENTRY_PTR assm = symbolTable[total_comands-offset];\
 				 				char new_addres[30];\
 								sprintf(new_addres,"%ld",assm->location);\
-								if(returns[total_comands-offset]!=NULL){\
+								int flag_p=0;\
+								if(returns[total_comands-offset]!=NULL ){\
 								assert(assm!=NULL);\
 									while(!isEmpty(returns[total_comands-offset])){\
 										int adress = pop(&(returns[total_comands-offset]));\
-										char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
-										strcpy(symbolTable[adress]->fucn_name,new_command);\
+										/*jump_map is neg for if statments*/ \
+										if(jump_map[adress%5000]>0 && jump_map[adress%5000]!=peek(&scope)){\
+											push(adress,&stack);\
+											if(!flag_p){push(FOR,&stuck);flag_p++;}\
+										}\
+										else if(isEmpty(scope) || jump_map[adress%5000]<0 || jump_map[adress%5000]==peek(&scope)){\
+											char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);\
+											strcpy(symbolTable[adress]->fucn_name,new_command);\
+										}\
+										else{\
+											push(adress,&stack);\
+											if(!flag_p){push(FOR,&stuck);flag_p++;}\
+										}\
 									}\
 								}\
-								if(  strcmp(operator,"else")!=0 && strcmp(operator,"else\r\n")!=0 && !ELSE ){\
+								if(  strncmp(operator,"else",sizeof("else")-1)!=0 && !ELSE ){\
 									if(!isEmpty(if_stack)){\
-										if (peek(&if_stack)==-1){pop(&if_stack);\
+										if (peek(&if_stack)==-1){pop(&if_stack);}\
 										int adress = pop(&if_stack)-1;\
 										if (adress<0){perror("WTF if happedn with if stack\n");}\
 										char *update = strcat(symbolTable[adress]->fucn_name,new_addres);\
-										strcpy(symbolTable[adress]->fucn_name,update);}\
+										strcpy(symbolTable[adress]->fucn_name,update);\
 									}\
 									if(if_or_for==IF){\
 										if(!isEmpty(if_out_stack)){\
@@ -62,7 +74,7 @@ enum TYPES{IF,FOR,WHILE};
 										}\
 									}\
 								}\
-								if(strcmp(operator,"if")!=0 && strcmp(operator,"else")!=0  && !ELSE){\
+								if(strcmp(operator,"if")!=0 && strncmp(operator,"else",sizeof("else")-1)!=0  && !ELSE){\
 									while(!isEmpty(if_out_stack)){\
 											int adress = pop(&if_out_stack) -1;\
 											/*fucking kludge here*/ \
@@ -140,6 +152,8 @@ TABLE_ENTRY_PTR create_new(char , long ,char *,long);
 	static STACKPTR if_out_stack = NULL;
 	static STACKPTR stuck = NULL;
 	static STACKPTR elif = NULL;
+	static STACKPTR scope = NULL;
+	static int jump_map[5000];
 	static char *line = NULL;
 	static STACKPTR returns[MAX_CODE_SIZE];
 	static int local_created=0;
@@ -232,7 +246,7 @@ FILE *precompile(FILE *file){
 		}
 		else{
 			fprintf(temp,"%s",rest);
-			//else just coppy line from orig file to the temp one
+			//else just coppy line from yorig file to the temp one
 			while(strstr(rest, "CALL "))
 			{
 			char *function_name = strstr(rest, "CALL ")+(sizeof("CALL ")-1);	
@@ -278,6 +292,7 @@ void first_compile(FILE *file){
 	if_out_stack = new_stack();
 	stuck = new_stack();
 	elif = new_stack();
+	scope = new_stack();
 	line = malloc(512);
 	operator = malloc(20);
 	operand = malloc(20);
@@ -484,10 +499,10 @@ void first_compile(FILE *file){
 		UPDATE_IF_BLOCKS(1)
 		memset(KWAC_COMMAND,0,sizeof(KWAC_COMMAND));
 		}
-	else if(!strcmp(operator,"if") || (!strcmp(operator,"else") && operand[0]=='i' && operand[1]=='f')){
+	else if(!strncmp(operator,"if",sizeof("if")-1) || (!strncmp(operator,"else",sizeof("else")-1) &&operand&& operand[0]=='i' && operand[1]=='f')){
 			//only if we have else if consturction
 			if(isEmpty(elif))push(1,&elif);
-			if(!strcmp(operator,"else")){
+			if(!strncmp(operator,"else",sizeof("else")-1)){
 				//inELSE=1;
 				operand = strtok(NULL," ");
 				if(isEmpty(if_stack)){
@@ -498,6 +513,7 @@ void first_compile(FILE *file){
 				int adress = pop(&if_stack) -1;
 				if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
 					push(adress,&(returns[total_comands]));
+				jump_map[adress%5000]=-1;	
 
 			}
 			while(rest[0]!='\0' && rest[0]!=' ')rest++;
@@ -573,7 +589,8 @@ void first_compile(FILE *file){
 
 
 			push(total_comands,&if_stack);
-			if(!strcmp(operator,"else")){
+			jump_map[(total_comands-1)%5000]=-1;
+			if(!strncmp(operator,"else",sizeof("else")-1)){
 				push(0,&elif);
 			}
 			else{
@@ -582,7 +599,7 @@ void first_compile(FILE *file){
 			//flags[function_pointer+local_comands+2] = total_comands;
 				//push adreess of brach command so we can resolve jump forward address once '}' encountered
 		}
-		else if(!strcmp(operator,"else\r\n")){
+		else if(!strncmp(operator,"else",sizeof("else")-1)){
 			//todo
 			if(isEmpty(if_stack)){
 					fprintf(stderr,"else statment not followed by previus if block on line %d\n",line_n+1);
@@ -598,13 +615,36 @@ void first_compile(FILE *file){
 		else if(line[0]=='{'){
 			if(!strcmp(last_line,"if") || !strcmp(last_line,"else") || !strcmp(last_line,"else\r\n")){
 				push(IF,&stuck);
+				if(isEmpty(scope)){
+					//else frame must not increse the scope level
+					if(!strncmp(last_line,"else",sizeof("else")-1)){
+						push(0,&scope);
+					}
+					else
+					{
+						push(1,&scope);
+					}
+				}
+				else
+				{
+					int last_scope_id = peek(&scope);
+					//else frame must not increse the scope level
+					if(!strncmp(last_line,"else",sizeof("else")-1)){
+						push(last_scope_id,&scope);
+					}
+					else{
+						push(last_scope_id+1,&scope);
+					}
+					
+				}
+
 			}
 			else push(FOR,&stuck);
 			ELSE = 1; //show that we intered if block
 		}
 		else if(line[0]=='}'){
 				if(!isEmpty(stuck)){
-					if_or_for = peek(&stuck);
+					if_or_for = peek(&stuck) * peek(&stuck->next);
 				}
 				else{
 					perror("Extra bracket found\n");
@@ -613,9 +653,24 @@ void first_compile(FILE *file){
 				if(!isEmpty(if_stack) && flags[peek(&if_stack)]==IF && if_or_for==IF){
 						symbolTable[total_comands++] = create_new('L',0,"BRANCH ",function_pointer+(local_comands++));
 						push(total_comands,&if_out_stack);
-						push(-1,&if_stack);
-						UPDATE_IF_BLOCKS(1)
+						//push(-1,&if_stack);
+						//UPDATE_IF_BLOCKS(1)
+						TABLE_ENTRY_PTR assm = symbolTable[total_comands-1];
+				 		char new_addres[30];\
+						sprintf(new_addres,"%ld",assm->location);
+						while(returns[total_comands-1]!=NULL && !isEmpty(returns[total_comands-1]))
+						{
+							int adress = pop(&(returns[total_comands-1]));
+							if(isEmpty(scope) || jump_map[adress%5000]<0 || jump_map[adress%5000]==peek(&scope)){
+								char *new_command = strcat(symbolTable[adress]->fucn_name,new_addres);
+								strcpy(symbolTable[adress]->fucn_name,new_command);
+							}
+						}
 						R=1;
+						//pop value from the scope stack to indicate we exited curren scope
+				}
+				if(if_or_for==IF){
+					pop(&scope);
 				}
 				//to do add last check if its loop closing bracket
 				if(!isEmpty(stack) && !isEmpty(return_stack) &&if_or_for){
@@ -635,18 +690,27 @@ void first_compile(FILE *file){
 				push(adress,&(returns[total_comands]));
 				memset(command,0,sizeof(command));
 					//apped brancha adress
-			}
+				}
+				//is to be executed after the scopes are exited
+				else if(!isEmpty(stack)&&if_or_for)
+				{
+					int adress = pop(&stack) -1; //exit of loop
+					if(returns[total_comands]==NULL)returns[total_comands] = new_stack();
+					push(adress,&(returns[total_comands]));
+				}
 			//poping here results in incorect if exit!
 			//but if we delete it it fucks of the entire loop
 			//tho i might fixed it
 			if(!isEmpty(stuck)){
+
 					pop(&stuck);
 			}
 			ELSE=0;
 	
 		}
-		else if(!strcmp(operator,"while")){
+		else if(!strncmp(operator,"while",sizeof("while")-1)){
 			char *comparingExpp;
+			save_line=1;
 			while (*rest && *rest!=' ')rest++;
 			while (*rest && *rest==' ')rest++;
 			comparingExpp=rest;
@@ -664,9 +728,12 @@ void first_compile(FILE *file){
 			memset(command,0,sizeof(command));
 			flags[total_comands]=FOR;
 			push(total_comands,&stack); 
+			//save the scope of the while loop
+			jump_map[(total_comands-1)%5000]=peek(&scope);
 		}
 
 		else if(!strcmp(operator,"for")){
+			//save_line=1;
 			char *defaultValueExpp;
 			char *comparingExpp=malloc(40);
 			char *incrementExpp;
@@ -749,6 +816,8 @@ void first_compile(FILE *file){
 			memset(command,0,sizeof(command));
 			flags[total_comands]=FOR;
 			push(total_comands,&stack); 
+			//save the scope of the for loop
+			jump_map[(total_comands-1)%5000]=peek(&scope);
 
 			//free(defaultValueExpp);
 			free(comparingExpp);
