@@ -1999,7 +1999,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				}
 				/*we pop adress of vars in table here*/ 
 				created++;
-				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,(ESP_ADR-MAX_STACK_SIZE)- created );
+				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,(ESP_ADR-MAX_STACK_SIZE)- (created+local_created) );
 				int adress = MAX_CODE_SIZE-(created) -50;
 				if (symbolTable[adress] && symbolTable[adress]->symbol!=0){
 					fprintf(stderr,"memory overide caused by temp var allocation!\n");
