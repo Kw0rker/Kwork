@@ -1563,10 +1563,9 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					ad = MAX_CODE_SIZE-(++total_vars);
 					symbolTable[ad]=CONST;
 				}
-				//05.22.23
-				// if(tem){
-				// 	symbolTable[ad]->symbol=Double;
-				// }
+				if(tem){
+					symbolTable[ad]->symbol=Double;
+				}
 				free(dig);
 				push(ad,&stack);
 			}
