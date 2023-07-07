@@ -2087,7 +2087,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					strcpy(apend,"_F");
 					//perfrom cast to get IEEE representation
 					if( (symbolTable[x]->type!='T'&&symbolTable[x]->const_value!=Double)&&
-						(symbolTable[x]->type=='C'&&symbolTable[x]->symbol!=Double)
+						(symbolTable[x]->type=='C'&&symbolTable[x]->symbol!=Double) || symbolTable[x]->type=='V'&&symbolTable[x]->symbol!=Double
 						){
 					sprintf(temp_s,"CAST_L_D %ld",symbolTable[x]->location);
 					//store it in temp
@@ -2104,6 +2104,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 						symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++));
 						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
 						}
+					memset(temp_s,0,sizeof(temp_s));
 					//set cast flag
 					//so we use IEEE from temp var for the operations bellow
 					x=adress;
@@ -2278,6 +2279,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				if(!floats &&!floats_was_set)
 				{
 					/*load first operand*/
+					symbolTable[adress]->const_value=Word;
 					if(flag){
 						symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++)); 
 						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
@@ -2298,7 +2300,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				//if double
 				else
 				{
-
+					symbolTable[adress]->const_value=Double;
 					if(cast_)
 					{
 						//perfrom cast
