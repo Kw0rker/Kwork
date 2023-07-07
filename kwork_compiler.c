@@ -2279,7 +2279,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				if(!floats &&!floats_was_set)
 				{
 					/*load first operand*/
-					symbolTable[adress]->const_value=Word;
+					
 					if(flag){
 						symbolTable[total_comands++] = create_new('L',0,load,function_pointer+(local_comands++)); 
 						if(code_lines==1){UPDATE_IF_BLOCKS(1)}
@@ -2300,6 +2300,9 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				//if double
 				else
 				{
+					//todo: I dont know if this can affect evaluation of other expressions
+					//but symbolTable[adress]->const_value=Word definatly breaks somthing. Suggested fix: use stack and push all adresses of temp
+					//vars and then reset their type at the end of evaluation
 					symbolTable[adress]->const_value=Double;
 					if(cast_)
 					{
