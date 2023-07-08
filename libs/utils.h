@@ -112,10 +112,9 @@ char *convertToPostfix(char *exp){
                 //means that we have smth like 5*-1
                 if(isdigit((int)exp[++i])){
                     result[++k]=NEGNUMBER;
-                    while(isdigit((int)exp[i]) || exp[i]=='.'){
+                    while(isdigit((int)exp[i])){
                         result[++k]=exp[i++];
                     }
-                    i--;
                 }
                 else{
                     //some real shit happened
@@ -129,25 +128,21 @@ char *convertToPostfix(char *exp){
         }        
          // If the scanned character is
         // an operand, add it to output.
-        if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) ){
-            while(isOperand(exp[i]) || exp[i]=='.'){
-                result[++k] = exp[i++];
-            }
-            i--;
-        }
+        if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) )
+            result[++k] = exp[i];
          
         // If the scanned character is an
         // ‘(‘, push it to the stack.
         else if (exp[i] == '(')
         {
-            //check if someone surrond negative number in paretecies 
+            //check if someone put negative number 
             int x=i+1;
             while(exp[x]&&exp[x]==' ')x++;
             if(exp[x]=='-'){
                 i=x;
                 if(isdigit((int)exp[++i])){
                     result[++k]=NEGNUMBER;
-                    while(isdigit((int)exp[i]) || exp[i]=='.'){
+                    while(isdigit((int)exp[i])){
                         result[++k]=exp[i++];
                     }
                     if(exp[i]==')')i++;
@@ -259,96 +254,17 @@ char *convertToPostfix(char *exp){
  
     }
  
-    //expiremental 07.08.2023
-    //sort the stack
-
-    int temp[130];
-    int ptr=0;
-    //transform stack into array
-     while (!isEmpty(stack)){
+    // pop all the operators from the stack
+    while (!isEmpty(stack)){
+        result[++k]=' ';
          int stack_val=pop(&stack);
          if(stack_val==DOUBLE_STACK_CHAR){
-            temp[ptr++]=pop(&stack)+pop(&stack);
-         }
-         else{
-            temp[ptr++]=stack_val;
-         }
-         if (ptr>=130){
-            fprintf(stderr,"Array size for stack to array is unsuficent in utils.h\n");
-         }
-     }
-
-
-     for (int i = 0; i < ptr-1; ++i)
-     {
-        int x;
-        char swaped=0;
-        for(int j=0;j<ptr-i-1;j++){
-            if(Prec(temp[j]<Prec(temp[j+1]))){
-                x=temp[j];
-                temp[j]=temp[j+1];
-                temp[j+1]=x;
-                swaped=1;
-            }
+            result[++k] = pop(&stack);
+            result[++k] = pop(&stack); 
         }
-        if(!swaped){break;}
-     }
-
-
-    // pop all the operators from the stack
-    for (int i=0;i<ptr;i++){
-        result[++k]=' ';
-        int X = temp[i];
-
-        switch(X){
-            case '+'+'+':
-            result[++k]='+';
-            result[++k]='+';
-            break;
-
-            case '-'+'-':
-            result[++k]='-';
-            result[++k]='-';
-            break;
-
-            case '<'+'=':
-            result[++k]='<';
-            result[++k]='=';
-            break;
-            case '>'+'=':
-            result[++k]='>';
-            result[++k]='=';
-            break;
-            case '='+'=':
-            result[++k]='=';
-            result[++k]='=';
-            break;
-            case '!'+'=':
-            result[++k]='!';
-            result[++k]='=';
-            break;
-            case '&'+'&':
-            result[++k]='&';
-            result[++k]='&';
-            break;
-            case '|'+'|':
-            result[++k]='|';
-            result[++k]='|';
-            break;
-            case '<'+'<':
-            result[++k]='<';
-            result[++k]='<';
-            break;
-            case '>'+'>':
-            result[++k]='>';
-            result[++k]='>';
-            break;
-            default:
-            result[++k]=(char)X;
-            break;    
+        else{
+            result[++k] = stack_val;
         }
-
-
     }
  
     result[++k] = '\0';
