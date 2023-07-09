@@ -222,7 +222,7 @@ char *convertToPostfix(char *exp){
                         val1=pop(&stack);
                         val2=pop(&stack);
                         stack_val=val1+val2;
-                        if(Prec(comp)<=Prec(val1+val2)){
+                        if(Prec(comp)>=Prec(val1+val2)){
                             result[++k] = val1;
                             result[++k] = val2;
                         }
@@ -237,7 +237,7 @@ char *convertToPostfix(char *exp){
                     }
                     else
                     {
-                        if (Prec(comp)<=Prec(stack_val)){
+                        if (Prec(comp)>=Prec(stack_val)){
                             result[++k] = stack_val;
                         }
                         else{
