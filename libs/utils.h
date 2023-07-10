@@ -107,7 +107,7 @@ char *convertToPostfix(char *exp){
         if(exp[i]=='-'){
             int x=i;
             //go back for any whitespaces before the minus sign
-            while(--x && exp[x]==' ');
+            while(exp[x]==' ' && --x);
             if(isOperator(exp[x])){
                 //means that we have smth like 5*-1
                 if(isdigit((int)exp[++i])){
@@ -222,7 +222,7 @@ char *convertToPostfix(char *exp){
                         val1=pop(&stack);
                         val2=pop(&stack);
                         stack_val=val1+val2;
-                        if(Prec(comp)>=Prec(val1+val2)){
+                        if(Prec(comp)<=Prec(val1+val2)){
                             result[++k] = val1;
                             result[++k] = val2;
                         }
@@ -237,7 +237,7 @@ char *convertToPostfix(char *exp){
                     }
                     else
                     {
-                        if (Prec(comp)>=Prec(stack_val)){
+                        if (Prec(comp)<=Prec(stack_val)){
                             result[++k] = stack_val;
                         }
                         else{
@@ -306,13 +306,13 @@ int Prec(int c){
         
     case '+':
     case '-':
-        return 2;
+        return 1;
  
     case '*':
     case '/':
     case '%':
     case '!':    
-        return 1;
+        return 2;
  
     // case '^': colides with != should i fix it ???
     //     return 6;
