@@ -107,7 +107,7 @@ char *convertToPostfix(char *exp){
         if(exp[i]=='-'){
             int x=i;
             //go back for any whitespaces before the minus sign
-            while(exp[x]==' ' && --x);
+            while(--x && exp[x]==' ');
             if(isOperator(exp[x])){
                 //means that we have smth like 5*-1
                 if(isdigit((int)exp[++i])){
