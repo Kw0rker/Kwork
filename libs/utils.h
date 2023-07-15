@@ -129,11 +129,8 @@ char *convertToPostfix(char *exp){
         }        
          // If the scanned character is
         // an operand, add it to output.
-        if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) ){
-            while(isOperand(exp[i]) || exp[i]=='.'){
-                result[++k] = exp[i++];
-            }
-            i--;
+        if (isOperand(exp[i]) || (exp[i]=='-'&&k==-1) ||exp[i]=='.' ){
+            result[++k] = exp[i];
         }
          
         // If the scanned character is an

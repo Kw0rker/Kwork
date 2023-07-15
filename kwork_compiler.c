@@ -2086,8 +2086,8 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				if(floats &&y>0){
 					strcpy(apend,"_F");
 					//perfrom cast to get IEEE representation
-					if( (symbolTable[x]->type!='T'&&symbolTable[x]->const_value!=Double)&&
-						(symbolTable[x]->type=='C'&&symbolTable[x]->symbol!=Double) || symbolTable[x]->type=='V'&&symbolTable[x]->symbol!=Double
+					if( (symbolTable[x]->type!='T'&&symbolTable[x]->const_value!=Double)&&(
+						(symbolTable[x]->type=='C'&&symbolTable[x]->symbol!=Double) || (symbolTable[x]->type=='V'&&symbolTable[x]->symbol!=Double))
 						){
 					sprintf(temp_s,"CAST_L_D %ld",symbolTable[x]->location);
 					//store it in temp
