@@ -40,6 +40,7 @@
 #define POP 72 //pops data from the stack to memory adress
 #define DEBUG 60 //dumps memory when reached
 #define CAST_L_D 61// gets IEEE represination of a number in acc
+#define CAST_D_L 62 //casts acc IEEE bit representation of float number to integer result stored in acc
 /*
  * all commands saved followed by prevoius, strting at 0, if input is negative it counts as an adress for next command
  */
@@ -248,6 +249,9 @@ int main(){
 				result=(double)memory[operand];
 				//get IEEE reprisentation of this number
 				acc=*(long*)&result;
+				break;
+			case CAST_D_L:
+				memory[operand]= (long)(*(double*)&acc);
 				break;		
 			case HALT:
 				remove_thread(&thread_id,thread_pool,active_threads,&time_since_last_call);

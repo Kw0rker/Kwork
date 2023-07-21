@@ -1636,6 +1636,12 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 			}
 			else if(!strncmp(postfix,"{w}",sizeof("{w}")-1)){
 					postfix+=sizeof("{w}")-1;
+					//insert double to word cast instruction here
+					char command[60];
+					sprintf(command,"CAST_D_L %ld",symbolTable[peek(&stack)]->location);
+					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
+					//push the arguments on the stack
+					UPDATE_IF_BLOCKS(1)
 					data_type=Word;
 			}
 
