@@ -1,0 +1,62 @@
+#include strings.kwh
+#include math.kwh
+prototype word draw(adress drawable,word size)
+prototype word createDrawable(word x,word y,word char)
+function main
+let double val=0.0
+let word draw=[80]
+for x=0;x<64;x++
+{
+	let double sin = CALL sin{val/20}
+	let word y = ((sin+1)*29){w}
+	let val = val+1.0
+	let draw[x]=CALL createDrawable{x,y,'*'}
+}
+let t = CALL draw{draw,x}
+end
+
+//@param x - > x coordinate of drawable
+//@param y -> y coordinate of drawable
+//@char asci representation of drawable
+function word createDrawable(word x,word y,word char)
+return 0 || y || (x<<16) || (char<<32)
+
+
+//@param drawable list of drawable characters 
+//@param size size of the list
+//function takes drwable list and displays each drawable on the screen
+//drawable format: 1 byte char,2 byte x pos, 2 byte y pos
+
+
+function word draw(adress drawable,word size)
+let screen = [8]
+//stores 64 chars
+let temp = [8]
+let d = CALL memset{screen,8,0}
+let counter=0
+for y=0;y<64;y++
+{
+	for x=0;x<8;x++
+	{
+		let d = CALL memset{temp,8,32}
+
+		for draw=0;draw<size;draw++
+		{
+			let dr = drawable[draw]
+			let yy = dr&&65535
+			let xx = (dr>>16)&&65535
+			let d = xx/8
+			if (yy==y)*(d==x)
+			{
+				let dem=xx%8
+				let temp[dem]=dr>>32
+			}
+		}
+		let d = CALL AppendBuffer{screen,#counter,temp}
+	}
+	let d = CALL FlushBuffer{screen}
+	let d = CALL memset{screen,8,0}
+	let counter=0
+}
+let d = CALL Flush{} 
+return 0
