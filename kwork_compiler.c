@@ -1260,9 +1260,6 @@ TABLE_ENTRY_PTR find_entry(char type,long data,char *fucn_name,int total_vars){
 
 }
 TABLE_ENTRY_PTR create_new(char type,long data,char *fucn_name,long location){
-	if(type==0){
-		printf("Erroorrrrr!\n");
-	}
 	TABLE_ENTRY_PTR new = malloc(sizeof (TABLE_ENTRY));
 	new->location=location;
 	new->type=type;
@@ -1718,7 +1715,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					TABLE_ENTRY_PTR function = find_entry('F',total_comands+1,fucn_name,total_vars);
 					if(function==NULL){
 						function = create_new('T',total_comands+1,fucn_name,MAX_CODE_SIZE - total_const++);
-						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)] && symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type!='T'&& isalpha( symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type)){
+						if(symbolTable[MAX_CODE_SIZE-(1+total_vars)] && symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type!='T'&& symbolTable[MAX_CODE_SIZE-(1+total_vars)]->type>0){
 							fprintf(stderr,"memory overide caused by return adress");
 							abort();
 						}
@@ -2009,7 +2006,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,(ESP_ADR-MAX_STACK_SIZE)- (created+local_created) );
 				int adress = MAX_CODE_SIZE-(created) -50;
-				if (symbolTable[adress] && symbolTable[adress]->symbol!=0 &&isalpha(symbolTable[adress]->type) ){
+				if (symbolTable[adress] && symbolTable[adress]->symbol!=0){
 					fprintf(stderr,"memory overide caused by temp var allocation!\n");
 					abort();
 				}
