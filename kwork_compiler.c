@@ -1524,6 +1524,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 	char *saved_postfix=postfix;
 		STACKPTR stack = new_stack();
 		STACKPTR operations = new_stack();
+		STACKPTR tempVars = new_stack();
 		char floats = 0;
 		char double_aray=0;
 		enum OPERATIONS{UNARY,BINARY};
@@ -1882,6 +1883,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 					TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,MAX_CODE_SIZE - created - 50);
 					int adress = MAX_CODE_SIZE-(created) -50;
 					symbolTable[adress] = temp;
+					push(adress,&tempVars);
 					temp->type=func_p?func_p->return_type:Word;
 					sprintf(command,"POP %d",adress);
 					symbolTable[total_comands++] = create_new('L',0,command,function_pointer+(local_comands++));
@@ -2006,6 +2008,7 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				created++;
 				TABLE_ENTRY_PTR temp = create_new('T',0,fucn_name,(ESP_ADR-MAX_STACK_SIZE)- (created+local_created) );
 				int adress = MAX_CODE_SIZE-(created) -50;
+				push(adress,&tempVars);
 				if (symbolTable[adress] && symbolTable[adress]->symbol!=0){
 					fprintf(stderr,"memory overide caused by temp var allocation!\n");
 					abort();
@@ -2375,7 +2378,15 @@ int EV_POSTFIX_EXPP(char *expp,TABLE_ENTRY_PTR return_){
 				else return_->const_value=symbolTable[result]->symbol;
 				if(symbolTable[result]->type=='C')return_->const_value=data_type;
 			}
-			return symbolTable[result]->location;
+			//save the location of return temp var
+			long location = symbolTable[result]->location;
+			//clear all temp vars allocated
+			while(!isEmpty(tempVars)){
+				int temp_var = pop(&tempVars);
+				free(symbolTable[temp_var]);
+				symbolTable[temp_var]=NULL;
+			}
+			return location;
 		}\
 		else{
 			fprintf(stderr,"Stack is empty\n");
